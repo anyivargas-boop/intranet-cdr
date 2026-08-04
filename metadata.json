@@ -1,0 +1,6 @@
+{
+  "name": "Intranet Consejo de Redacción",
+  "description": "Intranet corporativa para el equipo de Consejo de Redacción (CdR), con gestión de formatos, comunicados, reglamentos, agenda con Google Calendar, y archivos en Google Drive.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
