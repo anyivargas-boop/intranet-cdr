@@ -116,14 +116,6 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             </div>
           )}
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
-            <p className="font-bold flex items-center gap-1 mb-1 text-[#234156]">
-              💡 Credenciales para la prueba:
-            </p>
-            <p><strong>Usuario:</strong> <code className="bg-amber-100 px-1 py-0.5 rounded text-slate-900">admin</code></p>
-            <p><strong>Contraseña:</strong> <code className="bg-amber-100 px-1 py-0.5 rounded text-slate-900">1234</code> o <code className="bg-amber-100 px-1 py-0.5 rounded text-slate-900">cdr2026</code></p>
-          </div>
-
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
