@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { DashboardView } from './components/DashboardView';
+import { InicioView } from './components/InicioView';
 import { DocumentosView } from './components/DocumentosView';
 import { ComunicadosView } from './components/ComunicadosView';
 import { ReglamentosView } from './components/ReglamentosView';
@@ -34,7 +34,7 @@ import {
 } from './types';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>('inicio');
   const [isAdmin, setIsAdmin] = useState<boolean>(true); // default to Admin so user can immediately test publishing features
 
   // Persistent States with local storage fallback
@@ -141,8 +141,8 @@ export default function App() {
 
       {/* Main Viewport Content Area */}
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
-        {activeTab === 'dashboard' && (
-          <DashboardView
+        {activeTab === 'inicio' && (
+          <InicioView
             formatos={formatos}
             comunicados={comunicados}
             eventos={eventos}

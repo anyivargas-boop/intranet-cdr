@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { DriveIcon } from './DriveIcon';
 
-interface DashboardViewProps {
+interface InicioViewProps {
   formatos: FormatoDocumento[];
   comunicados: Comunicado[];
   eventos: EventoAgenda[];
@@ -33,7 +33,7 @@ interface DashboardViewProps {
   onOpenDriveModal: (folderUrl: string, folderName: string) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({
+export const InicioView: React.FC<InicioViewProps> = ({
   formatos,
   comunicados,
   eventos,

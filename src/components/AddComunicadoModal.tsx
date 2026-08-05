@@ -177,7 +177,7 @@ export const AddComunicadoModal: React.FC<AddComunicadoModalProps> = ({
               className="w-4 h-4 text-[#234156] rounded focus:ring-[#234156]"
             />
             <label htmlFor="pinned" className="font-extrabold text-[#234156] cursor-pointer">
-              Fijar este comunicado en la parte superior del Dashboard
+              Fijar este comunicado en la parte superior del Inicio
             </label>
           </div>
 

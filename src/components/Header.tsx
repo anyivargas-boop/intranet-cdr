@@ -4,7 +4,7 @@ import {
   Bell, 
   BookOpen, 
   Calendar, 
-  LayoutDashboard
+  LayoutInicio
 } from 'lucide-react';
 import { DriveIcon } from './DriveIcon';
 
@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadCount = 2,
 }) => {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'inicio', label: 'inicio', icon: Layoutinicio },
     { id: 'documentos', label: 'Formatos y Documentación', icon: FileText },
     { id: 'comunicados', label: 'Comunicados', icon: Bell, badge: unreadCount },
     { id: 'reglamentos', label: 'Reglamentos', icon: BookOpen },
@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Brand Identity */}
         <div 
           className="flex items-center gap-3 cursor-pointer shrink-0"
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => setActiveTab('inicio')}
         >
           <div className="w-10 h-10 bg-[#f3a828] text-slate-950 font-black flex items-center justify-center rounded-xl shadow-sm text-xl border border-amber-300">
             CdR
