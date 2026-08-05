@@ -73,7 +73,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             </label>
             <input
               type="text"
-              placeholder="Ej. admin"
+              placeholder="Ej. usuario"
               value={userInput}
               onChange={(e) => {
                 setUserInput(e.target.value);
@@ -92,7 +92,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Ej. 1234 o cdr2026"
+                placeholder="Ej. 1234 o XYZ"
                 value={passwordInput}
                 onChange={(e) => {
                   setPasswordInput(e.target.value);
