@@ -142,7 +142,7 @@ export default function App() {
       {/* Main Viewport Content Area */}
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
         {activeTab === 'inicio' && (
-          <InicioView
+          <DashboardView
             formatos={formatos}
             comunicados={comunicados}
             eventos={eventos}
