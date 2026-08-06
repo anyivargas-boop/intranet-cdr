@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { InicioView } from './components/InicioView';
+import { InicioView } from './components/DashboardView';
 import { DocumentosView } from './components/DocumentosView';
 import { ComunicadosView } from './components/ComunicadosView';
 import { ReglamentosView } from './components/ReglamentosView';
