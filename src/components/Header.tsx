@@ -4,7 +4,7 @@ import {
   Bell, 
   BookOpen, 
   Calendar, 
-  LayoutInicio
+  LayoutDashboard
 } from 'lucide-react';
 import { DriveIcon } from './DriveIcon';
 
@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadCount = 2,
 }) => {
   const navItems = [
-    { id: 'inicio', label: 'inicio', icon: Layoutinicio },
+    { id: 'inicio', label: 'inicio', icon: Layoutdashboard },
     { id: 'documentos', label: 'Formatos y Documentación', icon: FileText },
     { id: 'comunicados', label: 'Comunicados', icon: Bell, badge: unreadCount },
     { id: 'reglamentos', label: 'Reglamentos', icon: BookOpen },
