@@ -64,7 +64,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
             </div>
             
             <h1 className="text-2xl md:text-3xl font-extrabold text-[#234156] tracking-tight leading-tight">
-              Bienvenido al Portal de <span className="text-amber-600 underline decoration-amber-400 decoration-wavy decoration-2">Consejo de Redacción</span>
+            Bienvenido al Portal de <span className="text-amber-600">Consejo de Redacción</span>
             </h1>
             
             <p className="text-slate-600 text-xs md:text-sm mt-2.5 leading-relaxed max-w-2xl font-medium">
