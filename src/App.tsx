@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
 import { DocumentosView } from './components/DocumentosView';
@@ -9,6 +9,7 @@ import { DriveIntegrationView } from './components/DriveIntegrationView';
 import { Footer } from './components/Footer';
 
 import { AddDocumentModal } from './components/AddDocumentModal';
+import { EditDocumentModal } from './components/EditDocumentModal';
 import { AddComunicadoModal } from './components/AddComunicadoModal';
 import { AddEventModal } from './components/AddEventModal';
 import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
@@ -35,9 +36,9 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('inicio');
-  const [isAdmin, setIsAdmin] = useState<boolean>(true); // default to Admin so user can immediately test publishing features
+  const [isAdmin, setIsAdmin] = useState<boolean>(true);
 
-  // Persistent States with local storage fallback
+  // Información persistente
   const [formatos, setFormatos] = useState<FormatoDocumento[]>(() => {
     const saved = localStorage.getItem('cdr_formatos');
     return saved ? JSON.parse(saved) : initialFormatos;
@@ -48,7 +49,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialComunicados;
   });
 
-  const [reglamentos, setReglamentos] = useState<Reglamento[]>(() => {
+  const [reglamentos] = useState<Reglamento[]>(() => {
     const saved = localStorage.getItem('cdr_reglamentos');
     return saved ? JSON.parse(saved) : initialReglamentos;
   });
@@ -63,12 +64,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialDriveFolders;
   });
 
-  const [googleConfig, setGoogleConfig] = useState<GoogleIntegrationsConfig>(() => {
-    const saved = localStorage.getItem('cdr_googleConfig');
-    return saved ? JSON.parse(saved) : initialGoogleConfig;
-  });
+  const [googleConfig, setGoogleConfig] =
+    useState<GoogleIntegrationsConfig>(() => {
+      const saved = localStorage.getItem('cdr_googleConfig');
+      return saved ? JSON.parse(saved) : initialGoogleConfig;
+    });
 
-  // Save changes to LocalStorage
+  // Guardar cambios en el navegador
   useEffect(() => {
     localStorage.setItem('cdr_formatos', JSON.stringify(formatos));
   }, [formatos]);
@@ -82,64 +84,101 @@ export default function App() {
   }, [eventos]);
 
   useEffect(() => {
-    localStorage.setItem('cdr_driveFolders', JSON.stringify(driveFolders));
+    localStorage.setItem(
+      'cdr_driveFolders',
+      JSON.stringify(driveFolders)
+    );
   }, [driveFolders]);
 
   useEffect(() => {
-    localStorage.setItem('cdr_googleConfig', JSON.stringify(googleConfig));
+    localStorage.setItem(
+      'cdr_googleConfig',
+      JSON.stringify(googleConfig)
+    );
   }, [googleConfig]);
 
-  // Modal Visibility States
+  // Estados de modales
   const [isAddDocOpen, setIsAddDocOpen] = useState(false);
-  const [isAddComunicadoOpen, setIsAddComunicadoOpen] = useState(false);
+  const [isAddComunicadoOpen, setIsAddComunicadoOpen] =
+    useState(false);
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
-  const [driveViewerFolder, setDriveViewerFolder] = useState<{ url: string; name: string } | null>(null);
 
-  // Handlers
+  const [documentoEditando, setDocumentoEditando] =
+    useState<FormatoDocumento | null>(null);
+
+  const [selectedComunicado, setSelectedComunicado] =
+    useState<Comunicado | null>(null);
+
+  const [driveViewerFolder, setDriveViewerFolder] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
+
+  // Documentos
   const handleAddDocument = (newDoc: FormatoDocumento) => {
     setFormatos((prev) => [newDoc, ...prev]);
   };
 
-  const handleDeleteDocument = (id: string) => {
-    setFormatos((prev) => prev.filter((doc) => doc.id !== id));
+  const handleEditDocument = (
+    documentoActualizado: FormatoDocumento
+  ) => {
+    setFormatos((prev) =>
+      prev.map((documento) =>
+        documento.id === documentoActualizado.id
+          ? documentoActualizado
+          : documento
+      )
+    );
   };
 
+  const handleDeleteDocument = (id: string) => {
+    setFormatos((prev) =>
+      prev.filter((documento) => documento.id !== id)
+    );
+  };
+
+  // Comunicados
   const handleAddComunicado = (newCom: Comunicado) => {
     setComunicados((prev) => [newCom, ...prev]);
   };
 
   const handleDeleteComunicado = (id: string) => {
-    setComunicados((prev) => prev.filter((c) => c.id !== id));
+    setComunicados((prev) =>
+      prev.filter((comunicado) => comunicado.id !== id)
+    );
   };
 
+  // Eventos
   const handleAddEvent = (newEvt: EventoAgenda) => {
     setEventos((prev) => [newEvt, ...prev]);
   };
 
   const handleDeleteEvent = (id: string) => {
-    setEventos((prev) => prev.filter((e) => e.id !== id));
+    setEventos((prev) =>
+      prev.filter((evento) => evento.id !== id)
+    );
   };
 
+  // Carpetas de Drive
   const handleAddDriveFolder = (newFolder: DriveFolder) => {
     setDriveFolders((prev) => [newFolder, ...prev]);
   };
 
   const handleDeleteDriveFolder = (id: string) => {
-    setDriveFolders((prev) => prev.filter((f) => f.id !== id));
+    setDriveFolders((prev) =>
+      prev.filter((folder) => folder.id !== id)
+    );
   };
 
   return (
     <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      {/* Header */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         unreadCount={comunicados.length}
       />
 
-      {/* Main Viewport Content Area */}
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
         {activeTab === 'inicio' && (
           <DashboardView
@@ -149,11 +188,19 @@ export default function App() {
             driveFolders={driveFolders}
             isAdmin={isAdmin}
             onNavigate={setActiveTab}
-            onOpenAddDocumentModal={() => setIsAddDocOpen(true)}
-            onOpenAddComunicadoModal={() => setIsAddComunicadoOpen(true)}
-            onOpenAddEventModal={() => setIsAddEventOpen(true)}
+            onOpenAddDocumentModal={() =>
+              setIsAddDocOpen(true)
+            }
+            onOpenAddComunicadoModal={() =>
+              setIsAddComunicadoOpen(true)
+            }
+            onOpenAddEventModal={() =>
+              setIsAddEventOpen(true)
+            }
             onOpenComunicadoDetail={setSelectedComunicado}
-            onOpenDriveModal={(url, name) => setDriveViewerFolder({ url, name })}
+            onOpenDriveModal={(url, name) =>
+              setDriveViewerFolder({ url, name })
+            }
           />
         )}
 
@@ -162,6 +209,7 @@ export default function App() {
             formatos={formatos}
             isAdmin={isAdmin}
             onOpenAddModal={() => setIsAddDocOpen(true)}
+            onEditFormato={setDocumentoEditando}
             onDeleteFormato={handleDeleteDocument}
           />
         )}
@@ -170,7 +218,9 @@ export default function App() {
           <ComunicadosView
             comunicados={comunicados}
             isAdmin={isAdmin}
-            onOpenAddModal={() => setIsAddComunicadoOpen(true)}
+            onOpenAddModal={() =>
+              setIsAddComunicadoOpen(true)
+            }
             onSelectComunicado={setSelectedComunicado}
             onDeleteComunicado={handleDeleteComunicado}
           />
@@ -180,7 +230,9 @@ export default function App() {
           <ReglamentosView
             reglamentos={reglamentos}
             isAdmin={isAdmin}
-            onOpenDriveLink={(url) => window.open(url, '_blank')}
+            onOpenDriveLink={(url) =>
+              window.open(url, '_blank')
+            }
           />
         )}
 
@@ -189,7 +241,9 @@ export default function App() {
             eventos={eventos}
             googleConfig={googleConfig}
             isAdmin={isAdmin}
-            onOpenAddEventModal={() => setIsAddEventOpen(true)}
+            onOpenAddEventModal={() =>
+              setIsAddEventOpen(true)
+            }
             onUpdateGoogleConfig={setGoogleConfig}
             onDeleteEvent={handleDeleteEvent}
           />
@@ -200,35 +254,47 @@ export default function App() {
             driveFolders={driveFolders}
             googleConfig={googleConfig}
             isAdmin={isAdmin}
-            onOpenFolderModal={(url, name) => setDriveViewerFolder({ url, name })}
+            onOpenFolderModal={(url, name) =>
+              setDriveViewerFolder({ url, name })
+            }
             onAddDriveFolder={handleAddDriveFolder}
             onDeleteDriveFolder={handleDeleteDriveFolder}
           />
         )}
       </main>
 
-      {/* Footer */}
-      <Footer 
-        isAdmin={isAdmin} 
+      <Footer
+        isAdmin={isAdmin}
         setIsAdmin={setIsAdmin}
-        onOpenAdminModal={() => setIsAdminLoginOpen(true)}
+        onOpenAdminModal={() =>
+          setIsAdminLoginOpen(true)
+        }
       />
 
-      {/* Modals */}
       <AdminLoginModal
         isOpen={isAdminLoginOpen}
         onClose={() => setIsAdminLoginOpen(false)}
         onSuccess={() => setIsAdmin(true)}
       />
+
       <AddDocumentModal
         isOpen={isAddDocOpen}
         onClose={() => setIsAddDocOpen(false)}
         onAdd={handleAddDocument}
       />
 
+      <EditDocumentModal
+        isOpen={!!documentoEditando}
+        documento={documentoEditando}
+        onClose={() => setDocumentoEditando(null)}
+        onSave={handleEditDocument}
+      />
+
       <AddComunicadoModal
         isOpen={isAddComunicadoOpen}
-        onClose={() => setIsAddComunicadoOpen(false)}
+        onClose={() =>
+          setIsAddComunicadoOpen(false)
+        }
         onAdd={handleAddComunicado}
       />
 
@@ -245,7 +311,7 @@ export default function App() {
 
       {driveViewerFolder && (
         <DriveViewerModal
-          isOpen={!!driveViewerFolder}
+          isOpen={true}
           folderUrl={driveViewerFolder.url}
           folderName={driveViewerFolder.name}
           onClose={() => setDriveViewerFolder(null)}
