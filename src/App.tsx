@@ -37,70 +37,140 @@ import {
   GoogleIntegrationsConfig,
   CategoryType,
   FileType,
+  AuthorizedUser,
+  AuthorizedUserRole,
 } from './types';
 
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('inicio');
+  const [activeTab, setActiveTab] =
+    useState<string>('inicio');
 
   // =========================================================
   // ACCESO Y ROLES
   // =========================================================
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [employeeAuthorized, setEmployeeAuthorized] = useState(false);
-  const [currentUserEmail, setCurrentUserEmail] = useState('');
+  const [isAdmin, setIsAdmin] =
+    useState(false);
 
-  const [currentUserRole, setCurrentUserRole] = useState<
+  const [authLoading, setAuthLoading] =
+    useState(true);
+
+  const [
+    employeeAuthorized,
+    setEmployeeAuthorized,
+  ] = useState(false);
+
+  const [
+    currentUserEmail,
+    setCurrentUserEmail,
+  ] = useState('');
+
+  const [
+    currentUserRole,
+    setCurrentUserRole,
+  ] = useState<
     'admin' | 'employee' | ''
   >('');
+
+
+  // =========================================================
+  // USUARIOS AUTORIZADOS - SUPABASE
+  // =========================================================
+
+  const [
+    authorizedUsers,
+    setAuthorizedUsers,
+  ] = useState<AuthorizedUser[]>([]);
+
+  const [
+    authorizedUsersLoading,
+    setAuthorizedUsersLoading,
+  ] = useState(false);
+
 
   // =========================================================
   // DOCUMENTOS - SUPABASE
   // =========================================================
 
-  const [formatos, setFormatos] = useState<FormatoDocumento[]>([]);
-  const [documentosLoading, setDocumentosLoading] = useState(false);
+  const [formatos, setFormatos] =
+    useState<FormatoDocumento[]>([]);
+
+  const [
+    documentosLoading,
+    setDocumentosLoading,
+  ] = useState(false);
+
 
   // =========================================================
   // COMUNICADOS - LOCAL POR AHORA
   // =========================================================
 
-  const [comunicados, setComunicados] = useState<Comunicado[]>(() => {
-    const saved = localStorage.getItem('cdr_comunicados');
+  const [
+    comunicados,
+    setComunicados,
+  ] = useState<Comunicado[]>(() => {
+    const saved =
+      localStorage.getItem(
+        'cdr_comunicados'
+      );
 
     return saved
       ? JSON.parse(saved)
       : initialComunicados;
   });
 
+
   // =========================================================
   // REGLAMENTOS - SUPABASE
   // =========================================================
 
-  const [reglamentos, setReglamentos] = useState<Reglamento[]>([]);
-  const [reglamentosLoading, setReglamentosLoading] = useState(false);
+  const [
+    reglamentos,
+    setReglamentos,
+  ] = useState<Reglamento[]>([]);
+
+  const [
+    reglamentosLoading,
+    setReglamentosLoading,
+  ] = useState(false);
+
 
   // =========================================================
   // AGENDA - LOCAL POR AHORA
   // =========================================================
 
-  const [eventos, setEventos] = useState<EventoAgenda[]>(() => {
-    const saved = localStorage.getItem('cdr_eventos');
+  const [
+    eventos,
+    setEventos,
+  ] = useState<EventoAgenda[]>(() => {
+    const saved =
+      localStorage.getItem(
+        'cdr_eventos'
+      );
 
     return saved
       ? JSON.parse(saved)
       : initialEventos;
   });
 
-  const [googleConfig, setGoogleConfig] =
-    useState<GoogleIntegrationsConfig>(() => {
-      const saved = localStorage.getItem('cdr_googleConfig');
+  const [
+    googleConfig,
+    setGoogleConfig,
+  ] =
+    useState<GoogleIntegrationsConfig>(
+      () => {
+        const saved =
+          localStorage.getItem(
+            'cdr_googleConfig'
+          );
 
-      return saved
-        ? JSON.parse(saved)
-        : initialGoogleConfig;
-    });
+        return saved
+          ? JSON.parse(saved)
+          : initialGoogleConfig;
+      }
+    );
+
 
   // =========================================================
   // LOCAL STORAGE
@@ -127,6 +197,7 @@ export default function App() {
     );
   }, [googleConfig]);
 
+
   // =========================================================
   // VERIFICAR EMPLEADO
   // =========================================================
@@ -140,15 +211,22 @@ export default function App() {
       setCurrentUserRole('');
       setIsAdmin(false);
       setAuthLoading(false);
+
       return;
     }
 
     const normalizedEmail =
-      email.trim().toLowerCase();
+      email
+        .trim()
+        .toLowerCase();
 
     const validDomain =
-      normalizedEmail.endsWith('@consejoderedaccion.org') ||
-      normalizedEmail.endsWith('@colombiacheck.org');
+      normalizedEmail.endsWith(
+        '@consejoderedaccion.org'
+      ) ||
+      normalizedEmail.endsWith(
+        '@colombiacheck.org'
+      );
 
     if (!validDomain) {
       await supabase.auth.signOut();
@@ -162,14 +240,28 @@ export default function App() {
       return;
     }
 
-    const { data, error } = await supabase
+    const {
+      data,
+      error,
+    } = await supabase
       .from('authorized_users')
-      .select('email, active, role')
-      .eq('email', normalizedEmail)
-      .eq('active', true)
+      .select(
+        'email, active, role'
+      )
+      .eq(
+        'email',
+        normalizedEmail
+      )
+      .eq(
+        'active',
+        true
+      )
       .maybeSingle();
 
-    if (error || !data) {
+    if (
+      error ||
+      !data
+    ) {
       await supabase.auth.signOut();
 
       setEmployeeAuthorized(false);
@@ -187,39 +279,58 @@ export default function App() {
         : 'employee';
 
     setEmployeeAuthorized(true);
-    setCurrentUserEmail(normalizedEmail);
-    setCurrentUserRole(role);
-    setIsAdmin(role === 'admin');
+
+    setCurrentUserEmail(
+      normalizedEmail
+    );
+
+    setCurrentUserRole(
+      role
+    );
+
+    setIsAdmin(
+      role === 'admin'
+    );
+
     setAuthLoading(false);
   };
 
-  useEffect(() => {
-    const checkInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
 
-      await verifyEmployee(
-        session?.user?.email
-      );
-    };
+  // =========================================================
+  // SESIÓN
+  // =========================================================
+
+  useEffect(() => {
+    const checkInitialSession =
+      async () => {
+        const {
+          data: { session },
+        } =
+          await supabase.auth.getSession();
+
+        await verifyEmployee(
+          session?.user?.email
+        );
+      };
 
     checkInitialSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        verifyEmployee(
-          session?.user?.email
-        );
-      }
-    );
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          verifyEmployee(
+            session?.user?.email
+          );
+        }
+      );
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
 
   // =========================================================
   // PROTEGER PANEL ADMIN
@@ -232,225 +343,766 @@ export default function App() {
     ) {
       setActiveTab('inicio');
     }
-  }, [activeTab, isAdmin]);
+  }, [
+    activeTab,
+    isAdmin,
+  ]);
+
 
   // =========================================================
   // CERRAR SESIÓN
   // =========================================================
 
-  const handleEmployeeLogout = async () => {
-    await supabase.auth.signOut();
+  const handleEmployeeLogout =
+    async () => {
+      await supabase.auth.signOut();
 
-    setEmployeeAuthorized(false);
-    setCurrentUserEmail('');
-    setCurrentUserRole('');
-    setIsAdmin(false);
+      setEmployeeAuthorized(
+        false
+      );
 
-    setFormatos([]);
-    setReglamentos([]);
+      setCurrentUserEmail('');
 
-    setActiveTab('inicio');
-  };
+      setCurrentUserRole('');
+
+      setIsAdmin(false);
+
+      setFormatos([]);
+
+      setReglamentos([]);
+
+      setAuthorizedUsers([]);
+
+      setActiveTab('inicio');
+    };
+
+
+  // =========================================================
+  // CARGAR USUARIOS AUTORIZADOS
+  // =========================================================
+
+  const loadAuthorizedUsers =
+    async () => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        return;
+      }
+
+      setAuthorizedUsersLoading(
+        true
+      );
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('authorized_users')
+        .select(
+          'id, email, name, role, active, created_at'
+        )
+        .order(
+          'name',
+          {
+            ascending: true,
+          }
+        );
+
+      if (error) {
+        console.error(
+          'Error cargando usuarios autorizados:',
+          error
+        );
+
+        setAuthorizedUsers([]);
+
+        setAuthorizedUsersLoading(
+          false
+        );
+
+        return;
+      }
+
+      const mappedUsers: AuthorizedUser[] =
+        (data || []).map(
+          (user) => ({
+            id:
+              user.id,
+
+            email:
+              user.email || '',
+
+            name:
+              user.name || '',
+
+            role:
+              user.role ===
+              'admin'
+                ? 'admin'
+                : 'employee',
+
+            active:
+              Boolean(
+                user.active
+              ),
+
+            createdAt:
+              user.created_at ||
+              undefined,
+          })
+        );
+
+      setAuthorizedUsers(
+        mappedUsers
+      );
+
+      setAuthorizedUsersLoading(
+        false
+      );
+    };
+
+
+  // =========================================================
+  // AGREGAR USUARIO AUTORIZADO
+  // =========================================================
+
+  const handleAddAuthorizedUser =
+    async (
+      user: {
+        name: string;
+        email: string;
+        role: AuthorizedUserRole;
+      }
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede agregar usuarios.'
+        );
+
+        return false;
+      }
+
+      const normalizedEmail =
+        user.email
+          .trim()
+          .toLowerCase();
+
+      const validDomain =
+        normalizedEmail.endsWith(
+          '@consejoderedaccion.org'
+        ) ||
+        normalizedEmail.endsWith(
+          '@colombiacheck.org'
+        );
+
+      if (!validDomain) {
+        alert(
+          'El correo debe pertenecer a @consejoderedaccion.org o @colombiacheck.org.'
+        );
+
+        return false;
+      }
+
+      const existingUser =
+        authorizedUsers.find(
+          (existing) =>
+            existing.email
+              .toLowerCase() ===
+            normalizedEmail
+        );
+
+      if (existingUser) {
+        alert(
+          'Este correo ya está registrado en Usuarios y Accesos.'
+        );
+
+        return false;
+      }
+
+      const id =
+        crypto.randomUUID();
+
+      const {
+        error,
+      } = await supabase
+        .from(
+          'authorized_users'
+        )
+        .insert({
+          id,
+          email:
+            normalizedEmail,
+          name:
+            user.name.trim(),
+          role:
+            user.role,
+          active:
+            true,
+        });
+
+      if (error) {
+        console.error(
+          'Error agregando usuario:',
+          error
+        );
+
+        alert(
+          'No fue posible agregar el usuario. Revisa las políticas RLS de authorized_users.'
+        );
+
+        return false;
+      }
+
+      await loadAuthorizedUsers();
+
+      return true;
+    };
+
+
+  // =========================================================
+  // EDITAR USUARIO AUTORIZADO
+  // =========================================================
+
+  const handleUpdateAuthorizedUser =
+    async (
+      user: AuthorizedUser
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede editar usuarios.'
+        );
+
+        return false;
+      }
+
+      const normalizedEmail =
+        user.email
+          .trim()
+          .toLowerCase();
+
+      const validDomain =
+        normalizedEmail.endsWith(
+          '@consejoderedaccion.org'
+        ) ||
+        normalizedEmail.endsWith(
+          '@colombiacheck.org'
+        );
+
+      if (!validDomain) {
+        alert(
+          'El correo debe pertenecer a @consejoderedaccion.org o @colombiacheck.org.'
+        );
+
+        return false;
+      }
+
+      const {
+        error,
+      } = await supabase
+        .from(
+          'authorized_users'
+        )
+        .update({
+          email:
+            normalizedEmail,
+
+          name:
+            user.name.trim(),
+
+          role:
+            user.role,
+
+          active:
+            user.active,
+        })
+        .eq(
+          'id',
+          user.id
+        );
+
+      if (error) {
+        console.error(
+          'Error actualizando usuario:',
+          error
+        );
+
+        alert(
+          'No fue posible actualizar el usuario.'
+        );
+
+        return false;
+      }
+
+      await loadAuthorizedUsers();
+
+      /*
+        Si el administrador modifica
+        su propio rol o estado,
+        volvemos a verificar su acceso.
+      */
+      if (
+        normalizedEmail ===
+        currentUserEmail
+      ) {
+        await verifyEmployee(
+          normalizedEmail
+        );
+      }
+
+      return true;
+    };
+
+
+  // =========================================================
+  // ACTIVAR / DESACTIVAR USUARIO
+  // =========================================================
+
+  const handleToggleAuthorizedUser =
+    async (
+      user: AuthorizedUser
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede modificar accesos.'
+        );
+
+        return;
+      }
+
+      /*
+        Evitamos que el administrador
+        se desactive accidentalmente
+        desde su propia sesión.
+      */
+      if (
+        user.email
+          .toLowerCase() ===
+          currentUserEmail
+            .toLowerCase() &&
+        user.active
+      ) {
+        alert(
+          'No puedes desactivar tu propio acceso mientras estás usando esta sesión.'
+        );
+
+        return;
+      }
+
+      const {
+        error,
+      } = await supabase
+        .from(
+          'authorized_users'
+        )
+        .update({
+          active:
+            !user.active,
+        })
+        .eq(
+          'id',
+          user.id
+        );
+
+      if (error) {
+        console.error(
+          'Error cambiando estado del usuario:',
+          error
+        );
+
+        alert(
+          'No fue posible cambiar el estado del usuario.'
+        );
+
+        return;
+      }
+
+      await loadAuthorizedUsers();
+    };
+
+
+  // =========================================================
+  // ELIMINAR AUTORIZACIÓN
+  // =========================================================
+
+  const handleDeleteAuthorizedUser =
+    async (
+      user: AuthorizedUser
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede eliminar accesos.'
+        );
+
+        return;
+      }
+
+      if (
+        user.email
+          .toLowerCase() ===
+        currentUserEmail
+          .toLowerCase()
+      ) {
+        alert(
+          'No puedes eliminar tu propio acceso desde esta sesión.'
+        );
+
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          `¿Seguro que deseas eliminar la autorización de ${user.name || user.email}?`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const {
+        error,
+      } = await supabase
+        .from(
+          'authorized_users'
+        )
+        .delete()
+        .eq(
+          'id',
+          user.id
+        );
+
+      if (error) {
+        console.error(
+          'Error eliminando autorización:',
+          error
+        );
+
+        alert(
+          'No fue posible eliminar la autorización.'
+        );
+
+        return;
+      }
+
+      await loadAuthorizedUsers();
+    };
+
 
   // =========================================================
   // CARGAR DOCUMENTOS
   // =========================================================
 
-  const loadDocumentos = async () => {
-    setDocumentosLoading(true);
-
-    const { data, error } = await supabase
-      .from('documentos')
-      .select('*')
-      .eq('active', true)
-      .order('id', {
-        ascending: true,
-      });
-
-    if (error) {
-      console.error(
-        'Error cargando documentos:',
-        error
+  const loadDocumentos =
+    async () => {
+      setDocumentosLoading(
+        true
       );
 
-      setFormatos([]);
-      setDocumentosLoading(false);
-      return;
-    }
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('documentos')
+        .select('*')
+        .eq(
+          'active',
+          true
+        )
+        .order(
+          'id',
+          {
+            ascending: true,
+          }
+        );
 
-    const mappedDocumentos: FormatoDocumento[] =
-      (data || []).map((doc) => ({
-        id: doc.id,
+      if (error) {
+        console.error(
+          'Error cargando documentos:',
+          error
+        );
 
-        title:
-          doc.title || '',
+        setFormatos([]);
 
-        category:
-          (doc.category ||
-            'Administración') as CategoryType,
+        setDocumentosLoading(
+          false
+        );
 
-        description:
-          doc.description || '',
+        return;
+      }
 
-        driveUrl:
-          doc.drive_url || '',
+      const mappedDocumentos: FormatoDocumento[] =
+        (data || []).map(
+          (doc) => ({
+            id:
+              doc.id,
 
-        downloadUrl:
-          doc.download_url ||
-          doc.drive_url ||
-          '',
+            title:
+              doc.title || '',
 
-        fileType:
-          (doc.file_type ||
-            'word') as FileType,
+            category:
+              (
+                doc.category ||
+                'Administración'
+              ) as CategoryType,
 
-        version:
-          doc.version ||
-          'v1.0',
+            description:
+              doc.description ||
+              '',
 
-        lastUpdated:
-          doc.last_updated || '',
+            driveUrl:
+              doc.drive_url ||
+              '',
 
-        iconBgColor:
-          doc.icon_bg_color ||
-          undefined,
+            downloadUrl:
+              doc.download_url ||
+              doc.drive_url ||
+              '',
 
-        iconTextColor:
-          doc.icon_text_color ||
-          undefined,
+            fileType:
+              (
+                doc.file_type ||
+                'word'
+              ) as FileType,
 
-        downloadsCount:
-          doc.downloads_count ||
-          0,
-      }));
+            version:
+              doc.version ||
+              'v1.0',
 
-    setFormatos(mappedDocumentos);
-    setDocumentosLoading(false);
-  };
+            lastUpdated:
+              doc.last_updated ||
+              '',
+
+            iconBgColor:
+              doc.icon_bg_color ||
+              undefined,
+
+            iconTextColor:
+              doc.icon_text_color ||
+              undefined,
+
+            downloadsCount:
+              doc.downloads_count ||
+              0,
+          })
+        );
+
+      setFormatos(
+        mappedDocumentos
+      );
+
+      setDocumentosLoading(
+        false
+      );
+    };
+
 
   // =========================================================
   // CARGAR REGLAMENTOS
   // =========================================================
 
-  const loadReglamentos = async () => {
-    setReglamentosLoading(true);
+  const loadReglamentos =
+    async () => {
+      setReglamentosLoading(
+        true
+      );
 
-    const {
-      data: reglamentosData,
-      error: reglamentosError,
-    } = await supabase
-      .from('reglamentos')
-      .select('*')
-      .eq('active', true)
-      .order('id', {
-        ascending: true,
-      });
+      const {
+        data:
+          reglamentosData,
+        error:
+          reglamentosError,
+      } = await supabase
+        .from('reglamentos')
+        .select('*')
+        .eq(
+          'active',
+          true
+        )
+        .order(
+          'id',
+          {
+            ascending: true,
+          }
+        );
 
-    if (reglamentosError) {
-      console.error(
-        'Error cargando reglamentos:',
+      if (
         reglamentosError
-      );
+      ) {
+        console.error(
+          'Error cargando reglamentos:',
+          reglamentosError
+        );
 
-      setReglamentos([]);
-      setReglamentosLoading(false);
-      return;
-    }
+        setReglamentos([]);
 
-    const {
-      data: sectionsData,
-      error: sectionsError,
-    } = await supabase
-      .from('reglamento_sections')
-      .select('*')
-      .eq('active', true)
-      .order('sort_order', {
-        ascending: true,
-      });
+        setReglamentosLoading(
+          false
+        );
 
-    if (sectionsError) {
-      console.error(
-        'Error cargando capítulos:',
+        return;
+      }
+
+      const {
+        data:
+          sectionsData,
+        error:
+          sectionsError,
+      } = await supabase
+        .from(
+          'reglamento_sections'
+        )
+        .select('*')
+        .eq(
+          'active',
+          true
+        )
+        .order(
+          'sort_order',
+          {
+            ascending: true,
+          }
+        );
+
+      if (
         sectionsError
+      ) {
+        console.error(
+          'Error cargando capítulos:',
+          sectionsError
+        );
+
+        setReglamentosLoading(
+          false
+        );
+
+        return;
+      }
+
+      const mappedReglamentos: Reglamento[] =
+        (
+          reglamentosData ||
+          []
+        ).map((reg) => {
+          const sections: ReglamentoSection[] =
+            (
+              sectionsData ||
+              []
+            )
+              .filter(
+                (section) =>
+                  section.reglamento_id ===
+                  reg.id
+              )
+              .map(
+                (section) => ({
+                  id:
+                    section.id,
+
+                  title:
+                    section.title ||
+                    '',
+
+                  content:
+                    section.content ||
+                    '',
+
+                  sectionUrl:
+                    section.section_url ||
+                    '',
+
+                  sortOrder:
+                    section.sort_order ||
+                    0,
+                })
+              );
+
+          return {
+            id:
+              reg.id,
+
+            title:
+              reg.title ||
+              '',
+
+            description:
+              reg.description ||
+              '',
+
+            category:
+              reg.category ||
+              '',
+
+            lastRevision:
+              reg.last_revision ||
+              '',
+
+            articlesCount:
+              reg.articles_count ||
+              0,
+
+            driveLink:
+              reg.drive_link ||
+              '',
+
+            sections,
+          };
+        });
+
+      setReglamentos(
+        mappedReglamentos
       );
 
-      setReglamentosLoading(false);
-      return;
-    }
+      setReglamentosLoading(
+        false
+      );
+    };
 
-    const mappedReglamentos: Reglamento[] =
-      (reglamentosData || []).map((reg) => {
-        const sections: ReglamentoSection[] =
-          (sectionsData || [])
-            .filter(
-              (section) =>
-                section.reglamento_id ===
-                reg.id
-            )
-            .map((section) => ({
-              id:
-                section.id,
-
-              title:
-                section.title || '',
-
-              content:
-                section.content || '',
-
-              sectionUrl:
-                section.section_url || '',
-
-              sortOrder:
-                section.sort_order || 0,
-            }));
-
-        return {
-          id:
-            reg.id,
-
-          title:
-            reg.title || '',
-
-          description:
-            reg.description || '',
-
-          category:
-            reg.category || '',
-
-          lastRevision:
-            reg.last_revision || '',
-
-          articlesCount:
-            reg.articles_count || 0,
-
-          driveLink:
-            reg.drive_link || '',
-
-          sections,
-        };
-      });
-
-    setReglamentos(mappedReglamentos);
-    setReglamentosLoading(false);
-  };
 
   // =========================================================
   // CARGAR DATOS DESPUÉS DEL LOGIN
   // =========================================================
 
   useEffect(() => {
-    if (employeeAuthorized) {
+    if (
+      employeeAuthorized
+    ) {
       loadDocumentos();
+
       loadReglamentos();
+
+      if (
+        currentUserRole ===
+        'admin'
+      ) {
+        loadAuthorizedUsers();
+      }
     }
-  }, [employeeAuthorized]);
+  }, [
+    employeeAuthorized,
+    currentUserRole,
+  ]);
+
 
   // =========================================================
   // MODALES
   // =========================================================
 
-  const [isAddDocOpen, setIsAddDocOpen] =
-    useState(false);
+  const [
+    isAddDocOpen,
+    setIsAddDocOpen,
+  ] = useState(false);
 
   const [
     isAddComunicadoOpen,
@@ -470,16 +1122,18 @@ export default function App() {
   const [
     documentoEditando,
     setDocumentoEditando,
-  ] = useState<FormatoDocumento | null>(
-    null
-  );
+  ] =
+    useState<FormatoDocumento | null>(
+      null
+    );
 
   const [
     reglamentoEditando,
     setReglamentoEditando,
-  ] = useState<Reglamento | null>(
-    null
-  );
+  ] =
+    useState<Reglamento | null>(
+      null
+    );
 
   const [
     isEditReglamentoOpen,
@@ -489,573 +1143,656 @@ export default function App() {
   const [
     selectedComunicado,
     setSelectedComunicado,
-  ] = useState<Comunicado | null>(
-    null
-  );
+  ] =
+    useState<Comunicado | null>(
+      null
+    );
+
 
   // =========================================================
   // DOCUMENTOS - AGREGAR
   // =========================================================
 
-  const handleAddDocument = async (
-    newDoc: FormatoDocumento
-  ) => {
-    if (
-      currentUserRole !== 'admin'
-    ) {
-      alert(
-        'Solo un administrador puede agregar documentos.'
-      );
+  const handleAddDocument =
+    async (
+      newDoc: FormatoDocumento
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede agregar documentos.'
+        );
 
-      return;
-    }
+        return;
+      }
 
-    const { error } = await supabase
-      .from('documentos')
-      .insert({
-        title:
-          newDoc.title,
+      const {
+        error,
+      } = await supabase
+        .from('documentos')
+        .insert({
+          title:
+            newDoc.title,
 
-        category:
-          newDoc.category,
+          category:
+            newDoc.category,
 
-        description:
-          newDoc.description,
+          description:
+            newDoc.description,
 
-        drive_url:
-          newDoc.driveUrl,
+          drive_url:
+            newDoc.driveUrl,
 
-        download_url:
-          newDoc.downloadUrl ||
-          newDoc.driveUrl,
+          download_url:
+            newDoc.downloadUrl ||
+            newDoc.driveUrl,
 
-        file_type:
-          newDoc.fileType,
+          file_type:
+            newDoc.fileType,
 
-        version:
-          newDoc.version,
+          version:
+            newDoc.version,
 
-        last_updated:
-          newDoc.lastUpdated ||
-          null,
+          last_updated:
+            newDoc.lastUpdated ||
+            null,
 
-        icon_bg_color:
-          newDoc.iconBgColor ||
-          null,
+          icon_bg_color:
+            newDoc.iconBgColor ||
+            null,
 
-        icon_text_color:
-          newDoc.iconTextColor ||
-          null,
+          icon_text_color:
+            newDoc.iconTextColor ||
+            null,
 
-        downloads_count:
-          newDoc.downloadsCount ||
-          0,
+          downloads_count:
+            newDoc.downloadsCount ||
+            0,
 
-        active:
-          true,
-      });
+          active:
+            true,
+        });
 
-    if (error) {
-      console.error(
-        'Error agregando documento:',
-        error
-      );
+      if (error) {
+        console.error(
+          'Error agregando documento:',
+          error
+        );
 
-      alert(
-        'No fue posible guardar el documento.'
-      );
+        alert(
+          'No fue posible guardar el documento.'
+        );
 
-      return;
-    }
+        return;
+      }
 
-    await loadDocumentos();
-  };
+      await loadDocumentos();
+    };
+
 
   // =========================================================
   // DOCUMENTOS - EDITAR
   // =========================================================
 
-  const handleEditDocument = async (
-    documentoActualizado: FormatoDocumento
-  ) => {
-    if (
-      currentUserRole !== 'admin'
-    ) {
-      alert(
-        'Solo un administrador puede editar documentos.'
+  const handleEditDocument =
+    async (
+      documentoActualizado:
+        FormatoDocumento
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede editar documentos.'
+        );
+
+        return;
+      }
+
+      const {
+        error,
+      } = await supabase
+        .from('documentos')
+        .update({
+          title:
+            documentoActualizado.title,
+
+          category:
+            documentoActualizado.category,
+
+          description:
+            documentoActualizado.description,
+
+          drive_url:
+            documentoActualizado.driveUrl,
+
+          download_url:
+            documentoActualizado.downloadUrl ||
+            documentoActualizado.driveUrl,
+
+          file_type:
+            documentoActualizado.fileType,
+
+          version:
+            documentoActualizado.version,
+
+          last_updated:
+            documentoActualizado.lastUpdated ||
+            null,
+
+          icon_bg_color:
+            documentoActualizado.iconBgColor ||
+            null,
+
+          icon_text_color:
+            documentoActualizado.iconTextColor ||
+            null,
+
+          downloads_count:
+            documentoActualizado.downloadsCount ||
+            0,
+
+          active:
+            true,
+        })
+        .eq(
+          'id',
+          Number(
+            documentoActualizado.id
+          )
+        );
+
+      if (error) {
+        console.error(
+          'Error editando documento:',
+          error
+        );
+
+        alert(
+          'No fue posible actualizar el documento.'
+        );
+
+        return;
+      }
+
+      setDocumentoEditando(
+        null
       );
 
-      return;
-    }
+      await loadDocumentos();
+    };
 
-    const { error } = await supabase
-      .from('documentos')
-      .update({
-        title:
-          documentoActualizado.title,
-
-        category:
-          documentoActualizado.category,
-
-        description:
-          documentoActualizado.description,
-
-        drive_url:
-          documentoActualizado.driveUrl,
-
-        download_url:
-          documentoActualizado.downloadUrl ||
-          documentoActualizado.driveUrl,
-
-        file_type:
-          documentoActualizado.fileType,
-
-        version:
-          documentoActualizado.version,
-
-        last_updated:
-          documentoActualizado.lastUpdated ||
-          null,
-
-        icon_bg_color:
-          documentoActualizado.iconBgColor ||
-          null,
-
-        icon_text_color:
-          documentoActualizado.iconTextColor ||
-          null,
-
-        downloads_count:
-          documentoActualizado.downloadsCount ||
-          0,
-
-        active:
-          true,
-      })
-      .eq(
-        'id',
-        Number(
-          documentoActualizado.id
-        )
-      );
-
-    if (error) {
-      console.error(
-        'Error editando documento:',
-        error
-      );
-
-      alert(
-        'No fue posible actualizar el documento.'
-      );
-
-      return;
-    }
-
-    setDocumentoEditando(null);
-
-    await loadDocumentos();
-  };
 
   // =========================================================
   // DOCUMENTOS - ELIMINAR
   // =========================================================
 
-  const handleDeleteDocument = async (
-    id: number | string
-  ) => {
-    if (
-      currentUserRole !== 'admin'
-    ) {
-      alert(
-        'Solo un administrador puede eliminar documentos.'
-      );
+  const handleDeleteDocument =
+    async (
+      id:
+        | number
+        | string
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede eliminar documentos.'
+        );
 
-      return;
-    }
+        return;
+      }
 
-    const confirmed =
-      window.confirm(
-        '¿Seguro que deseas eliminar este documento?'
-      );
+      const confirmed =
+        window.confirm(
+          '¿Seguro que deseas eliminar este documento?'
+        );
 
-    if (!confirmed) {
-      return;
-    }
+      if (!confirmed) {
+        return;
+      }
 
-    const { error } = await supabase
-      .from('documentos')
-      .delete()
-      .eq(
-        'id',
-        Number(id)
-      );
-
-    if (error) {
-      console.error(
-        'Error eliminando documento:',
-        error
-      );
-
-      alert(
-        'No fue posible eliminar el documento.'
-      );
-
-      return;
-    }
-
-    await loadDocumentos();
-  };
-
-  // =========================================================
-  // REGLAMENTOS - ABRIR
-  // =========================================================
-
-  const handleOpenAddReglamento = () => {
-    setReglamentoEditando(null);
-    setIsEditReglamentoOpen(true);
-  };
-
-  const handleOpenEditReglamento = (
-    reglamento: Reglamento
-  ) => {
-    setReglamentoEditando(
-      reglamento
-    );
-
-    setIsEditReglamentoOpen(
-      true
-    );
-  };
-
-  // =========================================================
-  // REGLAMENTOS - GUARDAR
-  // =========================================================
-
-  const handleSaveReglamento = async (
-    reglamento: Reglamento
-  ) => {
-    if (
-      currentUserRole !== 'admin'
-    ) {
-      alert(
-        'Solo un administrador puede modificar reglamentos.'
-      );
-
-      return;
-    }
-
-    const isNew =
-      typeof reglamento.id === 'string' &&
-      reglamento.id.startsWith('temp-');
-
-    let reglamentoId: number;
-
-    if (isNew) {
       const {
-        data,
         error,
       } = await supabase
-        .from('reglamentos')
-        .insert({
-          title:
-            reglamento.title,
-
-          category:
-            reglamento.category,
-
-          description:
-            reglamento.description,
-
-          last_revision:
-            reglamento.lastRevision ||
-            null,
-
-          articles_count:
-            reglamento.articlesCount ||
-            0,
-
-          drive_link:
-            reglamento.driveLink,
-
-          active:
-            true,
-        })
-        .select('id')
-        .single();
-
-      if (
-        error ||
-        !data
-      ) {
-        console.error(
-          'Error creando reglamento:',
-          error
-        );
-
-        alert(
-          'No fue posible guardar el reglamento.'
-        );
-
-        return;
-      }
-
-      reglamentoId =
-        data.id;
-    } else {
-      reglamentoId =
-        Number(
-          reglamento.id
-        );
-
-      const { error } =
-        await supabase
-          .from('reglamentos')
-          .update({
-            title:
-              reglamento.title,
-
-            category:
-              reglamento.category,
-
-            description:
-              reglamento.description,
-
-            last_revision:
-              reglamento.lastRevision ||
-              null,
-
-            articles_count:
-              reglamento.articlesCount ||
-              0,
-
-            drive_link:
-              reglamento.driveLink,
-
-            active:
-              true,
-          })
-          .eq(
-            'id',
-            reglamentoId
-          );
-
-      if (error) {
-        console.error(
-          'Error actualizando reglamento:',
-          error
-        );
-
-        alert(
-          'No fue posible actualizar el reglamento.'
-        );
-
-        return;
-      }
-    }
-
-    const {
-      error: deleteSectionsError,
-    } = await supabase
-      .from('reglamento_sections')
-      .delete()
-      .eq(
-        'reglamento_id',
-        reglamentoId
-      );
-
-    if (deleteSectionsError) {
-      console.error(
-        'Error eliminando capítulos anteriores:',
-        deleteSectionsError
-      );
-
-      alert(
-        'El reglamento se guardó, pero hubo un problema actualizando los capítulos.'
-      );
-
-      return;
-    }
-
-    if (
-      reglamento.sections.length >
-      0
-    ) {
-      const sectionsToInsert =
-        reglamento.sections.map(
-          (section, index) => ({
-            reglamento_id:
-              reglamentoId,
-
-            title:
-              section.title,
-
-            content:
-              section.content,
-
-            section_url:
-              section.sectionUrl ||
-              '',
-
-            sort_order:
-              index + 1,
-
-            active:
-              true,
-          })
-        );
-
-      const {
-        error: sectionsInsertError,
-      } = await supabase
-        .from(
-          'reglamento_sections'
-        )
-        .insert(
-          sectionsToInsert
-        );
-
-      if (
-        sectionsInsertError
-      ) {
-        console.error(
-          'Error guardando capítulos:',
-          sectionsInsertError
-        );
-
-        alert(
-          'El reglamento se guardó, pero hubo un problema guardando los capítulos.'
-        );
-
-        return;
-      }
-    }
-
-    setIsEditReglamentoOpen(
-      false
-    );
-
-    setReglamentoEditando(
-      null
-    );
-
-    await loadReglamentos();
-  };
-
-  // =========================================================
-  // REGLAMENTOS - ELIMINAR
-  // =========================================================
-
-  const handleDeleteReglamento = async (
-    id: number | string
-  ) => {
-    if (
-      currentUserRole !==
-      'admin'
-    ) {
-      alert(
-        'Solo un administrador puede eliminar reglamentos.'
-      );
-
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        '¿Seguro que deseas eliminar esta política, reglamento o manual? También se eliminarán sus capítulos.'
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const { error } =
-      await supabase
-        .from('reglamentos')
+        .from('documentos')
         .delete()
         .eq(
           'id',
           Number(id)
         );
 
-    if (error) {
-      console.error(
-        'Error eliminando reglamento:',
-        error
+      if (error) {
+        console.error(
+          'Error eliminando documento:',
+          error
+        );
+
+        alert(
+          'No fue posible eliminar el documento.'
+        );
+
+        return;
+      }
+
+      await loadDocumentos();
+    };
+
+
+  // =========================================================
+  // REGLAMENTOS
+  // =========================================================
+
+  const handleOpenAddReglamento =
+    () => {
+      setReglamentoEditando(
+        null
       );
 
-      alert(
-        'No fue posible eliminar el reglamento.'
+      setIsEditReglamentoOpen(
+        true
+      );
+    };
+
+
+  const handleOpenEditReglamento =
+    (
+      reglamento:
+        Reglamento
+    ) => {
+      setReglamentoEditando(
+        reglamento
       );
 
-      return;
-    }
+      setIsEditReglamentoOpen(
+        true
+      );
+    };
 
-    await loadReglamentos();
-  };
+
+  const handleSaveReglamento =
+    async (
+      reglamento:
+        Reglamento
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede modificar reglamentos.'
+        );
+
+        return;
+      }
+
+      const isNew =
+        typeof reglamento.id ===
+          'string' &&
+        reglamento.id.startsWith(
+          'temp-'
+        );
+
+      let reglamentoId:
+        number;
+
+      if (isNew) {
+        const {
+          data,
+          error,
+        } =
+          await supabase
+            .from(
+              'reglamentos'
+            )
+            .insert({
+              title:
+                reglamento.title,
+
+              category:
+                reglamento.category,
+
+              description:
+                reglamento.description,
+
+              last_revision:
+                reglamento.lastRevision ||
+                null,
+
+              articles_count:
+                reglamento.articlesCount ||
+                0,
+
+              drive_link:
+                reglamento.driveLink,
+
+              active:
+                true,
+            })
+            .select(
+              'id'
+            )
+            .single();
+
+        if (
+          error ||
+          !data
+        ) {
+          console.error(
+            'Error creando reglamento:',
+            error
+          );
+
+          alert(
+            'No fue posible guardar el reglamento.'
+          );
+
+          return;
+        }
+
+        reglamentoId =
+          data.id;
+      } else {
+        reglamentoId =
+          Number(
+            reglamento.id
+          );
+
+        const {
+          error,
+        } =
+          await supabase
+            .from(
+              'reglamentos'
+            )
+            .update({
+              title:
+                reglamento.title,
+
+              category:
+                reglamento.category,
+
+              description:
+                reglamento.description,
+
+              last_revision:
+                reglamento.lastRevision ||
+                null,
+
+              articles_count:
+                reglamento.articlesCount ||
+                0,
+
+              drive_link:
+                reglamento.driveLink,
+
+              active:
+                true,
+            })
+            .eq(
+              'id',
+              reglamentoId
+            );
+
+        if (error) {
+          console.error(
+            'Error actualizando reglamento:',
+            error
+          );
+
+          alert(
+            'No fue posible actualizar el reglamento.'
+          );
+
+          return;
+        }
+      }
+
+      const {
+        error:
+          deleteSectionsError,
+      } =
+        await supabase
+          .from(
+            'reglamento_sections'
+          )
+          .delete()
+          .eq(
+            'reglamento_id',
+            reglamentoId
+          );
+
+      if (
+        deleteSectionsError
+      ) {
+        console.error(
+          'Error eliminando capítulos anteriores:',
+          deleteSectionsError
+        );
+
+        alert(
+          'El reglamento se guardó, pero hubo un problema actualizando los capítulos.'
+        );
+
+        return;
+      }
+
+      if (
+        reglamento
+          .sections
+          .length > 0
+      ) {
+        const sectionsToInsert =
+          reglamento.sections.map(
+            (
+              section,
+              index
+            ) => ({
+              reglamento_id:
+                reglamentoId,
+
+              title:
+                section.title,
+
+              content:
+                section.content,
+
+              section_url:
+                section.sectionUrl ||
+                '',
+
+              sort_order:
+                index + 1,
+
+              active:
+                true,
+            })
+          );
+
+        const {
+          error:
+            sectionsInsertError,
+        } =
+          await supabase
+            .from(
+              'reglamento_sections'
+            )
+            .insert(
+              sectionsToInsert
+            );
+
+        if (
+          sectionsInsertError
+        ) {
+          console.error(
+            'Error guardando capítulos:',
+            sectionsInsertError
+          );
+
+          alert(
+            'El reglamento se guardó, pero hubo un problema guardando los capítulos.'
+          );
+
+          return;
+        }
+      }
+
+      setIsEditReglamentoOpen(
+        false
+      );
+
+      setReglamentoEditando(
+        null
+      );
+
+      await loadReglamentos();
+    };
+
+
+  const handleDeleteReglamento =
+    async (
+      id:
+        | number
+        | string
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede eliminar reglamentos.'
+        );
+
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          '¿Seguro que deseas eliminar esta política, reglamento o manual? También se eliminarán sus capítulos.'
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            'reglamentos'
+          )
+          .delete()
+          .eq(
+            'id',
+            Number(id)
+          );
+
+      if (error) {
+        console.error(
+          'Error eliminando reglamento:',
+          error
+        );
+
+        alert(
+          'No fue posible eliminar el reglamento.'
+        );
+
+        return;
+      }
+
+      await loadReglamentos();
+    };
+
 
   // =========================================================
   // COMUNICADOS
   // =========================================================
 
-  const handleAddComunicado = (
-    newCom: Comunicado
-  ) => {
-    setComunicados(
-      (prev) => [
-        newCom,
-        ...prev,
-      ]
-    );
-  };
+  const handleAddComunicado =
+    (
+      newCom:
+        Comunicado
+    ) => {
+      setComunicados(
+        (prev) => [
+          newCom,
+          ...prev,
+        ]
+      );
+    };
 
-  const handleDeleteComunicado = (
-    id: string
-  ) => {
-    setComunicados(
-      (prev) =>
-        prev.filter(
-          (comunicado) =>
-            comunicado.id !== id
-        )
-    );
-  };
+
+  const handleDeleteComunicado =
+    (
+      id:
+        string
+    ) => {
+      setComunicados(
+        (prev) =>
+          prev.filter(
+            (
+              comunicado
+            ) =>
+              comunicado.id !==
+              id
+          )
+      );
+    };
+
 
   // =========================================================
   // EVENTOS
   // =========================================================
 
-  const handleAddEvent = (
-    newEvt: EventoAgenda
-  ) => {
-    setEventos(
-      (prev) => [
-        newEvt,
-        ...prev,
-      ]
-    );
-  };
+  const handleAddEvent =
+    (
+      newEvt:
+        EventoAgenda
+    ) => {
+      setEventos(
+        (prev) => [
+          newEvt,
+          ...prev,
+        ]
+      );
+    };
 
-  const handleDeleteEvent = (
-    id: string
-  ) => {
-    setEventos(
-      (prev) =>
-        prev.filter(
-          (evento) =>
-            evento.id !== id
-        )
-    );
-  };
+
+  const handleDeleteEvent =
+    (
+      id:
+        string
+    ) => {
+      setEventos(
+        (prev) =>
+          prev.filter(
+            (
+              evento
+            ) =>
+              evento.id !==
+              id
+          )
+      );
+    };
+
 
   // =========================================================
   // CARGANDO
   // =========================================================
 
-  if (authLoading) {
+  if (
+    authLoading
+  ) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+
         <div className="text-center">
+
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#234156] text-[#f3a828] flex items-center justify-center font-black text-xl mb-3">
             CdR
           </div>
@@ -1063,18 +1800,26 @@ export default function App() {
           <p className="text-sm font-bold text-[#234156]">
             Verificando acceso...
           </p>
+
         </div>
+
       </div>
     );
   }
+
 
   // =========================================================
   // LOGIN
   // =========================================================
 
-  if (!employeeAuthorized) {
-    return <EmployeeLogin />;
+  if (
+    !employeeAuthorized
+  ) {
+    return (
+      <EmployeeLogin />
+    );
   }
+
 
   // =========================================================
   // INTRANET
@@ -1084,19 +1829,31 @@ export default function App() {
     <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
 
       <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        unreadCount={comunicados.length}
-        isAdmin={isAdmin}
+        activeTab={
+          activeTab
+        }
+        setActiveTab={
+          setActiveTab
+        }
+        unreadCount={
+          comunicados.length
+        }
+        isAdmin={
+          isAdmin
+        }
       />
+
 
       {/* USUARIO CONECTADO */}
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
 
         <span>
           Sesión:{' '}
+
           <strong>
-            {currentUserEmail}
+            {
+              currentUserEmail
+            }
           </strong>
         </span>
 
@@ -1119,24 +1876,42 @@ export default function App() {
 
       </div>
 
+
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
 
         {/* INICIO */}
-        {activeTab === 'inicio' && (
+        {activeTab ===
+          'inicio' && (
           <DashboardView
-            formatos={formatos}
-            comunicados={comunicados}
-            eventos={eventos}
-            isAdmin={isAdmin}
-            onNavigate={setActiveTab}
+            formatos={
+              formatos
+            }
+            comunicados={
+              comunicados
+            }
+            eventos={
+              eventos
+            }
+            isAdmin={
+              isAdmin
+            }
+            onNavigate={
+              setActiveTab
+            }
             onOpenAddDocumentModal={() =>
-              setIsAddDocOpen(true)
+              setIsAddDocOpen(
+                true
+              )
             }
             onOpenAddComunicadoModal={() =>
-              setIsAddComunicadoOpen(true)
+              setIsAddComunicadoOpen(
+                true
+              )
             }
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(true)
+              setIsAddEventOpen(
+                true
+              )
             }
             onOpenComunicadoDetail={
               setSelectedComunicado
@@ -1144,22 +1919,64 @@ export default function App() {
           />
         )}
 
+
         {/* PANEL ADMINISTRATIVO */}
-        {activeTab === 'admin' &&
+        {activeTab ===
+          'admin' &&
           isAdmin && (
             <AdminPanelView
-              formatos={formatos}
-              onAddDocument={() =>
-                setIsAddDocOpen(true)
+              formatos={
+                formatos
               }
+
+              authorizedUsers={
+                authorizedUsers
+              }
+
+              authorizedUsersLoading={
+                authorizedUsersLoading
+              }
+
+              currentUserEmail={
+                currentUserEmail
+              }
+
+              onAddDocument={() =>
+                setIsAddDocOpen(
+                  true
+                )
+              }
+
               onEditDocument={
                 setDocumentoEditando
               }
+
               onDeleteDocument={
                 handleDeleteDocument
               }
+
+              onAddAuthorizedUser={
+                handleAddAuthorizedUser
+              }
+
+              onUpdateAuthorizedUser={
+                handleUpdateAuthorizedUser
+              }
+
+              onToggleAuthorizedUser={
+                handleToggleAuthorizedUser
+              }
+
+              onDeleteAuthorizedUser={
+                handleDeleteAuthorizedUser
+              }
+
+              onReloadAuthorizedUsers={
+                loadAuthorizedUsers
+              }
             />
           )}
+
 
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
         {activeTab ===
@@ -1171,10 +1988,16 @@ export default function App() {
               />
             ) : (
               <DocumentacionInstitucionalView
-                formatos={formatos}
-                isAdmin={isAdmin}
+                formatos={
+                  formatos
+                }
+                isAdmin={
+                  isAdmin
+                }
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(true)
+                  setIsAddDocOpen(
+                    true
+                  )
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -1186,6 +2009,7 @@ export default function App() {
             )}
           </>
         )}
+
 
         {/* FORMATOS */}
         {activeTab ===
@@ -1197,10 +2021,16 @@ export default function App() {
               />
             ) : (
               <DocumentosView
-                formatos={formatos}
-                isAdmin={isAdmin}
+                formatos={
+                  formatos
+                }
+                isAdmin={
+                  isAdmin
+                }
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(true)
+                  setIsAddDocOpen(
+                    true
+                  )
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -1213,14 +2043,21 @@ export default function App() {
           </>
         )}
 
+
         {/* COMUNICADOS */}
         {activeTab ===
           'comunicados' && (
           <ComunicadosView
-            comunicados={comunicados}
-            isAdmin={isAdmin}
+            comunicados={
+              comunicados
+            }
+            isAdmin={
+              isAdmin
+            }
             onOpenAddModal={() =>
-              setIsAddComunicadoOpen(true)
+              setIsAddComunicadoOpen(
+                true
+              )
             }
             onSelectComunicado={
               setSelectedComunicado
@@ -1230,6 +2067,7 @@ export default function App() {
             }
           />
         )}
+
 
         {/* REGLAMENTOS */}
         {activeTab ===
@@ -1241,9 +2079,15 @@ export default function App() {
               />
             ) : (
               <ReglamentosView
-                reglamentos={reglamentos}
-                isAdmin={isAdmin}
-                onOpenDriveLink={(url) =>
+                reglamentos={
+                  reglamentos
+                }
+                isAdmin={
+                  isAdmin
+                }
+                onOpenDriveLink={(
+                  url
+                ) =>
                   window.open(
                     url,
                     '_blank',
@@ -1264,15 +2108,24 @@ export default function App() {
           </>
         )}
 
+
         {/* AGENDA */}
         {activeTab ===
           'agenda' && (
           <AgendaView
-            eventos={eventos}
-            googleConfig={googleConfig}
-            isAdmin={isAdmin}
+            eventos={
+              eventos
+            }
+            googleConfig={
+              googleConfig
+            }
+            isAdmin={
+              isAdmin
+            }
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(true)
+              setIsAddEventOpen(
+                true
+              )
             }
             onUpdateGoogleConfig={
               setGoogleConfig
@@ -1285,45 +2138,74 @@ export default function App() {
 
       </main>
 
+
       {/* FOOTER */}
       <Footer
-        isAdmin={isAdmin}
-        setIsAdmin={setIsAdmin}
+        isAdmin={
+          isAdmin
+        }
+        setIsAdmin={
+          setIsAdmin
+        }
         onOpenAdminModal={() =>
-          setIsAdminLoginOpen(true)
+          setIsAdminLoginOpen(
+            true
+          )
         }
         onOpenAdminPanel={() =>
-          setActiveTab('admin')
+          setActiveTab(
+            'admin'
+          )
         }
       />
 
+
       {/* LOGIN ADMIN */}
       <AdminLoginModal
-        isOpen={isAdminLoginOpen}
+        isOpen={
+          isAdminLoginOpen
+        }
         onClose={() =>
-          setIsAdminLoginOpen(false)
+          setIsAdminLoginOpen(
+            false
+          )
         }
         onSuccess={() => {
           if (
             currentUserRole ===
             'admin'
           ) {
-            setIsAdmin(true);
-            setActiveTab('admin');
+            setIsAdmin(
+              true
+            );
+
+            setActiveTab(
+              'admin'
+            );
           }
 
-          setIsAdminLoginOpen(false);
+          setIsAdminLoginOpen(
+            false
+          );
         }}
       />
 
+
       {/* AGREGAR DOCUMENTO */}
       <AddDocumentModal
-        isOpen={isAddDocOpen}
-        onClose={() =>
-          setIsAddDocOpen(false)
+        isOpen={
+          isAddDocOpen
         }
-        onAdd={handleAddDocument}
+        onClose={() =>
+          setIsAddDocOpen(
+            false
+          )
+        }
+        onAdd={
+          handleAddDocument
+        }
       />
+
 
       {/* EDITAR DOCUMENTO */}
       <EditDocumentModal
@@ -1334,12 +2216,15 @@ export default function App() {
           documentoEditando
         }
         onClose={() =>
-          setDocumentoEditando(null)
+          setDocumentoEditando(
+            null
+          )
         }
         onSave={
           handleEditDocument
         }
       />
+
 
       {/* EDITAR REGLAMENTO */}
       <EditReglamentoModal
@@ -1350,13 +2235,19 @@ export default function App() {
           reglamentoEditando
         }
         onClose={() => {
-          setIsEditReglamentoOpen(false);
-          setReglamentoEditando(null);
+          setIsEditReglamentoOpen(
+            false
+          );
+
+          setReglamentoEditando(
+            null
+          );
         }}
         onSave={
           handleSaveReglamento
         }
       />
+
 
       {/* AGREGAR COMUNICADO */}
       <AddComunicadoModal
@@ -1364,12 +2255,15 @@ export default function App() {
           isAddComunicadoOpen
         }
         onClose={() =>
-          setIsAddComunicadoOpen(false)
+          setIsAddComunicadoOpen(
+            false
+          )
         }
         onAdd={
           handleAddComunicado
         }
       />
+
 
       {/* AGREGAR EVENTO */}
       <AddEventModal
@@ -1377,12 +2271,15 @@ export default function App() {
           isAddEventOpen
         }
         onClose={() =>
-          setIsAddEventOpen(false)
+          setIsAddEventOpen(
+            false
+          )
         }
         onAdd={
           handleAddEvent
         }
       />
+
 
       {/* DETALLE COMUNICADO */}
       <ComunicadoDetailModal
@@ -1390,13 +2287,16 @@ export default function App() {
           selectedComunicado
         }
         onClose={() =>
-          setSelectedComunicado(null)
+          setSelectedComunicado(
+            null
+          )
         }
       />
 
     </div>
   );
 }
+
 
 // =========================================================
 // CAJA DE CARGA

@@ -32,6 +32,10 @@ export interface FormatoDocumento {
 }
 
 
+// =========================================================
+// COMUNICADOS
+// =========================================================
+
 export type ComunicadoCategory =
   | 'Institucional'
   | 'Bienestar'
@@ -60,6 +64,10 @@ export interface Comunicado {
 }
 
 
+// =========================================================
+// REGLAMENTOS
+// =========================================================
+
 export interface ReglamentoSection {
   id?: number;
   title: string;
@@ -82,6 +90,10 @@ export interface Reglamento {
 }
 
 
+// =========================================================
+// AGENDA
+// =========================================================
+
 export type EventType =
   | 'Taller'
   | 'Capacitación'
@@ -103,6 +115,29 @@ export interface EventoAgenda {
 }
 
 
+// =========================================================
+// USUARIOS Y ACCESOS
+// =========================================================
+
+export type AuthorizedUserRole =
+  | 'admin'
+  | 'employee';
+
+
+export interface AuthorizedUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AuthorizedUserRole;
+  active: boolean;
+  createdAt?: string;
+}
+
+
+// =========================================================
+// GOOGLE DRIVE
+// =========================================================
+
 export interface DriveFolder {
   id: string;
   name: string;
@@ -114,6 +149,10 @@ export interface DriveFolder {
   iconTextColor: string;
 }
 
+
+// =========================================================
+// INTEGRACIONES
+// =========================================================
 
 export interface GoogleIntegrationsConfig {
   driveFolderUrl: string;

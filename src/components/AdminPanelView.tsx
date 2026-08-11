@@ -12,114 +12,442 @@ import {
   Plus,
   Pencil,
   Trash2,
+  UserCheck,
+  UserX,
+  RefreshCw,
+  X,
+  Save,
 } from 'lucide-react';
-import { FormatoDocumento } from '../types';
+
+import {
+  FormatoDocumento,
+  AuthorizedUser,
+  AuthorizedUserRole,
+} from '../types';
+
 
 interface AdminPanelViewProps {
   formatos: FormatoDocumento[];
+
+  authorizedUsers: AuthorizedUser[];
+  authorizedUsersLoading: boolean;
+  currentUserEmail: string;
+
   onAddDocument: () => void;
-  onEditDocument: (documento: FormatoDocumento) => void;
-  onDeleteDocument: (id: number | string) => void;
+
+  onEditDocument: (
+    documento: FormatoDocumento
+  ) => void;
+
+  onDeleteDocument: (
+    id: number | string
+  ) => void;
+
+  onAddAuthorizedUser: (
+    user: {
+      name: string;
+      email: string;
+      role: AuthorizedUserRole;
+    }
+  ) => Promise<boolean>;
+
+  onUpdateAuthorizedUser: (
+    user: AuthorizedUser
+  ) => Promise<boolean>;
+
+  onToggleAuthorizedUser: (
+    user: AuthorizedUser
+  ) => Promise<void>;
+
+  onDeleteAuthorizedUser: (
+    user: AuthorizedUser
+  ) => Promise<void>;
+
+  onReloadAuthorizedUsers: () => Promise<void>;
 }
 
-export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
+
+export const AdminPanelView: React.FC<
+  AdminPanelViewProps
+> = ({
   formatos,
+
+  authorizedUsers,
+  authorizedUsersLoading,
+  currentUserEmail,
+
   onAddDocument,
   onEditDocument,
   onDeleteDocument,
+
+  onAddAuthorizedUser,
+  onUpdateAuthorizedUser,
+  onToggleAuthorizedUser,
+  onDeleteAuthorizedUser,
+  onReloadAuthorizedUsers,
 }) => {
-  const [activeSection, setActiveSection] =
-    useState<string | null>(null);
+
+  // =========================================================
+  // SECCIÓN ACTIVA
+  // =========================================================
+
+  const [
+    activeSection,
+    setActiveSection,
+  ] = useState<string | null>(
+    null
+  );
+
+
+  // =========================================================
+  // MODAL USUARIO
+  // =========================================================
+
+  const [
+    isUserModalOpen,
+    setIsUserModalOpen,
+  ] = useState(false);
+
+  const [
+    editingUser,
+    setEditingUser,
+  ] =
+    useState<AuthorizedUser | null>(
+      null
+    );
+
+  const [
+    userName,
+    setUserName,
+  ] = useState('');
+
+  const [
+    userEmail,
+    setUserEmail,
+  ] = useState('');
+
+  const [
+    userRole,
+    setUserRole,
+  ] =
+    useState<AuthorizedUserRole>(
+      'employee'
+    );
+
+  const [
+    userActive,
+    setUserActive,
+  ] = useState(true);
+
+  const [
+    savingUser,
+    setSavingUser,
+  ] = useState(false);
+
+
+  // =========================================================
+  // MÓDULOS
+  // =========================================================
 
   const modules = [
     {
       id: 'institucional',
-      title: 'Documentación Institucional',
+      title:
+        'Documentación Institucional',
       description:
         'Administra certificados, documentos legales, Cámara de Comercio, RUT y documentación corporativa.',
       icon: Building2,
     },
+
     {
       id: 'documentos',
-      title: 'Formatos y Plantillas',
+      title:
+        'Formatos y Plantillas',
       description:
         'Administra formatos, plantillas, viáticos, solicitudes, formularios y documentos de trabajo.',
       icon: FileText,
     },
+
     {
       id: 'comunicados',
-      title: 'Comunicados',
+      title:
+        'Comunicados',
       description:
         'Publica, revisa y elimina comunicados, anuncios, circulares y novedades para el equipo.',
       icon: Bell,
     },
+
     {
       id: 'reglamentos',
-      title: 'Reglamentos y Políticas',
+      title:
+        'Reglamentos y Políticas',
       description:
         'Administra políticas, manuales, reglamentos, capítulos, resúmenes y enlaces oficiales.',
       icon: BookOpen,
     },
+
     {
       id: 'agenda',
-      title: 'Agenda y Eventos',
+      title:
+        'Agenda y Eventos',
       description:
         'Administra talleres, capacitaciones, reuniones, fechas límite y eventos internos.',
       icon: Calendar,
     },
+
     {
       id: 'usuarios',
-      title: 'Usuarios y Accesos',
+      title:
+        'Usuarios y Accesos',
       description:
         'Administra usuarios autorizados, roles, estado de acceso y permisos administrativos.',
       icon: Users,
     },
   ];
 
-  const handleOpenModule = (id: string) => {
+
+  // =========================================================
+  // DOCUMENTOS INSTITUCIONALES
+  // =========================================================
+
+  const institutionalDocuments =
+    formatos.filter(
+      (fmt) =>
+        fmt.category ===
+        'Documentación Institucional'
+    );
+
+
+  // =========================================================
+  // ABRIR MÓDULO
+  // =========================================================
+
+  const handleOpenModule = (
+    id: string
+  ) => {
     setActiveSection(id);
   };
 
-  const institutionalDocuments = formatos.filter(
-    (fmt) =>
-      fmt.category === 'Documentación Institucional'
-  );
 
-  if (activeSection === 'institucional') {
+  // =========================================================
+  // ABRIR MODAL NUEVO USUARIO
+  // =========================================================
+
+  const handleOpenNewUser =
+    () => {
+      setEditingUser(null);
+
+      setUserName('');
+
+      setUserEmail('');
+
+      setUserRole(
+        'employee'
+      );
+
+      setUserActive(true);
+
+      setIsUserModalOpen(
+        true
+      );
+    };
+
+
+  // =========================================================
+  // ABRIR MODAL EDITAR USUARIO
+  // =========================================================
+
+  const handleOpenEditUser =
+    (
+      user: AuthorizedUser
+    ) => {
+      setEditingUser(user);
+
+      setUserName(
+        user.name
+      );
+
+      setUserEmail(
+        user.email
+      );
+
+      setUserRole(
+        user.role
+      );
+
+      setUserActive(
+        user.active
+      );
+
+      setIsUserModalOpen(
+        true
+      );
+    };
+
+
+  // =========================================================
+  // CERRAR MODAL USUARIO
+  // =========================================================
+
+  const handleCloseUserModal =
+    () => {
+      if (savingUser) {
+        return;
+      }
+
+      setIsUserModalOpen(
+        false
+      );
+
+      setEditingUser(null);
+
+      setUserName('');
+
+      setUserEmail('');
+
+      setUserRole(
+        'employee'
+      );
+
+      setUserActive(true);
+    };
+
+
+  // =========================================================
+  // GUARDAR USUARIO
+  // =========================================================
+
+  const handleSaveUser =
+    async (
+      e: React.FormEvent
+    ) => {
+      e.preventDefault();
+
+      const cleanName =
+        userName.trim();
+
+      const cleanEmail =
+        userEmail
+          .trim()
+          .toLowerCase();
+
+      if (
+        !cleanName ||
+        !cleanEmail
+      ) {
+        alert(
+          'Debes ingresar el nombre y el correo electrónico.'
+        );
+
+        return;
+      }
+
+      setSavingUser(true);
+
+      try {
+        let success = false;
+
+        if (editingUser) {
+          success =
+            await onUpdateAuthorizedUser(
+              {
+                ...editingUser,
+
+                name:
+                  cleanName,
+
+                email:
+                  cleanEmail,
+
+                role:
+                  userRole,
+
+                active:
+                  userActive,
+              }
+            );
+        } else {
+          success =
+            await onAddAuthorizedUser(
+              {
+                name:
+                  cleanName,
+
+                email:
+                  cleanEmail,
+
+                role:
+                  userRole,
+              }
+            );
+        }
+
+        if (success) {
+          handleCloseUserModal();
+        }
+
+      } finally {
+        setSavingUser(false);
+      }
+    };
+
+
+  // =========================================================
+  // DOCUMENTACIÓN INSTITUCIONAL
+  // =========================================================
+
+  if (
+    activeSection ===
+    'institucional'
+  ) {
     return (
       <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
           <button
             type="button"
-            onClick={() => setActiveSection(null)}
+            onClick={() =>
+              setActiveSection(
+                null
+              )
+            }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
+
             Volver a módulos
           </button>
 
+
           <button
             type="button"
-            onClick={onAddDocument}
-            className="flex items-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
+            onClick={
+              onAddDocument
+            }
+            className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
+
             Agregar Documento
           </button>
 
         </div>
+
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
           <div className="flex items-start gap-4">
 
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
+
               <Building2 className="w-6 h-6" />
+
             </div>
 
+
             <div>
+
               <h1 className="text-xl md:text-2xl font-extrabold">
                 Administración de Documentación Institucional
               </h1>
@@ -127,15 +455,19 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               <p className="text-xs md:text-sm text-slate-200 mt-1">
                 Crea, edita o elimina documentos institucionales visibles para el equipo.
               </p>
+
             </div>
 
           </div>
 
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
 
-          {institutionalDocuments.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+          {institutionalDocuments.length ===
+          0 ? (
+
             <div className="p-10 text-center">
 
               <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -149,69 +481,109 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               </p>
 
             </div>
+
           ) : (
+
             <div className="divide-y divide-slate-100">
 
-              {institutionalDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                >
+              {institutionalDocuments.map(
+                (doc) => (
 
-                  <div className="flex-1">
+                  <div
+                    key={
+                      doc.id
+                    }
+                    className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
 
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex-1">
 
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-                        {doc.version}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
 
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {doc.lastUpdated}
-                      </span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
+
+                          {
+                            doc.version
+                          }
+
+                        </span>
+
+
+                        <span className="text-[10px] font-bold text-slate-400">
+
+                          {
+                            doc.lastUpdated
+                          }
+
+                        </span>
+
+                      </div>
+
+
+                      <h3 className="text-sm font-extrabold text-[#234156] mt-2">
+
+                        {
+                          doc.title
+                        }
+
+                      </h3>
+
+
+                      <p className="text-xs text-slate-500 mt-1">
+
+                        {
+                          doc.description
+                        }
+
+                      </p>
 
                     </div>
 
-                    <h3 className="text-sm font-extrabold text-[#234156] mt-2">
-                      {doc.title}
-                    </h3>
 
-                    <p className="text-xs text-slate-500 mt-1">
-                      {doc.description}
-                    </p>
+                    <div className="flex items-center gap-2 shrink-0">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onEditDocument(
+                            doc
+                          )
+                        }
+                        className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
+                      >
+
+                        <Pencil className="w-3.5 h-3.5" />
+
+                        Editar
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onDeleteDocument(
+                            doc.id
+                          )
+                        }
+                        className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
+                      >
+
+                        <Trash2 className="w-3.5 h-3.5" />
+
+                        Eliminar
+
+                      </button>
+
+                    </div>
 
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onEditDocument(doc)
-                      }
-                      className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      Editar
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onDeleteDocument(doc.id)
-                      }
-                      className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Eliminar
-                    </button>
-
-                  </div>
-
-                </div>
-              ))}
+                )
+              )}
 
             </div>
+
           )}
 
         </div>
@@ -220,32 +592,879 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     );
   }
 
+
+  // =========================================================
+  // USUARIOS Y ACCESOS
+  // =========================================================
+
+  if (
+    activeSection ===
+    'usuarios'
+  ) {
+    return (
+      <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
+
+        {/* BARRA SUPERIOR */}
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSection(
+                null
+              )
+            }
+            className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+
+            Volver a módulos
+          </button>
+
+
+          <div className="flex items-center gap-2">
+
+            <button
+              type="button"
+              onClick={
+                onReloadAuthorizedUsers
+              }
+              disabled={
+                authorizedUsersLoading
+              }
+              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-[#234156] px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 disabled:opacity-50"
+              title="Actualizar lista"
+            >
+
+              <RefreshCw
+                className={`w-4 h-4 ${
+                  authorizedUsersLoading
+                    ? 'animate-spin'
+                    : ''
+                }`}
+              />
+
+              Actualizar
+
+            </button>
+
+
+            <button
+              type="button"
+              onClick={
+                handleOpenNewUser
+              }
+              className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
+            >
+
+              <Plus className="w-4 h-4" />
+
+              Agregar Usuario
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        {/* ENCABEZADO */}
+
+        <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
+          <div className="flex items-start gap-4">
+
+            <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
+
+              <Users className="w-6 h-6" />
+
+            </div>
+
+
+            <div>
+
+              <h1 className="text-xl md:text-2xl font-extrabold">
+                Usuarios y Accesos
+              </h1>
+
+              <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl">
+                Administra las personas autorizadas para ingresar a la intranet, sus roles y el estado de acceso.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* AVISO */}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+
+          <div className="flex items-start gap-3">
+
+            <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+
+            <div>
+
+              <p className="text-xs font-extrabold text-[#234156]">
+                Autorización de acceso
+              </p>
+
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Esta sección controla quién está autorizado para usar la intranet y quién tiene permisos administrativos. Las contraseñas se administran de forma independiente mediante Supabase Authentication.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* CONTADOR */}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Usuarios
+            </p>
+
+            <p className="text-2xl font-black text-[#234156] mt-1">
+              {
+                authorizedUsers.length
+              }
+            </p>
+
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Activos
+            </p>
+
+            <p className="text-2xl font-black text-emerald-700 mt-1">
+
+              {
+                authorizedUsers.filter(
+                  (user) =>
+                    user.active
+                ).length
+              }
+
+            </p>
+
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Administradores
+            </p>
+
+            <p className="text-2xl font-black text-amber-700 mt-1">
+
+              {
+                authorizedUsers.filter(
+                  (user) =>
+                    user.role ===
+                    'admin' &&
+                    user.active
+                ).length
+              }
+
+            </p>
+
+          </div>
+
+        </div>
+
+
+        {/* LISTA */}
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+          <div className="px-5 py-4 border-b border-slate-100">
+
+            <h2 className="text-sm font-extrabold text-[#234156]">
+              Usuarios autorizados
+            </h2>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Correos con autorización para acceder a la intranet.
+            </p>
+
+          </div>
+
+
+          {authorizedUsersLoading ? (
+
+            <div className="p-10 text-center">
+
+              <RefreshCw className="w-7 h-7 text-[#234156] animate-spin mx-auto mb-3" />
+
+              <p className="text-xs font-bold text-slate-500">
+                Cargando usuarios...
+              </p>
+
+            </div>
+
+          ) : authorizedUsers.length ===
+            0 ? (
+
+            <div className="p-10 text-center">
+
+              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+              <p className="text-sm font-bold text-slate-700">
+                No hay usuarios autorizados
+              </p>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Agrega el primer usuario autorizado.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="divide-y divide-slate-100">
+
+              {authorizedUsers.map(
+                (user) => {
+
+                  const isCurrentUser =
+                    user.email
+                      .toLowerCase() ===
+                    currentUserEmail
+                      .toLowerCase();
+
+                  return (
+
+                    <div
+                      key={
+                        user.id
+                      }
+                      className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    >
+
+                      {/* INFORMACIÓN */}
+
+                      <div className="flex items-start gap-3 min-w-0">
+
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            user.active
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-400'
+                          }`}
+                        >
+
+                          {user.active ? (
+                            <UserCheck className="w-5 h-5" />
+                          ) : (
+                            <UserX className="w-5 h-5" />
+                          )}
+
+                        </div>
+
+
+                        <div className="min-w-0">
+
+                          <div className="flex items-center gap-2 flex-wrap">
+
+                            <h3 className="text-sm font-extrabold text-[#234156]">
+
+                              {
+                                user.name ||
+                                'Sin nombre'
+                              }
+
+                            </h3>
+
+
+                            {isCurrentUser && (
+
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                Tú
+                              </span>
+
+                            )}
+
+
+                            <span
+                              className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                user.role ===
+                                'admin'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+
+                              {user.role ===
+                              'admin'
+                                ? 'Administrador'
+                                : 'Empleado'}
+
+                            </span>
+
+
+                            <span
+                              className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                user.active
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-red-100 text-red-700'
+                              }`}
+                            >
+
+                              {user.active
+                                ? 'Activo'
+                                : 'Inactivo'}
+
+                            </span>
+
+                          </div>
+
+
+                          <p className="text-xs text-slate-500 mt-1 break-all">
+
+                            {
+                              user.email
+                            }
+
+                          </p>
+
+
+                          {user.createdAt && (
+
+                            <p className="text-[10px] text-slate-400 mt-1">
+
+                              Registrado:{' '}
+
+                              {new Date(
+                                user.createdAt
+                              ).toLocaleDateString(
+                                'es-CO'
+                              )}
+
+                            </p>
+
+                          )}
+
+                        </div>
+
+                      </div>
+
+
+                      {/* ACCIONES */}
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleOpenEditUser(
+                              user
+                            )
+                          }
+                          className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
+                        >
+
+                          <Pencil className="w-3.5 h-3.5" />
+
+                          Editar
+
+                        </button>
+
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onToggleAuthorizedUser(
+                              user
+                            )
+                          }
+                          disabled={
+                            isCurrentUser &&
+                            user.active
+                          }
+                          className={`flex items-center gap-1.5 border px-3 py-2 rounded-lg text-xs font-bold ${
+                            user.active
+                              ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                          } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          title={
+                            isCurrentUser &&
+                            user.active
+                              ? 'No puedes desactivar tu propio acceso'
+                              : user.active
+                              ? 'Desactivar acceso'
+                              : 'Activar acceso'
+                          }
+                        >
+
+                          {user.active ? (
+                            <UserX className="w-3.5 h-3.5" />
+                          ) : (
+                            <UserCheck className="w-3.5 h-3.5" />
+                          )}
+
+                          {user.active
+                            ? 'Desactivar'
+                            : 'Activar'}
+
+                        </button>
+
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onDeleteAuthorizedUser(
+                              user
+                            )
+                          }
+                          disabled={
+                            isCurrentUser
+                          }
+                          className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={
+                            isCurrentUser
+                              ? 'No puedes eliminar tu propio acceso'
+                              : 'Eliminar autorización'
+                          }
+                        >
+
+                          <Trash2 className="w-3.5 h-3.5" />
+
+                          Eliminar
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  );
+                }
+              )}
+
+            </div>
+
+          )}
+
+        </div>
+
+
+        {/* MODAL AGREGAR / EDITAR USUARIO */}
+
+        {isUserModalOpen && (
+
+          <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+
+              {/* CABECERA */}
+
+              <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-100">
+
+                <div className="flex items-center gap-3">
+
+                  <div className="w-10 h-10 rounded-xl bg-[#234156] text-[#f3a828] flex items-center justify-center">
+
+                    <Users className="w-5 h-5" />
+
+                  </div>
+
+
+                  <div>
+
+                    <h3 className="text-base font-extrabold text-[#234156]">
+
+                      {editingUser
+                        ? 'Editar usuario'
+                        : 'Agregar usuario'}
+
+                    </h3>
+
+                    <p className="text-xs text-slate-500">
+                      Usuarios y Accesos CdR
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  onClick={
+                    handleCloseUserModal
+                  }
+                  disabled={
+                    savingUser
+                  }
+                  className="text-slate-400 hover:text-slate-700 disabled:opacity-50"
+                >
+
+                  <X className="w-5 h-5" />
+
+                </button>
+
+              </div>
+
+
+              {/* FORMULARIO */}
+
+              <form
+                onSubmit={
+                  handleSaveUser
+                }
+                className="p-5 space-y-4"
+              >
+
+                <div>
+
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
+                    Nombre *
+                  </label>
+
+                  <input
+                    type="text"
+                    required
+                    value={
+                      userName
+                    }
+                    onChange={(e) =>
+                      setUserName(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Nombre del usuario"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
+                    Correo institucional *
+                  </label>
+
+                  <input
+                    type="email"
+                    required
+                    value={
+                      userEmail
+                    }
+                    onChange={(e) =>
+                      setUserEmail(
+                        e.target.value
+                      )
+                    }
+                    placeholder="usuario@consejoderedaccion.org"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
+                  />
+
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Se permiten correos de @consejoderedaccion.org y @colombiacheck.org.
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
+                    Rol *
+                  </label>
+
+                  <select
+                    value={
+                      userRole
+                    }
+                    onChange={(e) =>
+                      setUserRole(
+                        e.target
+                          .value as AuthorizedUserRole
+                      )
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
+                  >
+
+                    <option value="employee">
+                      Empleado
+                    </option>
+
+                    <option value="admin">
+                      Administrador
+                    </option>
+
+                  </select>
+
+                </div>
+
+
+                {editingUser && (
+
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+
+                    <label className="flex items-center justify-between gap-4 cursor-pointer">
+
+                      <div>
+
+                        <p className="text-xs font-extrabold text-[#234156]">
+                          Acceso activo
+                        </p>
+
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          Si se desactiva, este correo dejará de tener acceso autorizado.
+                        </p>
+
+                      </div>
+
+
+                      <input
+                        type="checkbox"
+                        checked={
+                          userActive
+                        }
+                        onChange={(e) =>
+                          setUserActive(
+                            e.target.checked
+                          )
+                        }
+                        disabled={
+                          editingUser.email
+                            .toLowerCase() ===
+                          currentUserEmail
+                            .toLowerCase()
+                        }
+                        className="w-4 h-4 accent-[#234156]"
+                      />
+
+                    </label>
+
+                  </div>
+
+                )}
+
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+
+                  <p className="text-[10px] text-amber-900 leading-relaxed">
+
+                    <strong>
+                      Importante:
+                    </strong>{' '}
+
+                    agregar un correo aquí autoriza su acceso a la intranet, pero no crea ni modifica su contraseña de Supabase Authentication.
+
+                  </p>
+
+                </div>
+
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleCloseUserModal
+                    }
+                    disabled={
+                      savingUser
+                    }
+                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+
+
+                  <button
+                    type="submit"
+                    disabled={
+                      savingUser
+                    }
+                    className="flex items-center gap-2 bg-[#234156] hover:bg-[#1a3142] text-white px-5 py-2.5 rounded-xl text-xs font-extrabold disabled:opacity-50"
+                  >
+
+                    {savingUser ? (
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#f3a828]" />
+                    ) : (
+                      <Save className="w-4 h-4 text-[#f3a828]" />
+                    )}
+
+                    {savingUser
+                      ? 'Guardando...'
+                      : editingUser
+                      ? 'Guardar cambios'
+                      : 'Agregar usuario'}
+
+                  </button>
+
+                </div>
+
+              </form>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+    );
+  }
+
+
+  // =========================================================
+  // MÓDULOS TODAVÍA PENDIENTES
+  // =========================================================
+
+  if (
+    activeSection ===
+      'documentos' ||
+    activeSection ===
+      'comunicados' ||
+    activeSection ===
+      'reglamentos' ||
+    activeSection ===
+      'agenda'
+  ) {
+
+    const selectedModule =
+      modules.find(
+        (module) =>
+          module.id ===
+          activeSection
+      );
+
+    const Icon =
+      selectedModule?.icon ||
+      ShieldCheck;
+
+    return (
+      <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
+
+        <button
+          type="button"
+          onClick={() =>
+            setActiveSection(
+              null
+            )
+          }
+          className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
+        >
+
+          <ArrowLeft className="w-4 h-4" />
+
+          Volver a módulos
+
+        </button>
+
+
+        <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
+          <div className="flex items-start gap-4">
+
+            <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
+
+              <Icon className="w-6 h-6" />
+
+            </div>
+
+
+            <div>
+
+              <h1 className="text-xl md:text-2xl font-extrabold">
+
+                {
+                  selectedModule?.title
+                }
+
+              </h1>
+
+              <p className="text-xs md:text-sm text-slate-200 mt-1">
+
+                {
+                  selectedModule?.description
+                }
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+
+          <Icon className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+          <h2 className="text-sm font-extrabold text-[#234156]">
+            Módulo preparado
+          </h2>
+
+          <p className="text-xs text-slate-500 mt-2 max-w-xl mx-auto">
+            Esta sección ya abre correctamente desde el Panel Administrativo. En el siguiente paso conectaremos sus herramientas para crear, editar y eliminar contenido.
+          </p>
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  // =========================================================
+  // PANEL PRINCIPAL
+  // =========================================================
+
   return (
     <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
+
+      {/* ENCABEZADO */}
 
       <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
         <div className="flex items-start gap-4">
 
           <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0 shadow-sm">
+
             <ShieldCheck className="w-6 h-6" />
+
           </div>
 
+
           <div>
+
             <h1 className="text-xl md:text-2xl font-extrabold">
               Panel Administrativo CdR
             </h1>
 
             <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl leading-relaxed">
-              Centro de gestión de contenidos de la intranet.
-              Desde aquí puedes administrar documentos,
-              formatos, comunicados, reglamentos, agenda y
-              accesos de usuarios.
+              Centro de gestión de contenidos de la intranet. Desde aquí puedes administrar documentos, formatos, comunicados, reglamentos, agenda y accesos de usuarios.
             </p>
+
           </div>
 
         </div>
+
       </div>
+
+
+      {/* AVISO */}
 
       <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4">
 
@@ -254,6 +1473,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
 
           <div>
+
             <p className="text-xs font-extrabold text-[#234156]">
               Área exclusiva para administradores
             </p>
@@ -261,11 +1481,15 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               Los cambios realizados desde estos módulos pueden modificar la información visible para todos los empleados autorizados en la intranet.
             </p>
+
           </div>
 
         </div>
 
       </div>
+
+
+      {/* MÓDULOS */}
 
       <div>
 
@@ -281,50 +1505,75 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 
         </div>
 
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-          {modules.map((module) => {
-            const Icon = module.icon;
+          {modules.map(
+            (module) => {
 
-            return (
-              <button
-                type="button"
-                key={module.id}
-                onClick={() =>
-                  handleOpenModule(module.id)
-                }
-                className="text-left bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:shadow-md hover:border-[#234156] transition-all group"
-              >
+              const Icon =
+                module.icon;
 
-                <div className="flex items-start justify-between gap-4">
+              return (
 
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-[#234156] group-hover:bg-[#234156] group-hover:text-[#f3a828] transition-all">
-                    <Icon className="w-5 h-5" />
+                <button
+                  type="button"
+                  key={
+                    module.id
+                  }
+                  onClick={() =>
+                    handleOpenModule(
+                      module.id
+                    )
+                  }
+                  className="text-left bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-[#234156] transition-all group"
+                >
+
+                  <div className="flex items-start justify-between gap-4">
+
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-[#234156] group-hover:bg-[#234156] group-hover:text-[#f3a828] transition-all">
+
+                      <Icon className="w-5 h-5" />
+
+                    </div>
+
+
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#234156] group-hover:translate-x-1 transition-all" />
+
                   </div>
 
-                  <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#234156] group-hover:translate-x-1 transition-all" />
 
-                </div>
+                  <h3 className="text-sm font-extrabold text-[#234156] mt-4">
 
-                <h3 className="text-sm font-extrabold text-[#234156] mt-4">
-                  {module.title}
-                </h3>
+                    {
+                      module.title
+                    }
 
-                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                  {module.description}
-                </p>
+                  </h3>
 
-                <div className="mt-4 pt-3 border-t border-slate-100">
 
-                  <span className="text-[11px] font-extrabold text-[#234156]">
-                    Administrar sección
-                  </span>
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
 
-                </div>
+                    {
+                      module.description
+                    }
 
-              </button>
-            );
-          })}
+                  </p>
+
+
+                  <div className="mt-4 pt-3 border-t border-slate-100">
+
+                    <span className="text-[11px] font-extrabold text-[#234156]">
+                      Administrar sección
+                    </span>
+
+                  </div>
+
+                </button>
+
+              );
+            }
+          )}
 
         </div>
 
