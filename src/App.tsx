@@ -7,6 +7,7 @@ import { DocumentosView } from './components/DocumentosView';
 import { ComunicadosView } from './components/ComunicadosView';
 import { ReglamentosView } from './components/ReglamentosView';
 import { AgendaView } from './components/AgendaView';
+import { AdminPanelView } from './components/AdminPanelView';
 import { Footer } from './components/Footer';
 
 import { EmployeeLogin } from './components/EmployeeLogin';
@@ -17,7 +18,6 @@ import { EditReglamentoModal } from './components/EditReglamentoModal';
 import { AddComunicadoModal } from './components/AddComunicadoModal';
 import { AddEventModal } from './components/AddEventModal';
 import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
-import { DriveViewerModal } from './components/DriveViewerModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
 
 import { supabase } from './lib/supabase';
@@ -25,7 +25,6 @@ import { supabase } from './lib/supabase';
 import {
   initialComunicados,
   initialEventos,
-  initialDriveFolders,
   initialGoogleConfig,
 } from './data/initialData';
 
@@ -35,7 +34,6 @@ import {
   Reglamento,
   ReglamentoSection,
   EventoAgenda,
-  DriveFolder,
   GoogleIntegrationsConfig,
   CategoryType,
   FileType,
@@ -66,35 +64,47 @@ export default function App() {
   const [documentosLoading, setDocumentosLoading] = useState(false);
 
   // =========================================================
-  // OTROS DATOS
+  // COMUNICADOS
   // =========================================================
 
   const [comunicados, setComunicados] = useState<Comunicado[]>(() => {
     const saved = localStorage.getItem('cdr_comunicados');
-    return saved ? JSON.parse(saved) : initialComunicados;
+
+    return saved
+      ? JSON.parse(saved)
+      : initialComunicados;
   });
+
+  // =========================================================
+  // REGLAMENTOS DESDE SUPABASE
+  // =========================================================
 
   const [reglamentos, setReglamentos] = useState<Reglamento[]>([]);
   const [reglamentosLoading, setReglamentosLoading] = useState(false);
 
+  // =========================================================
+  // AGENDA
+  // =========================================================
+
   const [eventos, setEventos] = useState<EventoAgenda[]>(() => {
     const saved = localStorage.getItem('cdr_eventos');
-    return saved ? JSON.parse(saved) : initialEventos;
-  });
 
-  const [driveFolders] = useState<DriveFolder[]>(() => {
-    const saved = localStorage.getItem('cdr_driveFolders');
-    return saved ? JSON.parse(saved) : initialDriveFolders;
+    return saved
+      ? JSON.parse(saved)
+      : initialEventos;
   });
 
   const [googleConfig, setGoogleConfig] =
     useState<GoogleIntegrationsConfig>(() => {
       const saved = localStorage.getItem('cdr_googleConfig');
-      return saved ? JSON.parse(saved) : initialGoogleConfig;
+
+      return saved
+        ? JSON.parse(saved)
+        : initialGoogleConfig;
     });
 
   // =========================================================
-  // GUARDAR DATOS LOCALES QUE AÚN NO ESTÁN EN SUPABASE
+  // GUARDAR DATOS LOCALES QUE TODAVÍA NO ESTÁN EN SUPABASE
   // =========================================================
 
   useEffect(() => {
@@ -132,7 +142,8 @@ export default function App() {
       return;
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
     const validDomain =
       normalizedEmail.endsWith('@consejoderedaccion.org') ||
@@ -170,7 +181,9 @@ export default function App() {
     }
 
     const role =
-      data.role === 'admin' ? 'admin' : 'employee';
+      data.role === 'admin'
+        ? 'admin'
+        : 'employee';
 
     setEmployeeAuthorized(true);
     setCurrentUserEmail(normalizedEmail);
@@ -186,21 +199,31 @@ export default function App() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      await verifyEmployee(session?.user?.email);
+      await verifyEmployee(
+        session?.user?.email
+      );
     };
 
     checkInitialSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      verifyEmployee(session?.user?.email);
-    });
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        verifyEmployee(
+          session?.user?.email
+        );
+      }
+    );
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // =========================================================
+  // CERRAR SESIÓN
+  // =========================================================
 
   const handleEmployeeLogout = async () => {
     await supabase.auth.signOut();
@@ -209,14 +232,15 @@ export default function App() {
     setCurrentUserEmail('');
     setCurrentUserRole('');
     setIsAdmin(false);
-    setReglamentos([]);
+
     setFormatos([]);
+    setReglamentos([]);
 
     setActiveTab('inicio');
   };
 
   // =========================================================
-  // CARGAR DOCUMENTOS DESDE SUPABASE
+  // CARGAR DOCUMENTOS
   // =========================================================
 
   const loadDocumentos = async () => {
@@ -226,7 +250,9 @@ export default function App() {
       .from('documentos')
       .select('*')
       .eq('active', true)
-      .order('id', { ascending: true });
+      .order('id', {
+        ascending: true,
+      });
 
     if (error) {
       console.error(
@@ -242,21 +268,43 @@ export default function App() {
     const mappedDocumentos: FormatoDocumento[] =
       (data || []).map((doc) => ({
         id: doc.id,
-        title: doc.title || '',
+
+        title:
+          doc.title || '',
+
         category:
-          (doc.category || 'Administración') as CategoryType,
-        description: doc.description || '',
-        driveUrl: doc.drive_url || '',
+          (doc.category ||
+            'Administración') as CategoryType,
+
+        description:
+          doc.description || '',
+
+        driveUrl:
+          doc.drive_url || '',
+
         downloadUrl:
-          doc.download_url || doc.drive_url || '',
+          doc.download_url ||
+          doc.drive_url ||
+          '',
+
         fileType:
-          (doc.file_type || 'word') as FileType,
-        version: doc.version || 'v1.0',
-        lastUpdated: doc.last_updated || '',
+          (doc.file_type ||
+            'word') as FileType,
+
+        version:
+          doc.version || 'v1.0',
+
+        lastUpdated:
+          doc.last_updated || '',
+
         iconBgColor:
-          doc.icon_bg_color || undefined,
+          doc.icon_bg_color ||
+          undefined,
+
         iconTextColor:
-          doc.icon_text_color || undefined,
+          doc.icon_text_color ||
+          undefined,
+
         downloadsCount:
           doc.downloads_count || 0,
       }));
@@ -266,7 +314,7 @@ export default function App() {
   };
 
   // =========================================================
-  // CARGAR REGLAMENTOS DESDE SUPABASE
+  // CARGAR REGLAMENTOS
   // =========================================================
 
   const loadReglamentos = async () => {
@@ -279,7 +327,9 @@ export default function App() {
       .from('reglamentos')
       .select('*')
       .eq('active', true)
-      .order('id', { ascending: true });
+      .order('id', {
+        ascending: true,
+      });
 
     if (reglamentosError) {
       console.error(
@@ -299,7 +349,9 @@ export default function App() {
       .from('reglamento_sections')
       .select('*')
       .eq('active', true)
-      .order('sort_order', { ascending: true });
+      .order('sort_order', {
+        ascending: true,
+      });
 
     if (sectionsError) {
       console.error(
@@ -317,24 +369,42 @@ export default function App() {
           (sectionsData || [])
             .filter(
               (section) =>
-                section.reglamento_id === reg.id
+                section.reglamento_id ===
+                reg.id
             )
             .map((section) => ({
               id: section.id,
-              title: section.title || '',
-              content: section.content || '',
-              sectionUrl: section.section_url || '',
-              sortOrder: section.sort_order || 0,
+              title:
+                section.title || '',
+              content:
+                section.content || '',
+              sectionUrl:
+                section.section_url || '',
+              sortOrder:
+                section.sort_order || 0,
             }));
 
         return {
           id: reg.id,
-          title: reg.title || '',
-          description: reg.description || '',
-          category: reg.category || '',
-          lastRevision: reg.last_revision || '',
-          articlesCount: reg.articles_count || 0,
-          driveLink: reg.drive_link || '',
+
+          title:
+            reg.title || '',
+
+          description:
+            reg.description || '',
+
+          category:
+            reg.category || '',
+
+          lastRevision:
+            reg.last_revision || '',
+
+          articlesCount:
+            reg.articles_count || 0,
+
+          driveLink:
+            reg.drive_link || '',
+
           sections,
         };
       });
@@ -358,36 +428,49 @@ export default function App() {
   // MODALES
   // =========================================================
 
-  const [isAddDocOpen, setIsAddDocOpen] = useState(false);
-
-  const [isAddComunicadoOpen, setIsAddComunicadoOpen] =
+  const [isAddDocOpen, setIsAddDocOpen] =
     useState(false);
 
-  const [isAddEventOpen, setIsAddEventOpen] =
-    useState(false);
+  const [
+    isAddComunicadoOpen,
+    setIsAddComunicadoOpen,
+  ] = useState(false);
 
-  const [isAdminLoginOpen, setIsAdminLoginOpen] =
-    useState(false);
+  const [
+    isAddEventOpen,
+    setIsAddEventOpen,
+  ] = useState(false);
 
-  const [documentoEditando, setDocumentoEditando] =
-    useState<FormatoDocumento | null>(null);
+  const [
+    isAdminLoginOpen,
+    setIsAdminLoginOpen,
+  ] = useState(false);
 
-  const [reglamentoEditando, setReglamentoEditando] =
-    useState<Reglamento | null>(null);
+  const [
+    documentoEditando,
+    setDocumentoEditando,
+  ] = useState<FormatoDocumento | null>(
+    null
+  );
+
+  const [
+    reglamentoEditando,
+    setReglamentoEditando,
+  ] = useState<Reglamento | null>(
+    null
+  );
 
   const [
     isEditReglamentoOpen,
     setIsEditReglamentoOpen,
   ] = useState(false);
 
-  const [selectedComunicado, setSelectedComunicado] =
-    useState<Comunicado | null>(null);
-
-  const [driveViewerFolder, setDriveViewerFolder] =
-    useState<{
-      url: string;
-      name: string;
-    } | null>(null);
+  const [
+    selectedComunicado,
+    setSelectedComunicado,
+  ] = useState<Comunicado | null>(
+    null
+  );
 
   // =========================================================
   // DOCUMENTOS - AGREGAR
@@ -406,22 +489,40 @@ export default function App() {
     const { error } = await supabase
       .from('documentos')
       .insert({
-        title: newDoc.title,
-        category: newDoc.category,
-        description: newDoc.description,
-        drive_url: newDoc.driveUrl,
+        title:
+          newDoc.title,
+
+        category:
+          newDoc.category,
+
+        description:
+          newDoc.description,
+
+        drive_url:
+          newDoc.driveUrl,
+
         download_url:
-          newDoc.downloadUrl || newDoc.driveUrl,
-        file_type: newDoc.fileType,
-        version: newDoc.version,
+          newDoc.downloadUrl ||
+          newDoc.driveUrl,
+
+        file_type:
+          newDoc.fileType,
+
+        version:
+          newDoc.version,
+
         last_updated:
           newDoc.lastUpdated || null,
+
         icon_bg_color:
           newDoc.iconBgColor || null,
+
         icon_text_color:
           newDoc.iconTextColor || null,
+
         downloads_count:
           newDoc.downloadsCount || 0,
+
         active: true,
       });
 
@@ -458,36 +559,51 @@ export default function App() {
     const { error } = await supabase
       .from('documentos')
       .update({
-        title: documentoActualizado.title,
-        category: documentoActualizado.category,
+        title:
+          documentoActualizado.title,
+
+        category:
+          documentoActualizado.category,
+
         description:
           documentoActualizado.description,
+
         drive_url:
           documentoActualizado.driveUrl,
+
         download_url:
           documentoActualizado.downloadUrl ||
           documentoActualizado.driveUrl,
+
         file_type:
           documentoActualizado.fileType,
+
         version:
           documentoActualizado.version,
+
         last_updated:
           documentoActualizado.lastUpdated ||
           null,
+
         icon_bg_color:
           documentoActualizado.iconBgColor ||
           null,
+
         icon_text_color:
           documentoActualizado.iconTextColor ||
           null,
+
         downloads_count:
           documentoActualizado.downloadsCount ||
           0,
+
         active: true,
       })
       .eq(
         'id',
-        Number(documentoActualizado.id)
+        Number(
+          documentoActualizado.id
+        )
       );
 
     if (error) {
@@ -522,16 +638,22 @@ export default function App() {
       return;
     }
 
-    const confirmed = window.confirm(
-      '¿Seguro que deseas eliminar este documento?'
-    );
+    const confirmed =
+      window.confirm(
+        '¿Seguro que deseas eliminar este documento?'
+      );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     const { error } = await supabase
       .from('documentos')
       .delete()
-      .eq('id', Number(id));
+      .eq(
+        'id',
+        Number(id)
+      );
 
     if (error) {
       console.error(
@@ -561,7 +683,10 @@ export default function App() {
   const handleOpenEditReglamento = (
     reglamento: Reglamento
   ) => {
-    setReglamentoEditando(reglamento);
+    setReglamentoEditando(
+      reglamento
+    );
+
     setIsEditReglamentoOpen(true);
   };
 
@@ -576,23 +701,41 @@ export default function App() {
     }
 
     const isNew =
-      typeof reglamento.id === 'string' &&
-      reglamento.id.startsWith('temp-');
+      typeof reglamento.id ===
+        'string' &&
+      reglamento.id.startsWith(
+        'temp-'
+      );
 
     let reglamentoId: number;
 
     if (isNew) {
-      const { data, error } = await supabase
+      const {
+        data,
+        error,
+      } = await supabase
         .from('reglamentos')
         .insert({
-          title: reglamento.title,
-          category: reglamento.category,
-          description: reglamento.description,
+          title:
+            reglamento.title,
+
+          category:
+            reglamento.category,
+
+          description:
+            reglamento.description,
+
           last_revision:
-            reglamento.lastRevision || null,
+            reglamento.lastRevision ||
+            null,
+
           articles_count:
-            reglamento.articlesCount || 0,
-          drive_link: reglamento.driveLink,
+            reglamento.articlesCount ||
+            0,
+
+          drive_link:
+            reglamento.driveLink,
+
           active: true,
         })
         .select('id')
@@ -611,24 +754,44 @@ export default function App() {
         return;
       }
 
-      reglamentoId = data.id;
+      reglamentoId =
+        data.id;
     } else {
-      reglamentoId = Number(reglamento.id);
+      reglamentoId =
+        Number(
+          reglamento.id
+        );
 
-      const { error } = await supabase
-        .from('reglamentos')
-        .update({
-          title: reglamento.title,
-          category: reglamento.category,
-          description: reglamento.description,
-          last_revision:
-            reglamento.lastRevision || null,
-          articles_count:
-            reglamento.articlesCount || 0,
-          drive_link: reglamento.driveLink,
-          active: true,
-        })
-        .eq('id', reglamentoId);
+      const { error } =
+        await supabase
+          .from('reglamentos')
+          .update({
+            title:
+              reglamento.title,
+
+            category:
+              reglamento.category,
+
+            description:
+              reglamento.description,
+
+            last_revision:
+              reglamento.lastRevision ||
+              null,
+
+            articles_count:
+              reglamento.articlesCount ||
+              0,
+
+            drive_link:
+              reglamento.driveLink,
+
+            active: true,
+          })
+          .eq(
+            'id',
+            reglamentoId
+          );
 
       if (error) {
         console.error(
@@ -644,11 +807,15 @@ export default function App() {
       }
     }
 
-    const { error: deleteSectionsError } =
-      await supabase
-        .from('reglamento_sections')
-        .delete()
-        .eq('reglamento_id', reglamentoId);
+    const {
+      error: deleteSectionsError,
+    } = await supabase
+      .from('reglamento_sections')
+      .delete()
+      .eq(
+        'reglamento_id',
+        reglamentoId
+      );
 
     if (deleteSectionsError) {
       console.error(
@@ -663,26 +830,46 @@ export default function App() {
       return;
     }
 
-    if (reglamento.sections.length > 0) {
+    if (
+      reglamento.sections.length > 0
+    ) {
       const sectionsToInsert =
         reglamento.sections.map(
           (section, index) => ({
-            reglamento_id: reglamentoId,
-            title: section.title,
-            content: section.content,
+            reglamento_id:
+              reglamentoId,
+
+            title:
+              section.title,
+
+            content:
+              section.content,
+
             section_url:
-              section.sectionUrl || '',
-            sort_order: index + 1,
-            active: true,
+              section.sectionUrl ||
+              '',
+
+            sort_order:
+              index + 1,
+
+            active:
+              true,
           })
         );
 
-      const { error: sectionsInsertError } =
-        await supabase
-          .from('reglamento_sections')
-          .insert(sectionsToInsert);
+      const {
+        error: sectionsInsertError,
+      } = await supabase
+        .from(
+          'reglamento_sections'
+        )
+        .insert(
+          sectionsToInsert
+        );
 
-      if (sectionsInsertError) {
+      if (
+        sectionsInsertError
+      ) {
         console.error(
           'Error guardando capítulos:',
           sectionsInsertError
@@ -696,8 +883,13 @@ export default function App() {
       }
     }
 
-    setIsEditReglamentoOpen(false);
-    setReglamentoEditando(null);
+    setIsEditReglamentoOpen(
+      false
+    );
+
+    setReglamentoEditando(
+      null
+    );
 
     await loadReglamentos();
   };
@@ -705,23 +897,34 @@ export default function App() {
   const handleDeleteReglamento = async (
     id: number | string
   ) => {
-    if (currentUserRole !== 'admin') {
+    if (
+      currentUserRole !==
+      'admin'
+    ) {
       alert(
         'Solo un administrador puede eliminar reglamentos.'
       );
+
       return;
     }
 
-    const confirmed = window.confirm(
-      '¿Seguro que deseas eliminar esta política, reglamento o manual? También se eliminarán sus capítulos.'
-    );
+    const confirmed =
+      window.confirm(
+        '¿Seguro que deseas eliminar esta política, reglamento o manual? También se eliminarán sus capítulos.'
+      );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
-    const { error } = await supabase
-      .from('reglamentos')
-      .delete()
-      .eq('id', Number(id));
+    const { error } =
+      await supabase
+        .from('reglamentos')
+        .delete()
+        .eq(
+          'id',
+          Number(id)
+        );
 
     if (error) {
       console.error(
@@ -746,20 +949,23 @@ export default function App() {
   const handleAddComunicado = (
     newCom: Comunicado
   ) => {
-    setComunicados((prev) => [
-      newCom,
-      ...prev,
-    ]);
+    setComunicados(
+      (prev) => [
+        newCom,
+        ...prev,
+      ]
+    );
   };
 
   const handleDeleteComunicado = (
     id: string
   ) => {
-    setComunicados((prev) =>
-      prev.filter(
-        (comunicado) =>
-          comunicado.id !== id
-      )
+    setComunicados(
+      (prev) =>
+        prev.filter(
+          (comunicado) =>
+            comunicado.id !== id
+        )
     );
   };
 
@@ -770,31 +976,36 @@ export default function App() {
   const handleAddEvent = (
     newEvt: EventoAgenda
   ) => {
-    setEventos((prev) => [
-      newEvt,
-      ...prev,
-    ]);
+    setEventos(
+      (prev) => [
+        newEvt,
+        ...prev,
+      ]
+    );
   };
 
   const handleDeleteEvent = (
     id: string
   ) => {
-    setEventos((prev) =>
-      prev.filter(
-        (evento) =>
-          evento.id !== id
-      )
+    setEventos(
+      (prev) =>
+        prev.filter(
+          (evento) =>
+            evento.id !== id
+        )
     );
   };
 
   // =========================================================
-  // CARGANDO ACCESO
+  // CARGANDO
   // =========================================================
 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+
         <div className="text-center">
+
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#234156] text-[#f3a828] flex items-center justify-center font-black text-xl mb-3">
             CdR
           </div>
@@ -802,7 +1013,9 @@ export default function App() {
           <p className="text-sm font-bold text-[#234156]">
             Verificando acceso...
           </p>
+
         </div>
+
       </div>
     );
   }
@@ -812,7 +1025,20 @@ export default function App() {
   // =========================================================
 
   if (!employeeAuthorized) {
-    return <EmployeeLogin />;
+    return (
+      <EmployeeLogin />
+    );
+  }
+
+  // =========================================================
+  // SEGURIDAD DEL PANEL ADMIN
+  // =========================================================
+
+  if (
+    activeTab === 'admin' &&
+    !isAdmin
+  ) {
+    setActiveTab('inicio');
   }
 
   // =========================================================
@@ -825,10 +1051,14 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        unreadCount={comunicados.length}
+        unreadCount={
+          comunicados.length
+        }
+        isAdmin={isAdmin}
       />
 
-      {/* USUARIO */}
+
+      {/* USUARIO CONECTADO */}
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
 
         <span>
@@ -838,7 +1068,8 @@ export default function App() {
           </strong>
         </span>
 
-        {currentUserRole === 'admin' && (
+        {currentUserRole ===
+          'admin' && (
           <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">
             Administrador
           </span>
@@ -846,7 +1077,9 @@ export default function App() {
 
         <button
           type="button"
-          onClick={handleEmployeeLogout}
+          onClick={
+            handleEmployeeLogout
+          }
           className="font-bold text-red-600 hover:text-red-800"
         >
           Cerrar sesión
@@ -858,21 +1091,32 @@ export default function App() {
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
 
         {/* INICIO */}
-        {activeTab === 'inicio' && (
+        {activeTab ===
+          'inicio' && (
           <DashboardView
             formatos={formatos}
-            comunicados={comunicados}
+            comunicados={
+              comunicados
+            }
             eventos={eventos}
             isAdmin={isAdmin}
-            onNavigate={setActiveTab}
+            onNavigate={
+              setActiveTab
+            }
             onOpenAddDocumentModal={() =>
-              setIsAddDocOpen(true)
+              setIsAddDocOpen(
+                true
+              )
             }
             onOpenAddComunicadoModal={() =>
-              setIsAddComunicadoOpen(true)
+              setIsAddComunicadoOpen(
+                true
+              )
             }
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(true)
+              setIsAddEventOpen(
+                true
+              )
             }
             onOpenComunicadoDetail={
               setSelectedComunicado
@@ -881,17 +1125,38 @@ export default function App() {
         )}
 
 
+        {/* PANEL ADMINISTRATIVO */}
+        {activeTab ===
+          'admin' &&
+          isAdmin && (
+            <AdminPanelView
+              onNavigate={
+                setActiveTab
+              }
+            />
+          )}
+
+
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
-        {activeTab === 'institucional' && (
+        {activeTab ===
+          'institucional' && (
           <>
             {documentosLoading ? (
-              <LoadingBox text="Cargando documentación institucional..." />
+              <LoadingBox
+                text="Cargando documentación institucional..."
+              />
             ) : (
               <DocumentacionInstitucionalView
-                formatos={formatos}
-                isAdmin={isAdmin}
+                formatos={
+                  formatos
+                }
+                isAdmin={
+                  isAdmin
+                }
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(true)
+                  setIsAddDocOpen(
+                    true
+                  )
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -905,17 +1170,26 @@ export default function App() {
         )}
 
 
-        {/* FORMATOS Y PLANTILLAS */}
-        {activeTab === 'documentos' && (
+        {/* FORMATOS */}
+        {activeTab ===
+          'documentos' && (
           <>
             {documentosLoading ? (
-              <LoadingBox text="Cargando formatos y plantillas..." />
+              <LoadingBox
+                text="Cargando formatos y plantillas..."
+              />
             ) : (
               <DocumentosView
-                formatos={formatos}
-                isAdmin={isAdmin}
+                formatos={
+                  formatos
+                }
+                isAdmin={
+                  isAdmin
+                }
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(true)
+                  setIsAddDocOpen(
+                    true
+                  )
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -930,12 +1204,19 @@ export default function App() {
 
 
         {/* COMUNICADOS */}
-        {activeTab === 'comunicados' && (
+        {activeTab ===
+          'comunicados' && (
           <ComunicadosView
-            comunicados={comunicados}
-            isAdmin={isAdmin}
+            comunicados={
+              comunicados
+            }
+            isAdmin={
+              isAdmin
+            }
             onOpenAddModal={() =>
-              setIsAddComunicadoOpen(true)
+              setIsAddComunicadoOpen(
+                true
+              )
             }
             onSelectComunicado={
               setSelectedComunicado
@@ -948,15 +1229,24 @@ export default function App() {
 
 
         {/* REGLAMENTOS */}
-        {activeTab === 'reglamentos' && (
+        {activeTab ===
+          'reglamentos' && (
           <>
             {reglamentosLoading ? (
-              <LoadingBox text="Cargando reglamentos..." />
+              <LoadingBox
+                text="Cargando reglamentos..."
+              />
             ) : (
               <ReglamentosView
-                reglamentos={reglamentos}
-                isAdmin={isAdmin}
-                onOpenDriveLink={(url) =>
+                reglamentos={
+                  reglamentos
+                }
+                isAdmin={
+                  isAdmin
+                }
+                onOpenDriveLink={(
+                  url
+                ) =>
                   window.open(
                     url,
                     '_blank',
@@ -979,13 +1269,20 @@ export default function App() {
 
 
         {/* AGENDA */}
-        {activeTab === 'agenda' && (
+        {activeTab ===
+          'agenda' && (
           <AgendaView
             eventos={eventos}
-            googleConfig={googleConfig}
-            isAdmin={isAdmin}
+            googleConfig={
+              googleConfig
+            }
+            isAdmin={
+              isAdmin
+            }
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(true)
+              setIsAddEventOpen(
+                true
+              )
             }
             onUpdateGoogleConfig={
               setGoogleConfig
@@ -1001,107 +1298,144 @@ export default function App() {
 
       <Footer
         isAdmin={isAdmin}
-        setIsAdmin={setIsAdmin}
+        setIsAdmin={
+          setIsAdmin
+        }
         onOpenAdminModal={() =>
-          setIsAdminLoginOpen(true)
+          setIsAdminLoginOpen(
+            true
+          )
         }
       />
 
 
-      {/* ADMINISTRADOR */}
+      {/* LOGIN ADMIN ANTIGUO */}
       <AdminLoginModal
-        isOpen={isAdminLoginOpen}
+        isOpen={
+          isAdminLoginOpen
+        }
         onClose={() =>
-          setIsAdminLoginOpen(false)
+          setIsAdminLoginOpen(
+            false
+          )
         }
         onSuccess={() => {
           if (
-            currentUserRole === 'admin'
+            currentUserRole ===
+            'admin'
           ) {
-            setIsAdmin(true);
+            setIsAdmin(
+              true
+            );
           }
 
-          setIsAdminLoginOpen(false);
+          setIsAdminLoginOpen(
+            false
+          );
         }}
       />
 
 
       {/* DOCUMENTOS */}
       <AddDocumentModal
-        isOpen={isAddDocOpen}
-        onClose={() =>
-          setIsAddDocOpen(false)
+        isOpen={
+          isAddDocOpen
         }
-        onAdd={handleAddDocument}
+        onClose={() =>
+          setIsAddDocOpen(
+            false
+          )
+        }
+        onAdd={
+          handleAddDocument
+        }
       />
 
 
       <EditDocumentModal
-        isOpen={!!documentoEditando}
-        documento={documentoEditando}
-        onClose={() =>
-          setDocumentoEditando(null)
+        isOpen={
+          !!documentoEditando
         }
-        onSave={handleEditDocument}
+        documento={
+          documentoEditando
+        }
+        onClose={() =>
+          setDocumentoEditando(
+            null
+          )
+        }
+        onSave={
+          handleEditDocument
+        }
       />
 
 
       {/* REGLAMENTOS */}
       <EditReglamentoModal
-        isOpen={isEditReglamentoOpen}
-        reglamento={reglamentoEditando}
+        isOpen={
+          isEditReglamentoOpen
+        }
+        reglamento={
+          reglamentoEditando
+        }
         onClose={() => {
-          setIsEditReglamentoOpen(false);
-          setReglamentoEditando(null);
+          setIsEditReglamentoOpen(
+            false
+          );
+
+          setReglamentoEditando(
+            null
+          );
         }}
-        onSave={handleSaveReglamento}
+        onSave={
+          handleSaveReglamento
+        }
       />
 
 
       {/* COMUNICADOS */}
       <AddComunicadoModal
-        isOpen={isAddComunicadoOpen}
-        onClose={() =>
-          setIsAddComunicadoOpen(false)
+        isOpen={
+          isAddComunicadoOpen
         }
-        onAdd={handleAddComunicado}
+        onClose={() =>
+          setIsAddComunicadoOpen(
+            false
+          )
+        }
+        onAdd={
+          handleAddComunicado
+        }
       />
 
 
       {/* EVENTOS */}
       <AddEventModal
-        isOpen={isAddEventOpen}
-        onClose={() =>
-          setIsAddEventOpen(false)
+        isOpen={
+          isAddEventOpen
         }
-        onAdd={handleAddEvent}
+        onClose={() =>
+          setIsAddEventOpen(
+            false
+          )
+        }
+        onAdd={
+          handleAddEvent
+        }
       />
 
 
       {/* DETALLE COMUNICADO */}
       <ComunicadoDetailModal
-        comunicado={selectedComunicado}
+        comunicado={
+          selectedComunicado
+        }
         onClose={() =>
-          setSelectedComunicado(null)
+          setSelectedComunicado(
+            null
+          )
         }
       />
-
-
-      {/* VISOR DRIVE, SI ALGÚN COMPONENTE LO NECESITA */}
-      {driveViewerFolder && (
-        <DriveViewerModal
-          isOpen={true}
-          folderUrl={
-            driveViewerFolder.url
-          }
-          folderName={
-            driveViewerFolder.name
-          }
-          onClose={() =>
-            setDriveViewerFolder(null)
-          }
-        />
-      )}
 
     </div>
   );
@@ -1109,7 +1443,7 @@ export default function App() {
 
 
 // =========================================================
-// INDICADOR DE CARGA
+// CAJA DE CARGA
 // =========================================================
 
 const LoadingBox = ({
