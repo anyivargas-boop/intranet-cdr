@@ -23,7 +23,6 @@ import { AdminLoginModal } from './components/AdminLoginModal';
 import { supabase } from './lib/supabase';
 
 import {
-  initialFormatos,
   initialComunicados,
   initialEventos,
   initialDriveFolders,
@@ -38,6 +37,8 @@ import {
   EventoAgenda,
   DriveFolder,
   GoogleIntegrationsConfig,
+  CategoryType,
+  FileType,
 } from './types';
 
 export default function App() {
@@ -58,13 +59,15 @@ export default function App() {
   >('');
 
   // =========================================================
-  // DATOS
+  // DOCUMENTOS DESDE SUPABASE
   // =========================================================
 
-  const [formatos, setFormatos] = useState<FormatoDocumento[]>(() => {
-    const saved = localStorage.getItem('cdr_formatos');
-    return saved ? JSON.parse(saved) : initialFormatos;
-  });
+  const [formatos, setFormatos] = useState<FormatoDocumento[]>([]);
+  const [documentosLoading, setDocumentosLoading] = useState(false);
+
+  // =========================================================
+  // OTROS DATOS
+  // =========================================================
 
   const [comunicados, setComunicados] = useState<Comunicado[]>(() => {
     const saved = localStorage.getItem('cdr_comunicados');
@@ -91,19 +94,21 @@ export default function App() {
     });
 
   // =========================================================
-  // GUARDAR DATOS LOCALES
+  // GUARDAR DATOS LOCALES QUE AÚN NO ESTÁN EN SUPABASE
   // =========================================================
 
   useEffect(() => {
-    localStorage.setItem('cdr_formatos', JSON.stringify(formatos));
-  }, [formatos]);
-
-  useEffect(() => {
-    localStorage.setItem('cdr_comunicados', JSON.stringify(comunicados));
+    localStorage.setItem(
+      'cdr_comunicados',
+      JSON.stringify(comunicados)
+    );
   }, [comunicados]);
 
   useEffect(() => {
-    localStorage.setItem('cdr_eventos', JSON.stringify(eventos));
+    localStorage.setItem(
+      'cdr_eventos',
+      JSON.stringify(eventos)
+    );
   }, [eventos]);
 
   useEffect(() => {
@@ -205,8 +210,59 @@ export default function App() {
     setCurrentUserRole('');
     setIsAdmin(false);
     setReglamentos([]);
+    setFormatos([]);
 
     setActiveTab('inicio');
+  };
+
+  // =========================================================
+  // CARGAR DOCUMENTOS DESDE SUPABASE
+  // =========================================================
+
+  const loadDocumentos = async () => {
+    setDocumentosLoading(true);
+
+    const { data, error } = await supabase
+      .from('documentos')
+      .select('*')
+      .eq('active', true)
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error(
+        'Error cargando documentos:',
+        error
+      );
+
+      setFormatos([]);
+      setDocumentosLoading(false);
+      return;
+    }
+
+    const mappedDocumentos: FormatoDocumento[] =
+      (data || []).map((doc) => ({
+        id: doc.id,
+        title: doc.title || '',
+        category:
+          (doc.category || 'Administración') as CategoryType,
+        description: doc.description || '',
+        driveUrl: doc.drive_url || '',
+        downloadUrl:
+          doc.download_url || doc.drive_url || '',
+        fileType:
+          (doc.file_type || 'word') as FileType,
+        version: doc.version || 'v1.0',
+        lastUpdated: doc.last_updated || '',
+        iconBgColor:
+          doc.icon_bg_color || undefined,
+        iconTextColor:
+          doc.icon_text_color || undefined,
+        downloadsCount:
+          doc.downloads_count || 0,
+      }));
+
+    setFormatos(mappedDocumentos);
+    setDocumentosLoading(false);
   };
 
   // =========================================================
@@ -287,8 +343,13 @@ export default function App() {
     setReglamentosLoading(false);
   };
 
+  // =========================================================
+  // CARGAR DATOS AL INICIAR SESIÓN
+  // =========================================================
+
   useEffect(() => {
     if (employeeAuthorized) {
+      loadDocumentos();
       loadReglamentos();
     }
   }, [employeeAuthorized]);
@@ -329,33 +390,163 @@ export default function App() {
     } | null>(null);
 
   // =========================================================
-  // DOCUMENTOS
+  // DOCUMENTOS - AGREGAR
   // =========================================================
 
-  const handleAddDocument = (
+  const handleAddDocument = async (
     newDoc: FormatoDocumento
   ) => {
-    setFormatos((prev) => [newDoc, ...prev]);
+    if (currentUserRole !== 'admin') {
+      alert(
+        'Solo un administrador puede agregar documentos.'
+      );
+      return;
+    }
+
+    const { error } = await supabase
+      .from('documentos')
+      .insert({
+        title: newDoc.title,
+        category: newDoc.category,
+        description: newDoc.description,
+        drive_url: newDoc.driveUrl,
+        download_url:
+          newDoc.downloadUrl || newDoc.driveUrl,
+        file_type: newDoc.fileType,
+        version: newDoc.version,
+        last_updated:
+          newDoc.lastUpdated || null,
+        icon_bg_color:
+          newDoc.iconBgColor || null,
+        icon_text_color:
+          newDoc.iconTextColor || null,
+        downloads_count:
+          newDoc.downloadsCount || 0,
+        active: true,
+      });
+
+    if (error) {
+      console.error(
+        'Error agregando documento:',
+        error
+      );
+
+      alert(
+        'No fue posible guardar el documento.'
+      );
+
+      return;
+    }
+
+    await loadDocumentos();
   };
 
-  const handleEditDocument = (
+  // =========================================================
+  // DOCUMENTOS - EDITAR
+  // =========================================================
+
+  const handleEditDocument = async (
     documentoActualizado: FormatoDocumento
   ) => {
-    setFormatos((prev) =>
-      prev.map((documento) =>
-        documento.id === documentoActualizado.id
-          ? documentoActualizado
-          : documento
-      )
-    );
+    if (currentUserRole !== 'admin') {
+      alert(
+        'Solo un administrador puede editar documentos.'
+      );
+      return;
+    }
+
+    const { error } = await supabase
+      .from('documentos')
+      .update({
+        title: documentoActualizado.title,
+        category: documentoActualizado.category,
+        description:
+          documentoActualizado.description,
+        drive_url:
+          documentoActualizado.driveUrl,
+        download_url:
+          documentoActualizado.downloadUrl ||
+          documentoActualizado.driveUrl,
+        file_type:
+          documentoActualizado.fileType,
+        version:
+          documentoActualizado.version,
+        last_updated:
+          documentoActualizado.lastUpdated ||
+          null,
+        icon_bg_color:
+          documentoActualizado.iconBgColor ||
+          null,
+        icon_text_color:
+          documentoActualizado.iconTextColor ||
+          null,
+        downloads_count:
+          documentoActualizado.downloadsCount ||
+          0,
+        active: true,
+      })
+      .eq(
+        'id',
+        Number(documentoActualizado.id)
+      );
+
+    if (error) {
+      console.error(
+        'Error editando documento:',
+        error
+      );
+
+      alert(
+        'No fue posible actualizar el documento.'
+      );
+
+      return;
+    }
+
+    setDocumentoEditando(null);
+
+    await loadDocumentos();
   };
 
-  const handleDeleteDocument = (id: string) => {
-    setFormatos((prev) =>
-      prev.filter(
-        (documento) => documento.id !== id
-      )
+  // =========================================================
+  // DOCUMENTOS - ELIMINAR
+  // =========================================================
+
+  const handleDeleteDocument = async (
+    id: number | string
+  ) => {
+    if (currentUserRole !== 'admin') {
+      alert(
+        'Solo un administrador puede eliminar documentos.'
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      '¿Seguro que deseas eliminar este documento?'
     );
+
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('documentos')
+      .delete()
+      .eq('id', Number(id));
+
+    if (error) {
+      console.error(
+        'Error eliminando documento:',
+        error
+      );
+
+      alert(
+        'No fue posible eliminar el documento.'
+      );
+
+      return;
+    }
+
+    await loadDocumentos();
   };
 
   // =========================================================
@@ -555,7 +746,10 @@ export default function App() {
   const handleAddComunicado = (
     newCom: Comunicado
   ) => {
-    setComunicados((prev) => [newCom, ...prev]);
+    setComunicados((prev) => [
+      newCom,
+      ...prev,
+    ]);
   };
 
   const handleDeleteComunicado = (
@@ -563,7 +757,8 @@ export default function App() {
   ) => {
     setComunicados((prev) =>
       prev.filter(
-        (comunicado) => comunicado.id !== id
+        (comunicado) =>
+          comunicado.id !== id
       )
     );
   };
@@ -575,19 +770,25 @@ export default function App() {
   const handleAddEvent = (
     newEvt: EventoAgenda
   ) => {
-    setEventos((prev) => [newEvt, ...prev]);
+    setEventos((prev) => [
+      newEvt,
+      ...prev,
+    ]);
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = (
+    id: string
+  ) => {
     setEventos((prev) =>
       prev.filter(
-        (evento) => evento.id !== id
+        (evento) =>
+          evento.id !== id
       )
     );
   };
 
   // =========================================================
-  // CARGANDO
+  // CARGANDO ACCESO
   // =========================================================
 
   if (authLoading) {
@@ -629,9 +830,12 @@ export default function App() {
 
       {/* USUARIO */}
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
+
         <span>
           Sesión:{' '}
-          <strong>{currentUserEmail}</strong>
+          <strong>
+            {currentUserEmail}
+          </strong>
         </span>
 
         {currentUserRole === 'admin' && (
@@ -647,7 +851,9 @@ export default function App() {
         >
           Cerrar sesión
         </button>
+
       </div>
+
 
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
 
@@ -657,7 +863,6 @@ export default function App() {
             formatos={formatos}
             comunicados={comunicados}
             eventos={eventos}
-            driveFolders={driveFolders}
             isAdmin={isAdmin}
             onNavigate={setActiveTab}
             onOpenAddDocumentModal={() =>
@@ -672,48 +877,57 @@ export default function App() {
             onOpenComunicadoDetail={
               setSelectedComunicado
             }
-            onOpenDriveModal={(url, name) =>
-              setDriveViewerFolder({
-                url,
-                name,
-              })
-            }
           />
         )}
+
 
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
         {activeTab === 'institucional' && (
-          <DocumentacionInstitucionalView
-            formatos={formatos}
-            isAdmin={isAdmin}
-            onOpenAddModal={() =>
-              setIsAddDocOpen(true)
-            }
-            onEditFormato={
-              setDocumentoEditando
-            }
-            onDeleteFormato={
-              handleDeleteDocument
-            }
-          />
+          <>
+            {documentosLoading ? (
+              <LoadingBox text="Cargando documentación institucional..." />
+            ) : (
+              <DocumentacionInstitucionalView
+                formatos={formatos}
+                isAdmin={isAdmin}
+                onOpenAddModal={() =>
+                  setIsAddDocOpen(true)
+                }
+                onEditFormato={
+                  setDocumentoEditando
+                }
+                onDeleteFormato={
+                  handleDeleteDocument
+                }
+              />
+            )}
+          </>
         )}
+
 
         {/* FORMATOS Y PLANTILLAS */}
         {activeTab === 'documentos' && (
-          <DocumentosView
-            formatos={formatos}
-            isAdmin={isAdmin}
-            onOpenAddModal={() =>
-              setIsAddDocOpen(true)
-            }
-            onEditFormato={
-              setDocumentoEditando
-            }
-            onDeleteFormato={
-              handleDeleteDocument
-            }
-          />
+          <>
+            {documentosLoading ? (
+              <LoadingBox text="Cargando formatos y plantillas..." />
+            ) : (
+              <DocumentosView
+                formatos={formatos}
+                isAdmin={isAdmin}
+                onOpenAddModal={() =>
+                  setIsAddDocOpen(true)
+                }
+                onEditFormato={
+                  setDocumentoEditando
+                }
+                onDeleteFormato={
+                  handleDeleteDocument
+                }
+              />
+            )}
+          </>
         )}
+
 
         {/* COMUNICADOS */}
         {activeTab === 'comunicados' && (
@@ -732,13 +946,12 @@ export default function App() {
           />
         )}
 
+
         {/* REGLAMENTOS */}
         {activeTab === 'reglamentos' && (
           <>
             {reglamentosLoading ? (
-              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
-                <BookOpenLoading />
-              </div>
+              <LoadingBox text="Cargando reglamentos..." />
             ) : (
               <ReglamentosView
                 reglamentos={reglamentos}
@@ -764,6 +977,7 @@ export default function App() {
           </>
         )}
 
+
         {/* AGENDA */}
         {activeTab === 'agenda' && (
           <AgendaView
@@ -781,7 +995,9 @@ export default function App() {
             }
           />
         )}
+
       </main>
+
 
       <Footer
         isAdmin={isAdmin}
@@ -791,6 +1007,7 @@ export default function App() {
         }
       />
 
+
       {/* ADMINISTRADOR */}
       <AdminLoginModal
         isOpen={isAdminLoginOpen}
@@ -798,13 +1015,16 @@ export default function App() {
           setIsAdminLoginOpen(false)
         }
         onSuccess={() => {
-          if (currentUserRole === 'admin') {
+          if (
+            currentUserRole === 'admin'
+          ) {
             setIsAdmin(true);
           }
 
           setIsAdminLoginOpen(false);
         }}
       />
+
 
       {/* DOCUMENTOS */}
       <AddDocumentModal
@@ -815,6 +1035,7 @@ export default function App() {
         onAdd={handleAddDocument}
       />
 
+
       <EditDocumentModal
         isOpen={!!documentoEditando}
         documento={documentoEditando}
@@ -823,6 +1044,7 @@ export default function App() {
         }
         onSave={handleEditDocument}
       />
+
 
       {/* REGLAMENTOS */}
       <EditReglamentoModal
@@ -835,6 +1057,7 @@ export default function App() {
         onSave={handleSaveReglamento}
       />
 
+
       {/* COMUNICADOS */}
       <AddComunicadoModal
         isOpen={isAddComunicadoOpen}
@@ -843,6 +1066,7 @@ export default function App() {
         }
         onAdd={handleAddComunicado}
       />
+
 
       {/* EVENTOS */}
       <AddEventModal
@@ -853,6 +1077,7 @@ export default function App() {
         onAdd={handleAddEvent}
       />
 
+
       {/* DETALLE COMUNICADO */}
       <ComunicadoDetailModal
         comunicado={selectedComunicado}
@@ -861,7 +1086,8 @@ export default function App() {
         }
       />
 
-      {/* VISOR DE DOCUMENTOS DE DRIVE */}
+
+      {/* VISOR DRIVE, SI ALGÚN COMPONENTE LO NECESITA */}
       {driveViewerFolder && (
         <DriveViewerModal
           isOpen={true}
@@ -876,24 +1102,32 @@ export default function App() {
           }
         />
       )}
+
     </div>
   );
 }
 
+
 // =========================================================
-// CARGANDO REGLAMENTOS
+// INDICADOR DE CARGA
 // =========================================================
 
-const BookOpenLoading = () => {
+const LoadingBox = ({
+  text,
+}: {
+  text: string;
+}) => {
   return (
-    <div>
+    <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+
       <div className="w-10 h-10 rounded-xl bg-[#234156] text-[#f3a828] flex items-center justify-center mx-auto mb-3 font-black">
         CdR
       </div>
 
       <p className="text-xs font-bold text-[#234156]">
-        Cargando reglamentos...
+        {text}
       </p>
+
     </div>
   );
 };

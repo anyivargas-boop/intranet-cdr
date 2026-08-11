@@ -17,7 +17,7 @@ export type FileType =
 
 
 export interface FormatoDocumento {
-  id: string;
+  id: number | string;
   title: string;
   category: CategoryType;
   description: string;

@@ -19,7 +19,7 @@ interface DocumentosViewProps {
   formatos: FormatoDocumento[];
   isAdmin: boolean;
   onOpenAddModal: () => void;
-  onDeleteFormato?: (id: string) => void;
+  onDeleteFormato?: (id: number | string) => void;
   onEditFormato?: (formato: FormatoDocumento) => void;
 }
 
