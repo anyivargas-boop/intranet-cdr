@@ -1,60 +1,70 @@
 import React from 'react';
-import { Calendar, ShieldCheck, Lock } from 'lucide-react';
-import { DriveIcon } from './DriveIcon';
+import {
+  ShieldCheck,
+  LogOut,
+} from 'lucide-react';
 
 interface FooterProps {
   isAdmin: boolean;
   setIsAdmin: (status: boolean) => void;
   onOpenAdminModal: () => void;
+  onOpenAdminPanel: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ 
-  isAdmin, 
-  setIsAdmin, 
-  onOpenAdminModal 
+export const Footer: React.FC<FooterProps> = ({
+  isAdmin,
+  setIsAdmin,
+  onOpenAdminModal,
+  onOpenAdminPanel,
 }) => {
   return (
-    <footer className="py-2.5 bg-[#234156] text-white flex flex-wrap items-center justify-between px-6 lg:px-10 shrink-0 text-xs font-semibold border-t-2 border-[#f3a828] sticky bottom-0 z-20 shadow-lg gap-3">
-      <p className="text-[11px] text-slate-300">
-        © 2026 Consejo de Redacción (CdR) &bull; Intranet Corporativa v2.1
-      </p>
+    <footer className="bg-[#234156] border-t-2 border-[#f3a828] px-6 lg:px-10 py-2 flex items-center justify-between gap-4 shrink-0">
       
-      <div className="flex items-center gap-4 text-[11px]">
-        <span className="hidden md:flex items-center gap-1.5 text-slate-300">
-          <DriveIcon className="w-3.5 h-3.5 text-[#f3a828]" />
-          Google Drive: <span className="text-amber-300 font-bold">Sincronizado</span>
-        </span>
-        <span className="hidden sm:flex items-center gap-1.5 text-slate-300">
-          <Calendar className="w-3.5 h-3.5 text-[#f3a828]" />
-          Calendar: <span className="text-amber-300 font-bold">Conectado</span>
-        </span>
+      {/* INFORMACIÓN INSTITUCIONAL */}
+      <div className="text-[11px] text-slate-300 font-medium">
+        © 2026 Consejo de Redacción (CdR) • Intranet Corporativa v2.1
+      </div>
 
-        {/* Administrator Access Button in Footer */}
+      {/* ZONA ADMINISTRATIVA */}
+      <div className="flex items-center gap-2">
+
         {isAdmin ? (
-          <div className="flex items-center gap-2 bg-[#f3a828] text-slate-950 px-3 py-1 rounded-lg text-xs font-extrabold border border-amber-300 shadow-sm">
-            <ShieldCheck className="w-3.5 h-3.5 text-slate-950" />
-            <span>Modo Administrador</span>
+          <>
+            {/* ABRIR PANEL ADMINISTRATIVO */}
             <button
-              onClick={() => setIsAdmin(false)}
-              className="ml-1 text-slate-950 hover:text-red-700 text-[10px] underline font-black"
-              title="Cerrar modo administrador"
+              type="button"
+              onClick={onOpenAdminPanel}
+              className="flex items-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-1.5 rounded-lg text-xs font-extrabold transition-all shadow-sm border border-amber-300"
+              title="Abrir Panel Administrativo"
             >
-              Salir
+              <ShieldCheck className="w-4 h-4" />
+              <span>Panel Administrativo</span>
             </button>
-          </div>
+
+            {/* SALIR DEL MODO ADMINISTRADOR */}
+            <button
+              type="button"
+              onClick={() => setIsAdmin(false)}
+              className="flex items-center gap-1.5 text-slate-300 hover:text-white px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+              title="Salir del modo administrador"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Salir</span>
+            </button>
+          </>
         ) : (
           <button
+            type="button"
             onClick={onOpenAdminModal}
-            className="flex items-center gap-1.5 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-3.5 py-1 rounded-lg text-xs font-extrabold transition-all shadow-sm border border-amber-300 cursor-pointer"
-            title="Ingresar como administrador para publicar y editar formatos o comunicados"
+            className="flex items-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-1.5 rounded-lg text-xs font-extrabold transition-all shadow-sm border border-amber-300"
+            title="Ingresar como administrador"
           >
-            <Lock className="w-3.5 h-3.5 text-slate-950" />
+            <ShieldCheck className="w-4 h-4" />
             <span>Ingresar como Administrador</span>
           </button>
         )}
+
       </div>
     </footer>
   );
 };
-
-
