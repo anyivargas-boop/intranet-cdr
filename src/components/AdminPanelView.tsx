@@ -17,6 +17,7 @@ import {
   RefreshCw,
   X,
   Save,
+  KeyRound,
 } from 'lucide-react';
 
 import {
@@ -24,7 +25,6 @@ import {
   AuthorizedUser,
   AuthorizedUserRole,
 } from '../types';
-
 
 interface AdminPanelViewProps {
   formatos: FormatoDocumento[];
@@ -63,9 +63,12 @@ interface AdminPanelViewProps {
     user: AuthorizedUser
   ) => Promise<void>;
 
+  onResetUserPassword: (
+    user: AuthorizedUser
+  ) => Promise<boolean>;
+
   onReloadAuthorizedUsers: () => Promise<void>;
 }
-
 
 export const AdminPanelView: React.FC<
   AdminPanelViewProps
@@ -84,9 +87,9 @@ export const AdminPanelView: React.FC<
   onUpdateAuthorizedUser,
   onToggleAuthorizedUser,
   onDeleteAuthorizedUser,
+  onResetUserPassword,
   onReloadAuthorizedUsers,
 }) => {
-
   // =========================================================
   // SECCIÓN ACTIVA
   // =========================================================
@@ -94,10 +97,7 @@ export const AdminPanelView: React.FC<
   const [
     activeSection,
     setActiveSection,
-  ] = useState<string | null>(
-    null
-  );
-
+  ] = useState<string | null>(null);
 
   // =========================================================
   // MODAL USUARIO
@@ -111,10 +111,7 @@ export const AdminPanelView: React.FC<
   const [
     editingUser,
     setEditingUser,
-  ] =
-    useState<AuthorizedUser | null>(
-      null
-    );
+  ] = useState<AuthorizedUser | null>(null);
 
   const [
     userName,
@@ -144,6 +141,10 @@ export const AdminPanelView: React.FC<
     setSavingUser,
   ] = useState(false);
 
+  const [
+    resettingPasswordId,
+    setResettingPasswordId,
+  ] = useState<string | null>(null);
 
   // =========================================================
   // MÓDULOS
@@ -158,7 +159,6 @@ export const AdminPanelView: React.FC<
         'Administra certificados, documentos legales, Cámara de Comercio, RUT y documentación corporativa.',
       icon: Building2,
     },
-
     {
       id: 'documentos',
       title:
@@ -167,7 +167,6 @@ export const AdminPanelView: React.FC<
         'Administra formatos, plantillas, viáticos, solicitudes, formularios y documentos de trabajo.',
       icon: FileText,
     },
-
     {
       id: 'comunicados',
       title:
@@ -176,7 +175,6 @@ export const AdminPanelView: React.FC<
         'Publica, revisa y elimina comunicados, anuncios, circulares y novedades para el equipo.',
       icon: Bell,
     },
-
     {
       id: 'reglamentos',
       title:
@@ -185,7 +183,6 @@ export const AdminPanelView: React.FC<
         'Administra políticas, manuales, reglamentos, capítulos, resúmenes y enlaces oficiales.',
       icon: BookOpen,
     },
-
     {
       id: 'agenda',
       title:
@@ -194,7 +191,6 @@ export const AdminPanelView: React.FC<
         'Administra talleres, capacitaciones, reuniones, fechas límite y eventos internos.',
       icon: Calendar,
     },
-
     {
       id: 'usuarios',
       title:
@@ -204,7 +200,6 @@ export const AdminPanelView: React.FC<
       icon: Users,
     },
   ];
-
 
   // =========================================================
   // DOCUMENTOS INSTITUCIONALES
@@ -217,7 +212,6 @@ export const AdminPanelView: React.FC<
         'Documentación Institucional'
     );
 
-
   // =========================================================
   // ABRIR MÓDULO
   // =========================================================
@@ -228,169 +222,140 @@ export const AdminPanelView: React.FC<
     setActiveSection(id);
   };
 
-
   // =========================================================
-  // ABRIR MODAL NUEVO USUARIO
-  // =========================================================
-
-  const handleOpenNewUser =
-    () => {
-      setEditingUser(null);
-
-      setUserName('');
-
-      setUserEmail('');
-
-      setUserRole(
-        'employee'
-      );
-
-      setUserActive(true);
-
-      setIsUserModalOpen(
-        true
-      );
-    };
-
-
-  // =========================================================
-  // ABRIR MODAL EDITAR USUARIO
+  // NUEVO USUARIO
   // =========================================================
 
-  const handleOpenEditUser =
-    (
-      user: AuthorizedUser
-    ) => {
-      setEditingUser(user);
-
-      setUserName(
-        user.name
-      );
-
-      setUserEmail(
-        user.email
-      );
-
-      setUserRole(
-        user.role
-      );
-
-      setUserActive(
-        user.active
-      );
-
-      setIsUserModalOpen(
-        true
-      );
-    };
-
+  const handleOpenNewUser = () => {
+    setEditingUser(null);
+    setUserName('');
+    setUserEmail('');
+    setUserRole('employee');
+    setUserActive(true);
+    setIsUserModalOpen(true);
+  };
 
   // =========================================================
-  // CERRAR MODAL USUARIO
+  // EDITAR USUARIO
   // =========================================================
 
-  const handleCloseUserModal =
-    () => {
-      if (savingUser) {
-        return;
-      }
+  const handleOpenEditUser = (
+    user: AuthorizedUser
+  ) => {
+    setEditingUser(user);
+    setUserName(user.name);
+    setUserEmail(user.email);
+    setUserRole(user.role);
+    setUserActive(user.active);
+    setIsUserModalOpen(true);
+  };
 
-      setIsUserModalOpen(
-        false
-      );
+  // =========================================================
+  // CERRAR MODAL
+  // =========================================================
 
-      setEditingUser(null);
+  const handleCloseUserModal = () => {
+    if (savingUser) {
+      return;
+    }
 
-      setUserName('');
-
-      setUserEmail('');
-
-      setUserRole(
-        'employee'
-      );
-
-      setUserActive(true);
-    };
-
+    setIsUserModalOpen(false);
+    setEditingUser(null);
+    setUserName('');
+    setUserEmail('');
+    setUserRole('employee');
+    setUserActive(true);
+  };
 
   // =========================================================
   // GUARDAR USUARIO
   // =========================================================
 
-  const handleSaveUser =
-    async (
-      e: React.FormEvent
-    ) => {
-      e.preventDefault();
+  const handleSaveUser = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
 
-      const cleanName =
-        userName.trim();
+    const cleanName =
+      userName.trim();
 
-      const cleanEmail =
-        userEmail
-          .trim()
-          .toLowerCase();
+    const cleanEmail =
+      userEmail
+        .trim()
+        .toLowerCase();
 
-      if (
-        !cleanName ||
-        !cleanEmail
-      ) {
-        alert(
-          'Debes ingresar el nombre y el correo electrónico.'
-        );
+    if (
+      !cleanName ||
+      !cleanEmail
+    ) {
+      alert(
+        'Debes ingresar el nombre y el correo electrónico.'
+      );
 
-        return;
+      return;
+    }
+
+    setSavingUser(true);
+
+    let success = false;
+
+    try {
+      if (editingUser) {
+        success =
+          await onUpdateAuthorizedUser({
+            ...editingUser,
+            name: cleanName,
+            email: cleanEmail,
+            role: userRole,
+            active: userActive,
+          });
+      } else {
+        success =
+          await onAddAuthorizedUser({
+            name: cleanName,
+            email: cleanEmail,
+            role: userRole,
+          });
       }
+    } finally {
+      setSavingUser(false);
+    }
 
-      setSavingUser(true);
+    if (success) {
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+      setUserName('');
+      setUserEmail('');
+      setUserRole('employee');
+      setUserActive(true);
+    }
+  };
 
-      try {
-        let success = false;
+  // =========================================================
+  // RESTABLECER CONTRASEÑA
+  // =========================================================
 
-        if (editingUser) {
-          success =
-            await onUpdateAuthorizedUser(
-              {
-                ...editingUser,
+  const handleResetPassword = async (
+    user: AuthorizedUser
+  ) => {
+    if (resettingPasswordId) {
+      return;
+    }
 
-                name:
-                  cleanName,
+    setResettingPasswordId(
+      user.id
+    );
 
-                email:
-                  cleanEmail,
-
-                role:
-                  userRole,
-
-                active:
-                  userActive,
-              }
-            );
-        } else {
-          success =
-            await onAddAuthorizedUser(
-              {
-                name:
-                  cleanName,
-
-                email:
-                  cleanEmail,
-
-                role:
-                  userRole,
-              }
-            );
-        }
-
-        if (success) {
-          handleCloseUserModal();
-        }
-
-      } finally {
-        setSavingUser(false);
-      }
-    };
-
+    try {
+      await onResetUserPassword(
+        user
+      );
+    } finally {
+      setResettingPasswordId(
+        null
+      );
+    }
+  };
 
   // =========================================================
   // DOCUMENTACIÓN INSTITUCIONAL
@@ -404,50 +369,34 @@ export const AdminPanelView: React.FC<
       <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-
           <button
             type="button"
             onClick={() =>
-              setActiveSection(
-                null
-              )
+              setActiveSection(null)
             }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
-
           <button
             type="button"
-            onClick={
-              onAddDocument
-            }
+            onClick={onAddDocument}
             className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-
             Agregar Documento
           </button>
-
         </div>
 
-
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
-
           <div className="flex items-start gap-4">
-
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
-
               <Building2 className="w-6 h-6" />
-
             </div>
 
-
             <div>
-
               <h1 className="text-xl md:text-2xl font-extrabold">
                 Administración de Documentación Institucional
               </h1>
@@ -455,21 +404,13 @@ export const AdminPanelView: React.FC<
               <p className="text-xs md:text-sm text-slate-200 mt-1">
                 Crea, edita o elimina documentos institucionales visibles para el equipo.
               </p>
-
             </div>
-
           </div>
-
         </div>
 
-
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-
-          {institutionalDocuments.length ===
-          0 ? (
-
+          {institutionalDocuments.length === 0 ? (
             <div className="p-10 text-center">
-
               <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
               <p className="text-sm font-bold text-slate-700">
@@ -479,69 +420,36 @@ export const AdminPanelView: React.FC<
               <p className="text-xs text-slate-400 mt-1">
                 Usa “Agregar Documento” para crear el primero.
               </p>
-
             </div>
-
           ) : (
-
             <div className="divide-y divide-slate-100">
-
               {institutionalDocuments.map(
                 (doc) => (
-
                   <div
-                    key={
-                      doc.id
-                    }
+                    key={doc.id}
                     className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
-
                     <div className="flex-1">
-
                       <div className="flex items-center gap-2 flex-wrap">
-
                         <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-
-                          {
-                            doc.version
-                          }
-
+                          {doc.version}
                         </span>
-
 
                         <span className="text-[10px] font-bold text-slate-400">
-
-                          {
-                            doc.lastUpdated
-                          }
-
+                          {doc.lastUpdated}
                         </span>
-
                       </div>
 
-
                       <h3 className="text-sm font-extrabold text-[#234156] mt-2">
-
-                        {
-                          doc.title
-                        }
-
+                        {doc.title}
                       </h3>
 
-
                       <p className="text-xs text-slate-500 mt-1">
-
-                        {
-                          doc.description
-                        }
-
+                        {doc.description}
                       </p>
-
                     </div>
 
-
                     <div className="flex items-center gap-2 shrink-0">
-
                       <button
                         type="button"
                         onClick={() =>
@@ -551,13 +459,9 @@ export const AdminPanelView: React.FC<
                         }
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
-
                         <Pencil className="w-3.5 h-3.5" />
-
                         Editar
-
                       </button>
-
 
                       <button
                         type="button"
@@ -568,30 +472,19 @@ export const AdminPanelView: React.FC<
                         }
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
-
                         <Trash2 className="w-3.5 h-3.5" />
-
                         Eliminar
-
                       </button>
-
                     </div>
-
                   </div>
-
                 )
               )}
-
             </div>
-
           )}
-
         </div>
-
       </div>
     );
   }
-
 
   // =========================================================
   // USUARIOS Y ACCESOS
@@ -607,24 +500,18 @@ export const AdminPanelView: React.FC<
         {/* BARRA SUPERIOR */}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-
           <button
             type="button"
             onClick={() =>
-              setActiveSection(
-                null
-              )
+              setActiveSection(null)
             }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
-
           <div className="flex items-center gap-2">
-
             <button
               type="button"
               onClick={
@@ -634,9 +521,7 @@ export const AdminPanelView: React.FC<
                 authorizedUsersLoading
               }
               className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-[#234156] px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 disabled:opacity-50"
-              title="Actualizar lista"
             >
-
               <RefreshCw
                 className={`w-4 h-4 ${
                   authorizedUsersLoading
@@ -646,9 +531,7 @@ export const AdminPanelView: React.FC<
               />
 
               Actualizar
-
             </button>
-
 
             <button
               type="button"
@@ -657,142 +540,101 @@ export const AdminPanelView: React.FC<
               }
               className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
             >
-
               <Plus className="w-4 h-4" />
-
               Agregar Usuario
-
             </button>
-
           </div>
-
         </div>
-
 
         {/* ENCABEZADO */}
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
-
           <div className="flex items-start gap-4">
-
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
-
               <Users className="w-6 h-6" />
-
             </div>
 
-
             <div>
-
               <h1 className="text-xl md:text-2xl font-extrabold">
                 Usuarios y Accesos
               </h1>
 
               <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl">
-                Administra las personas autorizadas para ingresar a la intranet, sus roles y el estado de acceso.
+                Administra las personas autorizadas para ingresar a la intranet, sus roles, estado de acceso y recuperación de contraseña.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
 
         {/* AVISO */}
 
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-
           <div className="flex items-start gap-3">
-
             <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
 
             <div>
-
               <p className="text-xs font-extrabold text-[#234156]">
-                Autorización de acceso
+                Autorización y contraseña
               </p>
 
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Esta sección controla quién está autorizado para usar la intranet y quién tiene permisos administrativos. Las contraseñas se administran de forma independiente mediante Supabase Authentication.
+                Los permisos de acceso se administran en esta sección. La contraseña se gestiona mediante Supabase Authentication. El botón “Restablecer contraseña” enviará un enlace al correo del usuario.
               </p>
-
             </div>
-
           </div>
-
         </div>
 
-
-        {/* CONTADOR */}
+        {/* CONTADORES */}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
-
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Usuarios
             </p>
 
             <p className="text-2xl font-black text-[#234156] mt-1">
-              {
-                authorizedUsers.length
-              }
+              {authorizedUsers.length}
             </p>
-
           </div>
 
-
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
-
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Activos
             </p>
 
             <p className="text-2xl font-black text-emerald-700 mt-1">
-
               {
                 authorizedUsers.filter(
                   (user) =>
                     user.active
                 ).length
               }
-
             </p>
-
           </div>
 
-
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
-
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Administradores
             </p>
 
             <p className="text-2xl font-black text-amber-700 mt-1">
-
               {
                 authorizedUsers.filter(
                   (user) =>
                     user.role ===
-                    'admin' &&
+                      'admin' &&
                     user.active
                 ).length
               }
-
             </p>
-
           </div>
-
         </div>
-
 
         {/* LISTA */}
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
           <div className="px-5 py-4 border-b border-slate-100">
-
             <h2 className="text-sm font-extrabold text-[#234156]">
               Usuarios autorizados
             </h2>
@@ -800,61 +642,45 @@ export const AdminPanelView: React.FC<
             <p className="text-xs text-slate-500 mt-1">
               Correos con autorización para acceder a la intranet.
             </p>
-
           </div>
 
-
           {authorizedUsersLoading ? (
-
             <div className="p-10 text-center">
-
               <RefreshCw className="w-7 h-7 text-[#234156] animate-spin mx-auto mb-3" />
 
               <p className="text-xs font-bold text-slate-500">
                 Cargando usuarios...
               </p>
-
             </div>
-
           ) : authorizedUsers.length ===
             0 ? (
-
             <div className="p-10 text-center">
-
               <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
               <p className="text-sm font-bold text-slate-700">
                 No hay usuarios autorizados
               </p>
-
-              <p className="text-xs text-slate-400 mt-1">
-                Agrega el primer usuario autorizado.
-              </p>
-
             </div>
-
           ) : (
-
             <div className="divide-y divide-slate-100">
 
               {authorizedUsers.map(
                 (user) => {
-
                   const isCurrentUser =
                     user.email
                       .toLowerCase() ===
                     currentUserEmail
                       .toLowerCase();
 
+                  const isResetting =
+                    resettingPasswordId ===
+                    user.id;
+
                   return (
-
                     <div
-                      key={
-                        user.id
-                      }
-                      className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                      key={user.id}
+                      className="p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4"
                     >
-
                       {/* INFORMACIÓN */}
 
                       <div className="flex items-start gap-3 min-w-0">
@@ -866,38 +692,26 @@ export const AdminPanelView: React.FC<
                               : 'bg-slate-100 text-slate-400'
                           }`}
                         >
-
                           {user.active ? (
                             <UserCheck className="w-5 h-5" />
                           ) : (
                             <UserX className="w-5 h-5" />
                           )}
-
                         </div>
-
 
                         <div className="min-w-0">
 
                           <div className="flex items-center gap-2 flex-wrap">
-
                             <h3 className="text-sm font-extrabold text-[#234156]">
-
-                              {
-                                user.name ||
-                                'Sin nombre'
-                              }
-
+                              {user.name ||
+                                'Sin nombre'}
                             </h3>
 
-
                             {isCurrentUser && (
-
                               <span className="text-[9px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                                 Tú
                               </span>
-
                             )}
-
 
                             <span
                               className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
@@ -907,14 +721,11 @@ export const AdminPanelView: React.FC<
                                   : 'bg-slate-100 text-slate-600'
                               }`}
                             >
-
                               {user.role ===
                               'admin'
                                 ? 'Administrador'
                                 : 'Empleado'}
-
                             </span>
-
 
                             <span
                               className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
@@ -923,45 +734,28 @@ export const AdminPanelView: React.FC<
                                   : 'bg-red-100 text-red-700'
                               }`}
                             >
-
                               {user.active
                                 ? 'Activo'
                                 : 'Inactivo'}
-
                             </span>
-
                           </div>
 
-
                           <p className="text-xs text-slate-500 mt-1 break-all">
-
-                            {
-                              user.email
-                            }
-
+                            {user.email}
                           </p>
 
-
                           {user.createdAt && (
-
                             <p className="text-[10px] text-slate-400 mt-1">
-
                               Registrado:{' '}
-
                               {new Date(
                                 user.createdAt
                               ).toLocaleDateString(
                                 'es-CO'
                               )}
-
                             </p>
-
                           )}
-
                         </div>
-
                       </div>
-
 
                       {/* ACCIONES */}
 
@@ -976,13 +770,33 @@ export const AdminPanelView: React.FC<
                           }
                           className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                         >
-
                           <Pencil className="w-3.5 h-3.5" />
-
                           Editar
-
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleResetPassword(
+                              user
+                            )
+                          }
+                          disabled={
+                            isResetting
+                          }
+                          className="flex items-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Enviar enlace de restablecimiento de contraseña"
+                        >
+                          {isResetting ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <KeyRound className="w-3.5 h-3.5" />
+                          )}
+
+                          {isResetting
+                            ? 'Enviando...'
+                            : 'Restablecer contraseña'}
+                        </button>
 
                         <button
                           type="button"
@@ -1000,16 +814,7 @@ export const AdminPanelView: React.FC<
                               ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
                               : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
                           } disabled:opacity-40 disabled:cursor-not-allowed`}
-                          title={
-                            isCurrentUser &&
-                            user.active
-                              ? 'No puedes desactivar tu propio acceso'
-                              : user.active
-                              ? 'Desactivar acceso'
-                              : 'Activar acceso'
-                          }
                         >
-
                           {user.active ? (
                             <UserX className="w-3.5 h-3.5" />
                           ) : (
@@ -1019,9 +824,7 @@ export const AdminPanelView: React.FC<
                           {user.active
                             ? 'Desactivar'
                             : 'Activar'}
-
                         </button>
-
 
                         <button
                           type="button"
@@ -1034,73 +837,49 @@ export const AdminPanelView: React.FC<
                             isCurrentUser
                           }
                           className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={
-                            isCurrentUser
-                              ? 'No puedes eliminar tu propio acceso'
-                              : 'Eliminar autorización'
-                          }
                         >
-
                           <Trash2 className="w-3.5 h-3.5" />
-
                           Eliminar
-
                         </button>
 
                       </div>
-
                     </div>
-
                   );
                 }
               )}
 
             </div>
-
           )}
-
         </div>
 
-
-        {/* MODAL AGREGAR / EDITAR USUARIO */}
+        {/* MODAL USUARIO */}
 
         {isUserModalOpen && (
-
           <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
 
             <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-
-              {/* CABECERA */}
 
               <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-100">
 
                 <div className="flex items-center gap-3">
 
                   <div className="w-10 h-10 rounded-xl bg-[#234156] text-[#f3a828] flex items-center justify-center">
-
                     <Users className="w-5 h-5" />
-
                   </div>
 
-
                   <div>
-
                     <h3 className="text-base font-extrabold text-[#234156]">
-
                       {editingUser
                         ? 'Editar usuario'
                         : 'Agregar usuario'}
-
                     </h3>
 
                     <p className="text-xs text-slate-500">
                       Usuarios y Accesos CdR
                     </p>
-
                   </div>
 
                 </div>
-
 
                 <button
                   type="button"
@@ -1112,15 +891,9 @@ export const AdminPanelView: React.FC<
                   }
                   className="text-slate-400 hover:text-slate-700 disabled:opacity-50"
                 >
-
                   <X className="w-5 h-5" />
-
                 </button>
-
               </div>
-
-
-              {/* FORMULARIO */}
 
               <form
                 onSubmit={
@@ -1130,7 +903,6 @@ export const AdminPanelView: React.FC<
               >
 
                 <div>
-
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Nombre *
                   </label>
@@ -1146,15 +918,11 @@ export const AdminPanelView: React.FC<
                         e.target.value
                       )
                     }
-                    placeholder="Nombre del usuario"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
                   />
-
                 </div>
 
-
                 <div>
-
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Correo institucional *
                   </label>
@@ -1170,19 +938,15 @@ export const AdminPanelView: React.FC<
                         e.target.value
                       )
                     }
-                    placeholder="usuario@consejoderedaccion.org"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
                   />
 
                   <p className="text-[10px] text-slate-400 mt-1">
                     Se permiten correos de @consejoderedaccion.org y @colombiacheck.org.
                   </p>
-
                 </div>
 
-
                 <div>
-
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Rol *
                   </label>
@@ -1199,7 +963,6 @@ export const AdminPanelView: React.FC<
                     }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
                   >
-
                     <option value="employee">
                       Empleado
                     </option>
@@ -1207,20 +970,15 @@ export const AdminPanelView: React.FC<
                     <option value="admin">
                       Administrador
                     </option>
-
                   </select>
-
                 </div>
 
-
                 {editingUser && (
-
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
 
                     <label className="flex items-center justify-between gap-4 cursor-pointer">
 
                       <div>
-
                         <p className="text-xs font-extrabold text-[#234156]">
                           Acceso activo
                         </p>
@@ -1228,9 +986,7 @@ export const AdminPanelView: React.FC<
                         <p className="text-[10px] text-slate-500 mt-0.5">
                           Si se desactiva, este correo dejará de tener acceso autorizado.
                         </p>
-
                       </div>
-
 
                       <input
                         type="checkbox"
@@ -1252,26 +1008,17 @@ export const AdminPanelView: React.FC<
                       />
 
                     </label>
-
                   </div>
-
                 )}
 
-
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-
                   <p className="text-[10px] text-amber-900 leading-relaxed">
-
                     <strong>
                       Importante:
                     </strong>{' '}
-
-                    agregar un correo aquí autoriza su acceso a la intranet, pero no crea ni modifica su contraseña de Supabase Authentication.
-
+                    agregar un correo aquí autoriza su acceso a la intranet. La contraseña se administra mediante Supabase Authentication.
                   </p>
-
                 </div>
-
 
                 <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
 
@@ -1288,7 +1035,6 @@ export const AdminPanelView: React.FC<
                     Cancelar
                   </button>
 
-
                   <button
                     type="submit"
                     disabled={
@@ -1296,7 +1042,6 @@ export const AdminPanelView: React.FC<
                     }
                     className="flex items-center gap-2 bg-[#234156] hover:bg-[#1a3142] text-white px-5 py-2.5 rounded-xl text-xs font-extrabold disabled:opacity-50"
                   >
-
                     {savingUser ? (
                       <RefreshCw className="w-4 h-4 animate-spin text-[#f3a828]" />
                     ) : (
@@ -1308,26 +1053,20 @@ export const AdminPanelView: React.FC<
                       : editingUser
                       ? 'Guardar cambios'
                       : 'Agregar usuario'}
-
                   </button>
 
                 </div>
-
               </form>
-
             </div>
-
           </div>
-
         )}
 
       </div>
     );
   }
 
-
   // =========================================================
-  // MÓDULOS TODAVÍA PENDIENTES
+  // MÓDULOS PENDIENTES
   // =========================================================
 
   if (
@@ -1340,7 +1079,6 @@ export const AdminPanelView: React.FC<
     activeSection ===
       'agenda'
   ) {
-
     const selectedModule =
       modules.find(
         (module) =>
@@ -1358,55 +1096,33 @@ export const AdminPanelView: React.FC<
         <button
           type="button"
           onClick={() =>
-            setActiveSection(
-              null
-            )
+            setActiveSection(null)
           }
           className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
         >
-
           <ArrowLeft className="w-4 h-4" />
-
           Volver a módulos
-
         </button>
-
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
           <div className="flex items-start gap-4">
 
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
-
               <Icon className="w-6 h-6" />
-
             </div>
 
-
             <div>
-
               <h1 className="text-xl md:text-2xl font-extrabold">
-
-                {
-                  selectedModule?.title
-                }
-
+                {selectedModule?.title}
               </h1>
 
               <p className="text-xs md:text-sm text-slate-200 mt-1">
-
-                {
-                  selectedModule?.description
-                }
-
+                {selectedModule?.description}
               </p>
-
             </div>
-
           </div>
-
         </div>
-
 
         <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
 
@@ -1421,11 +1137,9 @@ export const AdminPanelView: React.FC<
           </p>
 
         </div>
-
       </div>
     );
   }
-
 
   // =========================================================
   // PANEL PRINCIPAL
@@ -1434,21 +1148,15 @@ export const AdminPanelView: React.FC<
   return (
     <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
-      {/* ENCABEZADO */}
-
       <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
         <div className="flex items-start gap-4">
 
           <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0 shadow-sm">
-
             <ShieldCheck className="w-6 h-6" />
-
           </div>
 
-
           <div>
-
             <h1 className="text-xl md:text-2xl font-extrabold">
               Panel Administrativo CdR
             </h1>
@@ -1456,15 +1164,10 @@ export const AdminPanelView: React.FC<
             <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl leading-relaxed">
               Centro de gestión de contenidos de la intranet. Desde aquí puedes administrar documentos, formatos, comunicados, reglamentos, agenda y accesos de usuarios.
             </p>
-
           </div>
 
         </div>
-
       </div>
-
-
-      {/* AVISO */}
 
       <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4">
 
@@ -1473,7 +1176,6 @@ export const AdminPanelView: React.FC<
           <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
 
           <div>
-
             <p className="text-xs font-extrabold text-[#234156]">
               Área exclusiva para administradores
             </p>
@@ -1481,20 +1183,14 @@ export const AdminPanelView: React.FC<
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               Los cambios realizados desde estos módulos pueden modificar la información visible para todos los empleados autorizados en la intranet.
             </p>
-
           </div>
 
         </div>
-
       </div>
-
-
-      {/* MÓDULOS */}
 
       <div>
 
         <div className="mb-4">
-
           <h2 className="text-base font-extrabold text-[#234156]">
             Módulos de administración
           </h2>
@@ -1502,25 +1198,19 @@ export const AdminPanelView: React.FC<
           <p className="text-xs text-slate-500 mt-1">
             Selecciona la sección que deseas administrar.
           </p>
-
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
           {modules.map(
             (module) => {
-
               const Icon =
                 module.icon;
 
               return (
-
                 <button
                   type="button"
-                  key={
-                    module.id
-                  }
+                  key={module.id}
                   onClick={() =>
                     handleOpenModule(
                       module.id
@@ -1532,51 +1222,32 @@ export const AdminPanelView: React.FC<
                   <div className="flex items-start justify-between gap-4">
 
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-[#234156] group-hover:bg-[#234156] group-hover:text-[#f3a828] transition-all">
-
                       <Icon className="w-5 h-5" />
-
                     </div>
 
-
                     <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#234156] group-hover:translate-x-1 transition-all" />
-
                   </div>
 
-
                   <h3 className="text-sm font-extrabold text-[#234156] mt-4">
-
-                    {
-                      module.title
-                    }
-
+                    {module.title}
                   </h3>
 
-
                   <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-
-                    {
-                      module.description
-                    }
-
+                    {module.description}
                   </p>
 
-
                   <div className="mt-4 pt-3 border-t border-slate-100">
-
                     <span className="text-[11px] font-extrabold text-[#234156]">
                       Administrar sección
                     </span>
-
                   </div>
 
                 </button>
-
               );
             }
           )}
 
         </div>
-
       </div>
 
     </div>

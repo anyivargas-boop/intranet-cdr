@@ -2046,6 +2046,10 @@ export default function App() {
                 handleDeleteAuthorizedUser
               }
 
+              onResetUserPassword={
+                handleResetUserPassword
+              }
+
               onReloadAuthorizedUsers={
                 loadAuthorizedUsers
               }
