@@ -799,6 +799,81 @@ export default function App() {
       await loadAuthorizedUsers();
     };
 
+  // =========================================================
+  // RESTABLECER CONTRASEÑA DE USUARIO
+  // =========================================================
+
+  const handleResetUserPassword =
+    async (
+      user: AuthorizedUser
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede solicitar el restablecimiento de contraseña.'
+        );
+
+        return false;
+      }
+
+      const normalizedEmail =
+        user.email
+          .trim()
+          .toLowerCase();
+
+      if (!normalizedEmail) {
+        alert(
+          'Este usuario no tiene un correo electrónico válido.'
+        );
+
+        return false;
+      }
+
+      const confirmed =
+        window.confirm(
+          `¿Deseas enviar un enlace para restablecer la contraseña de ${user.name || normalizedEmail}?\n\nEl correo será enviado a:\n${normalizedEmail}`
+        );
+
+      if (!confirmed) {
+        return false;
+      }
+
+      const redirectUrl =
+        `${window.location.origin}/`;
+
+      const {
+        error,
+      } =
+        await supabase.auth.resetPasswordForEmail(
+          normalizedEmail,
+          {
+            redirectTo:
+              redirectUrl,
+          }
+        );
+
+      if (error) {
+        console.error(
+          'Error enviando recuperación de contraseña:',
+          error
+        );
+
+        alert(
+          `No fue posible enviar el correo de recuperación.\n\n${error.message}`
+        );
+
+        return false;
+      }
+
+      alert(
+        `Correo de recuperación solicitado correctamente.\n\nDestino:\n${normalizedEmail}\n\nEl usuario debe revisar su bandeja de entrada y la carpeta de spam.`
+      );
+
+      return true;
+    };
+
 
   // =========================================================
   // CARGAR DOCUMENTOS
