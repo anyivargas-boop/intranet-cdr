@@ -1,4 +1,5 @@
 export type CategoryType =
+  | 'Documentación Institucional'
   | 'Administración'
   | 'Formatos de Viáticos'
   | 'Leyes y Reglamentos'
@@ -6,7 +7,14 @@ export type CategoryType =
   | 'Salud y Seguridad (SST)'
   | 'Proyectos y Becas';
 
-export type FileType = 'drive' | 'pdf' | 'excel' | 'word' | 'form';
+
+export type FileType =
+  | 'drive'
+  | 'pdf'
+  | 'excel'
+  | 'word'
+  | 'form';
+
 
 export interface FormatoDocumento {
   id: string;
@@ -23,17 +31,20 @@ export interface FormatoDocumento {
   downloadsCount?: number;
 }
 
+
 export type ComunicadoCategory =
   | 'Institucional'
   | 'Bienestar'
   | 'Importante'
   | 'Formación';
 
+
 export interface ComunicadoAttachment {
   name: string;
   url: string;
   type: string;
 }
+
 
 export interface Comunicado {
   id: string;
@@ -48,6 +59,7 @@ export interface Comunicado {
   attachments?: ComunicadoAttachment[];
 }
 
+
 export interface ReglamentoSection {
   id?: number;
   title: string;
@@ -55,6 +67,7 @@ export interface ReglamentoSection {
   sectionUrl?: string;
   sortOrder?: number;
 }
+
 
 export interface Reglamento {
   id: number | string;
@@ -68,12 +81,14 @@ export interface Reglamento {
   sections: ReglamentoSection[];
 }
 
+
 export type EventType =
   | 'Taller'
   | 'Capacitación'
   | 'Cierre Editorial'
   | 'Reunión General'
   | 'Fecha Límite';
+
 
 export interface EventoAgenda {
   id: string;
@@ -87,6 +102,7 @@ export interface EventoAgenda {
   calendarUrl?: string;
 }
 
+
 export interface DriveFolder {
   id: string;
   name: string;
@@ -97,6 +113,7 @@ export interface DriveFolder {
   iconBgColor: string;
   iconTextColor: string;
 }
+
 
 export interface GoogleIntegrationsConfig {
   driveFolderUrl: string;

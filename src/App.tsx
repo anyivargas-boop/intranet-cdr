@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
+import { DocumentacionInstitucionalView } from './components/DocumentacionInstitucionalView';
 import { DocumentosView } from './components/DocumentosView';
 import { ComunicadosView } from './components/ComunicadosView';
 import { ReglamentosView } from './components/ReglamentosView';
 import { AgendaView } from './components/AgendaView';
-import { DriveIntegrationView } from './components/DriveIntegrationView';
 import { Footer } from './components/Footer';
 
 import { EmployeeLogin } from './components/EmployeeLogin';
@@ -58,7 +58,7 @@ export default function App() {
   >('');
 
   // =========================================================
-  // DATOS LOCALES EXISTENTES
+  // DATOS
   // =========================================================
 
   const [formatos, setFormatos] = useState<FormatoDocumento[]>(() => {
@@ -71,7 +71,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialComunicados;
   });
 
-  // REGLAMENTOS AHORA VIENEN DE SUPABASE
   const [reglamentos, setReglamentos] = useState<Reglamento[]>([]);
   const [reglamentosLoading, setReglamentosLoading] = useState(false);
 
@@ -80,7 +79,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialEventos;
   });
 
-  const [driveFolders, setDriveFolders] = useState<DriveFolder[]>(() => {
+  const [driveFolders] = useState<DriveFolder[]>(() => {
     const saved = localStorage.getItem('cdr_driveFolders');
     return saved ? JSON.parse(saved) : initialDriveFolders;
   });
@@ -109,20 +108,13 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem(
-      'cdr_driveFolders',
-      JSON.stringify(driveFolders)
-    );
-  }, [driveFolders]);
-
-  useEffect(() => {
-    localStorage.setItem(
       'cdr_googleConfig',
       JSON.stringify(googleConfig)
     );
   }, [googleConfig]);
 
   // =========================================================
-  // VERIFICACIÓN DEL EMPLEADO
+  // VERIFICAR EMPLEADO
   // =========================================================
 
   const verifyEmployee = async (email?: string | null) => {
@@ -178,9 +170,6 @@ export default function App() {
     setEmployeeAuthorized(true);
     setCurrentUserEmail(normalizedEmail);
     setCurrentUserRole(role);
-
-    // Los usuarios con role=admin quedan habilitados
-    // automáticamente para administrar.
     setIsAdmin(role === 'admin');
 
     setAuthLoading(false);
@@ -227,12 +216,14 @@ export default function App() {
   const loadReglamentos = async () => {
     setReglamentosLoading(true);
 
-    const { data: reglamentosData, error: reglamentosError } =
-      await supabase
-        .from('reglamentos')
-        .select('*')
-        .eq('active', true)
-        .order('id', { ascending: true });
+    const {
+      data: reglamentosData,
+      error: reglamentosError,
+    } = await supabase
+      .from('reglamentos')
+      .select('*')
+      .eq('active', true)
+      .order('id', { ascending: true });
 
     if (reglamentosError) {
       console.error(
@@ -245,12 +236,14 @@ export default function App() {
       return;
     }
 
-    const { data: sectionsData, error: sectionsError } =
-      await supabase
-        .from('reglamento_sections')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+    const {
+      data: sectionsData,
+      error: sectionsError,
+    } = await supabase
+      .from('reglamento_sections')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order', { ascending: true });
 
     if (sectionsError) {
       console.error(
@@ -366,7 +359,7 @@ export default function App() {
   };
 
   // =========================================================
-  // REGLAMENTOS - ABRIR MODALES
+  // REGLAMENTOS
   // =========================================================
 
   const handleOpenAddReglamento = () => {
@@ -380,10 +373,6 @@ export default function App() {
     setReglamentoEditando(reglamento);
     setIsEditReglamentoOpen(true);
   };
-
-  // =========================================================
-  // REGLAMENTOS - GUARDAR EN SUPABASE
-  // =========================================================
 
   const handleSaveReglamento = async (
     reglamento: Reglamento
@@ -400,10 +389,6 @@ export default function App() {
       reglamento.id.startsWith('temp-');
 
     let reglamentoId: number;
-
-    // -------------------------------------------------------
-    // CREAR NUEVO
-    // -------------------------------------------------------
 
     if (isNew) {
       const { data, error } = await supabase
@@ -436,13 +421,7 @@ export default function App() {
       }
 
       reglamentoId = data.id;
-    }
-
-    // -------------------------------------------------------
-    // EDITAR EXISTENTE
-    // -------------------------------------------------------
-
-    else {
+    } else {
       reglamentoId = Number(reglamento.id);
 
       const { error } = await supabase
@@ -473,10 +452,6 @@ export default function App() {
         return;
       }
     }
-
-    // -------------------------------------------------------
-    // REEMPLAZAR CAPÍTULOS
-    // -------------------------------------------------------
 
     const { error: deleteSectionsError } =
       await supabase
@@ -535,10 +510,6 @@ export default function App() {
 
     await loadReglamentos();
   };
-
-  // =========================================================
-  // REGLAMENTOS - ELIMINAR
-  // =========================================================
 
   const handleDeleteReglamento = async (
     id: number | string
@@ -616,30 +587,7 @@ export default function App() {
   };
 
   // =========================================================
-  // DRIVE
-  // =========================================================
-
-  const handleAddDriveFolder = (
-    newFolder: DriveFolder
-  ) => {
-    setDriveFolders((prev) => [
-      newFolder,
-      ...prev,
-    ]);
-  };
-
-  const handleDeleteDriveFolder = (
-    id: string
-  ) => {
-    setDriveFolders((prev) =>
-      prev.filter(
-        (folder) => folder.id !== id
-      )
-    );
-  };
-
-  // =========================================================
-  // PANTALLA DE CARGA
+  // CARGANDO
   // =========================================================
 
   if (authLoading) {
@@ -679,9 +627,8 @@ export default function App() {
         unreadCount={comunicados.length}
       />
 
-      {/* USUARIO CONECTADO */}
+      {/* USUARIO */}
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
-
         <span>
           Sesión:{' '}
           <strong>{currentUserEmail}</strong>
@@ -734,7 +681,24 @@ export default function App() {
           />
         )}
 
-        {/* DOCUMENTOS */}
+        {/* DOCUMENTACIÓN INSTITUCIONAL */}
+        {activeTab === 'institucional' && (
+          <DocumentacionInstitucionalView
+            formatos={formatos}
+            isAdmin={isAdmin}
+            onOpenAddModal={() =>
+              setIsAddDocOpen(true)
+            }
+            onEditFormato={
+              setDocumentoEditando
+            }
+            onDeleteFormato={
+              handleDeleteDocument
+            }
+          />
+        )}
+
+        {/* FORMATOS Y PLANTILLAS */}
         {activeTab === 'documentos' && (
           <DocumentosView
             formatos={formatos}
@@ -817,27 +781,6 @@ export default function App() {
             }
           />
         )}
-
-        {/* DRIVE */}
-        {activeTab === 'drive' && (
-          <DriveIntegrationView
-            driveFolders={driveFolders}
-            googleConfig={googleConfig}
-            isAdmin={isAdmin}
-            onOpenFolderModal={(url, name) =>
-              setDriveViewerFolder({
-                url,
-                name,
-              })
-            }
-            onAddDriveFolder={
-              handleAddDriveFolder
-            }
-            onDeleteDriveFolder={
-              handleDeleteDriveFolder
-            }
-          />
-        )}
       </main>
 
       <Footer
@@ -848,15 +791,13 @@ export default function App() {
         }
       />
 
-      {/* LOGIN ADMINISTRADOR ANTIGUO */}
+      {/* ADMINISTRADOR */}
       <AdminLoginModal
         isOpen={isAdminLoginOpen}
         onClose={() =>
           setIsAdminLoginOpen(false)
         }
         onSuccess={() => {
-          // La base de datos solamente permitirá
-          // editar si el usuario tiene role=admin.
           if (currentUserRole === 'admin') {
             setIsAdmin(true);
           }
@@ -920,7 +861,7 @@ export default function App() {
         }
       />
 
-      {/* DRIVE */}
+      {/* VISOR DE DOCUMENTOS DE DRIVE */}
       {driveViewerFolder && (
         <DriveViewerModal
           isOpen={true}
@@ -940,7 +881,7 @@ export default function App() {
 }
 
 // =========================================================
-// PEQUEÑO INDICADOR DE CARGA PARA REGLAMENTOS
+// CARGANDO REGLAMENTOS
 // =========================================================
 
 const BookOpenLoading = () => {

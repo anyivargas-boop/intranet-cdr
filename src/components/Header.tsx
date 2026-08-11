@@ -5,8 +5,8 @@ import {
   BookOpen,
   Calendar,
   LayoutDashboard,
+  Building2,
 } from 'lucide-react';
-import { DriveIcon } from './DriveIcon';
 
 interface HeaderProps {
   activeTab: string;
@@ -20,27 +20,54 @@ export const Header: React.FC<HeaderProps> = ({
   unreadCount = 2,
 }) => {
   const navItems = [
-    { id: 'inicio', label: 'Inicio', icon: LayoutDashboard },
-    { id: 'documentos', label: 'Formatos y Documentación', icon: FileText },
-    { id: 'comunicados', label: 'Comunicados', icon: Bell, badge: unreadCount },
-    { id: 'reglamentos', label: 'Reglamentos', icon: BookOpen },
-    { id: 'agenda', label: 'Agenda CdR', icon: Calendar },
-    { id: 'drive', label: 'Google Drive & Sync', icon: DriveIcon },
+    {
+      id: 'inicio',
+      label: 'Inicio',
+      icon: LayoutDashboard,
+    },
+    {
+      id: 'institucional',
+      label: 'Documentación Institucional',
+      icon: Building2,
+    },
+    {
+      id: 'documentos',
+      label: 'Formatos y Plantillas',
+      icon: FileText,
+    },
+    {
+      id: 'comunicados',
+      label: 'Comunicados',
+      icon: Bell,
+      badge: unreadCount,
+    },
+    {
+      id: 'reglamentos',
+      label: 'Reglamentos',
+      icon: BookOpen,
+    },
+    {
+      id: 'agenda',
+      label: 'Agenda CdR',
+      icon: Calendar,
+    },
   ];
 
   return (
-    <header className="bg-[#234156] border-b-4 border-[#f3a828] text-white shadow-md shrink-0 sticky top-0 z-30">
-      <div className="bg-[#1a3040] text-[11px] py-1 px-6 lg:px-10 flex justify-between items-center text-slate-300 font-medium border-b border-slate-700/50">
-        <span className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#f3a828]"></span>
-          Intranet Oficial &bull; <strong className="text-white">Consejo de Redacción</strong>
+    <header className="bg-[#234156] border-b-4 border-[#f3a828] shadow-sm">
+      {/* Barra superior */}
+      <div className="bg-[#182c3b] text-slate-200 text-[10px] font-semibold px-6 lg:px-10 py-1.5 flex items-center justify-between">
+        <span>
+          <span className="text-[#f3a828]">●</span>{' '}
+          Intranet Oficial • Consejo de Redacción
         </span>
-        <div className="hidden sm:flex items-center gap-4 text-slate-300 font-medium">
-          <span>Bogotá, Colombia</span>
-        </div>
+
+        <span>Bogotá, Colombia</span>
       </div>
 
-      <div className="h-16 px-6 lg:px-10 flex items-center justify-between gap-6">
+      {/* Navegación principal */}
+      <div className="min-h-16 px-6 lg:px-10 py-2 flex items-center justify-between gap-6">
+        {/* Logo */}
         <div
           className="flex items-center gap-3 cursor-pointer shrink-0"
           onClick={() => setActiveTab('inicio')}
@@ -60,7 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-3 text-xs font-semibold text-slate-200">
+        {/* Menú escritorio */}
+        <nav className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-200">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -69,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 py-1.5 px-3 rounded-lg transition-all relative ${
+                className={`flex items-center gap-2 py-1.5 px-3 rounded-lg transition-all relative whitespace-nowrap ${
                   isActive
                     ? 'bg-[#182c3b] text-[#f3a828] font-bold border border-[#f3a828]/40 shadow-inner'
                     : 'hover:bg-[#1a3243] hover:text-white'
@@ -83,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
 
                 <span>{item.label}</span>
 
-                {item.badge && item.badge > 0 && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="bg-[#f3a828] text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
                     {item.badge}
                   </span>
@@ -93,6 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
+        {/* Menú móvil */}
         <div className="lg:hidden flex items-center">
           <select
             value={activeTab}

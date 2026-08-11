@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { FormatoDocumento, CategoryType, FileType } from '../types';
-import { FilePenLine, Save, X } from 'lucide-react';
+import {
+  FormatoDocumento,
+  CategoryType,
+  FileType,
+} from '../types';
+import {
+  FilePenLine,
+  Save,
+  X,
+} from 'lucide-react';
 
 interface EditDocumentModalProps {
   isOpen: boolean;
@@ -9,7 +17,9 @@ interface EditDocumentModalProps {
   onSave: (documento: FormatoDocumento) => void;
 }
 
-export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
+export const EditDocumentModal: React.FC<
+  EditDocumentModalProps
+> = ({
   isOpen,
   documento,
   onClose,
@@ -20,7 +30,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     useState<CategoryType>('Administración');
   const [description, setDescription] = useState('');
   const [driveUrl, setDriveUrl] = useState('');
-  const [fileType, setFileType] = useState<FileType>('word');
+  const [fileType, setFileType] =
+    useState<FileType>('word');
   const [version, setVersion] = useState('v1.0');
   const [lastUpdated, setLastUpdated] = useState('');
 
@@ -41,9 +52,17 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim() || !driveUrl.trim()) return;
+    if (!title.trim() || !driveUrl.trim()) {
+      return;
+    }
 
-    const colors: Record<FileType, { bg: string; text: string }> = {
+    const colors: Record<
+      FileType,
+      {
+        bg: string;
+        text: string;
+      }
+    > = {
       excel: {
         bg: 'bg-emerald-50',
         text: 'text-emerald-700',
@@ -76,7 +95,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       fileType,
       version: version.trim() || 'v1.0',
       lastUpdated:
-        lastUpdated || new Date().toISOString().split('T')[0],
+        lastUpdated ||
+        new Date().toISOString().split('T')[0],
       iconBgColor: colors[fileType].bg,
       iconTextColor: colors[fileType].text,
     };
@@ -88,8 +108,11 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   return (
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-lg w-full p-6 text-slate-900">
+
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+
           <div className="flex items-center gap-3">
+
             <div className="w-10 h-10 rounded-xl bg-[#234156] text-[#f3a828] flex items-center justify-center border border-slate-700">
               <FilePenLine className="w-5 h-5" />
             </div>
@@ -100,9 +123,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               </h3>
 
               <p className="text-xs text-slate-500 font-semibold">
-                Modifique la información o el enlace
+                Modifica la información, ubicación o enlace
               </p>
             </div>
+
           </div>
 
           <button
@@ -112,12 +136,15 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+
         </div>
+
 
         <form
           onSubmit={handleSubmit}
           className="space-y-4 text-xs"
         >
+
           <div>
             <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
               Nombre del documento *
@@ -127,12 +154,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               type="text"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) =>
+                setTitle(e.target.value)
+              }
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
             />
           </div>
 
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
                 Categoría
@@ -141,30 +172,44 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <select
                 value={category}
                 onChange={(e) =>
-                  setCategory(e.target.value as CategoryType)
+                  setCategory(
+                    e.target.value as CategoryType
+                  )
                 }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               >
+
+                <option value="Documentación Institucional">
+                  Documentación Institucional
+                </option>
+
                 <option value="Administración">
                   Administración
                 </option>
+
                 <option value="Formatos de Viáticos">
                   Formatos de Viáticos
                 </option>
+
                 <option value="Leyes y Reglamentos">
                   Leyes y Reglamentos
                 </option>
+
                 <option value="Redacción y Estilo">
                   Redacción y Estilo
                 </option>
+
                 <option value="Salud y Seguridad (SST)">
                   Salud y Seguridad (SST)
                 </option>
+
                 <option value="Proyectos y Becas">
                   Proyectos y Becas
                 </option>
+
               </select>
             </div>
+
 
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
@@ -174,20 +219,39 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <select
                 value={fileType}
                 onChange={(e) =>
-                  setFileType(e.target.value as FileType)
+                  setFileType(
+                    e.target.value as FileType
+                  )
                 }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               >
-                <option value="excel">Excel</option>
-                <option value="word">Word / Google Docs</option>
-                <option value="pdf">PDF</option>
-                <option value="form">Google Forms</option>
-                <option value="drive">Carpeta de Drive</option>
+                <option value="excel">
+                  Excel
+                </option>
+
+                <option value="word">
+                  Word / Google Docs
+                </option>
+
+                <option value="pdf">
+                  PDF
+                </option>
+
+                <option value="form">
+                  Google Forms
+                </option>
+
+                <option value="drive">
+                  Enlace / Carpeta
+                </option>
               </select>
             </div>
+
           </div>
 
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
                 Versión
@@ -196,10 +260,13 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <input
                 type="text"
                 value={version}
-                onChange={(e) => setVersion(e.target.value)}
+                onChange={(e) =>
+                  setVersion(e.target.value)
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               />
             </div>
+
 
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
@@ -215,22 +282,27 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               />
             </div>
+
           </div>
+
 
           <div>
             <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
-              Enlace de Google Drive / Docs *
+              Enlace del archivo *
             </label>
 
             <input
               type="url"
               required
               value={driveUrl}
-              onChange={(e) => setDriveUrl(e.target.value)}
+              onChange={(e) =>
+                setDriveUrl(e.target.value)
+              }
               placeholder="https://docs.google.com/..."
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
             />
           </div>
+
 
           <div>
             <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
@@ -247,7 +319,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             />
           </div>
 
+
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+
             <button
               type="button"
               onClick={onClose}
@@ -263,7 +337,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <Save className="w-4 h-4 text-[#f3a828]" />
               Guardar cambios
             </button>
+
           </div>
+
         </form>
       </div>
     </div>
