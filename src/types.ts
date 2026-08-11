@@ -23,7 +23,11 @@ export interface FormatoDocumento {
   downloadsCount?: number;
 }
 
-export type ComunicadoCategory = 'Institucional' | 'Bienestar' | 'Importante' | 'Formación';
+export type ComunicadoCategory =
+  | 'Institucional'
+  | 'Bienestar'
+  | 'Importante'
+  | 'Formación';
 
 export interface ComunicadoAttachment {
   name: string;
@@ -45,12 +49,15 @@ export interface Comunicado {
 }
 
 export interface ReglamentoSection {
+  id?: number;
   title: string;
   content: string;
+  sectionUrl?: string;
+  sortOrder?: number;
 }
 
 export interface Reglamento {
-  id: string;
+  id: number | string;
   title: string;
   description: string;
   category: string;
@@ -61,12 +68,17 @@ export interface Reglamento {
   sections: ReglamentoSection[];
 }
 
-export type EventType = 'Taller' | 'Capacitación' | 'Cierre Editorial' | 'Reunión General' | 'Fecha Límite';
+export type EventType =
+  | 'Taller'
+  | 'Capacitación'
+  | 'Cierre Editorial'
+  | 'Reunión General'
+  | 'Fecha Límite';
 
 export interface EventoAgenda {
   id: string;
   title: string;
-  date: string; // ISO date format YYYY-MM-DD
+  date: string;
   time: string;
   location: string;
   type: EventType;
