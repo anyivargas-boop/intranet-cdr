@@ -1130,11 +1130,17 @@ export default function App() {
           'admin' &&
           isAdmin && (
             <AdminPanelView
-              onNavigate={
-                setActiveTab
-              }
-            />
-          )}
+            formatos={formatos}
+            onAddDocument={() =>
+              setIsAddDocOpen(true)
+            }
+            onEditDocument={
+              setDocumentoEditando
+            }
+            onDeleteDocument={
+              handleDeleteDocument
+            }
+          />
 
 
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
