@@ -1298,13 +1298,12 @@ export default function App() {
 
       <Footer
         isAdmin={isAdmin}
-        setIsAdmin={
-          setIsAdmin
-        }
+        setIsAdmin={setIsAdmin}
         onOpenAdminModal={() =>
-          setIsAdminLoginOpen(
-            true
-          )
+          setIsAdminLoginOpen(true)
+        }
+        onOpenAdminPanel={() =>
+          setActiveTab('admin')
         }
       />
 
