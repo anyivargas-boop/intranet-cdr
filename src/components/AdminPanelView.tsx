@@ -64,10 +64,9 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     },
   ];
 
-  const handleOpenModule = (id: string) => {
-    setActiveSection(id);
-    onNavigate(id);
-  };
+    const handleOpenModule = (id: string) => {
+     setActiveSection(id);
+    };
 
   return (
     <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
