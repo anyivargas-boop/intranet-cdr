@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FormatoDocumento,
   CategoryType,
@@ -25,12 +25,23 @@ export const AddDocumentModal: React.FC<
 }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] =
-    useState<CategoryType>('Administración');
+    useState<CategoryType>('Documentación Institucional');
   const [description, setDescription] = useState('');
   const [driveUrl, setDriveUrl] = useState('');
   const [fileType, setFileType] =
     useState<FileType>('word');
   const [version, setVersion] = useState('v1.0');
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle('');
+      setCategory('Documentación Institucional');
+      setDescription('');
+      setDriveUrl('');
+      setFileType('word');
+      setVersion('v1.0');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -73,7 +84,7 @@ export const AddDocumentModal: React.FC<
     };
 
     const newDoc: FormatoDocumento = {
-      id: `fmt-${Date.now()}`,
+      id: `temp-${Date.now()}`,
       title: title.trim(),
       category,
       description: description.trim(),
@@ -124,7 +135,6 @@ export const AddDocumentModal: React.FC<
           </button>
         </div>
 
-
         <form
           onSubmit={handleSubmit}
           className="space-y-4 text-xs"
@@ -147,7 +157,6 @@ export const AddDocumentModal: React.FC<
             />
           </div>
 
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <div>
@@ -164,7 +173,6 @@ export const AddDocumentModal: React.FC<
                 }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               >
-
                 <option value="Documentación Institucional">
                   Documentación Institucional
                 </option>
@@ -192,10 +200,8 @@ export const AddDocumentModal: React.FC<
                 <option value="Proyectos y Becas">
                   Proyectos y Becas
                 </option>
-
               </select>
             </div>
-
 
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
@@ -211,7 +217,6 @@ export const AddDocumentModal: React.FC<
                 }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               >
-
                 <option value="excel">
                   Excel / Plantilla de Cálculo
                 </option>
@@ -231,12 +236,10 @@ export const AddDocumentModal: React.FC<
                 <option value="drive">
                   Enlace / Carpeta
                 </option>
-
               </select>
             </div>
 
           </div>
-
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -255,7 +258,6 @@ export const AddDocumentModal: React.FC<
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
               />
             </div>
-
 
             <div>
               <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
@@ -276,7 +278,6 @@ export const AddDocumentModal: React.FC<
 
           </div>
 
-
           <div>
             <label className="block font-bold text-[#234156] uppercase tracking-wider mb-1">
               Descripción Corta e Instrucciones de Uso
@@ -292,7 +293,6 @@ export const AddDocumentModal: React.FC<
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234156] font-medium"
             />
           </div>
-
 
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
 
