@@ -46,8 +46,7 @@ export default function App() {
   // ACCESO Y ROLES
   // =========================================================
 
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-
+  const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [employeeAuthorized, setEmployeeAuthorized] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState('');
@@ -57,14 +56,14 @@ export default function App() {
   >('');
 
   // =========================================================
-  // DOCUMENTOS DESDE SUPABASE
+  // DOCUMENTOS - SUPABASE
   // =========================================================
 
   const [formatos, setFormatos] = useState<FormatoDocumento[]>([]);
   const [documentosLoading, setDocumentosLoading] = useState(false);
 
   // =========================================================
-  // COMUNICADOS
+  // COMUNICADOS - LOCAL POR AHORA
   // =========================================================
 
   const [comunicados, setComunicados] = useState<Comunicado[]>(() => {
@@ -76,14 +75,14 @@ export default function App() {
   });
 
   // =========================================================
-  // REGLAMENTOS DESDE SUPABASE
+  // REGLAMENTOS - SUPABASE
   // =========================================================
 
   const [reglamentos, setReglamentos] = useState<Reglamento[]>([]);
   const [reglamentosLoading, setReglamentosLoading] = useState(false);
 
   // =========================================================
-  // AGENDA
+  // AGENDA - LOCAL POR AHORA
   // =========================================================
 
   const [eventos, setEventos] = useState<EventoAgenda[]>(() => {
@@ -104,7 +103,7 @@ export default function App() {
     });
 
   // =========================================================
-  // GUARDAR DATOS LOCALES QUE TODAVÍA NO ESTÁN EN SUPABASE
+  // LOCAL STORAGE
   // =========================================================
 
   useEffect(() => {
@@ -132,7 +131,9 @@ export default function App() {
   // VERIFICAR EMPLEADO
   // =========================================================
 
-  const verifyEmployee = async (email?: string | null) => {
+  const verifyEmployee = async (
+    email?: string | null
+  ) => {
     if (!email) {
       setEmployeeAuthorized(false);
       setCurrentUserEmail('');
@@ -189,7 +190,6 @@ export default function App() {
     setCurrentUserEmail(normalizedEmail);
     setCurrentUserRole(role);
     setIsAdmin(role === 'admin');
-
     setAuthLoading(false);
   };
 
@@ -220,6 +220,19 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // =========================================================
+  // PROTEGER PANEL ADMIN
+  // =========================================================
+
+  useEffect(() => {
+    if (
+      activeTab === 'admin' &&
+      !isAdmin
+    ) {
+      setActiveTab('inicio');
+    }
+  }, [activeTab, isAdmin]);
 
   // =========================================================
   // CERRAR SESIÓN
@@ -292,7 +305,8 @@ export default function App() {
             'word') as FileType,
 
         version:
-          doc.version || 'v1.0',
+          doc.version ||
+          'v1.0',
 
         lastUpdated:
           doc.last_updated || '',
@@ -306,7 +320,8 @@ export default function App() {
           undefined,
 
         downloadsCount:
-          doc.downloads_count || 0,
+          doc.downloads_count ||
+          0,
       }));
 
     setFormatos(mappedDocumentos);
@@ -373,19 +388,25 @@ export default function App() {
                 reg.id
             )
             .map((section) => ({
-              id: section.id,
+              id:
+                section.id,
+
               title:
                 section.title || '',
+
               content:
                 section.content || '',
+
               sectionUrl:
                 section.section_url || '',
+
               sortOrder:
                 section.sort_order || 0,
             }));
 
         return {
-          id: reg.id,
+          id:
+            reg.id,
 
           title:
             reg.title || '',
@@ -414,7 +435,7 @@ export default function App() {
   };
 
   // =========================================================
-  // CARGAR DATOS AL INICIAR SESIÓN
+  // CARGAR DATOS DESPUÉS DEL LOGIN
   // =========================================================
 
   useEffect(() => {
@@ -479,10 +500,13 @@ export default function App() {
   const handleAddDocument = async (
     newDoc: FormatoDocumento
   ) => {
-    if (currentUserRole !== 'admin') {
+    if (
+      currentUserRole !== 'admin'
+    ) {
       alert(
         'Solo un administrador puede agregar documentos.'
       );
+
       return;
     }
 
@@ -512,18 +536,23 @@ export default function App() {
           newDoc.version,
 
         last_updated:
-          newDoc.lastUpdated || null,
+          newDoc.lastUpdated ||
+          null,
 
         icon_bg_color:
-          newDoc.iconBgColor || null,
+          newDoc.iconBgColor ||
+          null,
 
         icon_text_color:
-          newDoc.iconTextColor || null,
+          newDoc.iconTextColor ||
+          null,
 
         downloads_count:
-          newDoc.downloadsCount || 0,
+          newDoc.downloadsCount ||
+          0,
 
-        active: true,
+        active:
+          true,
       });
 
     if (error) {
@@ -549,10 +578,13 @@ export default function App() {
   const handleEditDocument = async (
     documentoActualizado: FormatoDocumento
   ) => {
-    if (currentUserRole !== 'admin') {
+    if (
+      currentUserRole !== 'admin'
+    ) {
       alert(
         'Solo un administrador puede editar documentos.'
       );
+
       return;
     }
 
@@ -597,7 +629,8 @@ export default function App() {
           documentoActualizado.downloadsCount ||
           0,
 
-        active: true,
+        active:
+          true,
       })
       .eq(
         'id',
@@ -631,10 +664,13 @@ export default function App() {
   const handleDeleteDocument = async (
     id: number | string
   ) => {
-    if (currentUserRole !== 'admin') {
+    if (
+      currentUserRole !== 'admin'
+    ) {
       alert(
         'Solo un administrador puede eliminar documentos.'
       );
+
       return;
     }
 
@@ -672,7 +708,7 @@ export default function App() {
   };
 
   // =========================================================
-  // REGLAMENTOS
+  // REGLAMENTOS - ABRIR
   // =========================================================
 
   const handleOpenAddReglamento = () => {
@@ -687,25 +723,31 @@ export default function App() {
       reglamento
     );
 
-    setIsEditReglamentoOpen(true);
+    setIsEditReglamentoOpen(
+      true
+    );
   };
+
+  // =========================================================
+  // REGLAMENTOS - GUARDAR
+  // =========================================================
 
   const handleSaveReglamento = async (
     reglamento: Reglamento
   ) => {
-    if (currentUserRole !== 'admin') {
+    if (
+      currentUserRole !== 'admin'
+    ) {
       alert(
         'Solo un administrador puede modificar reglamentos.'
       );
+
       return;
     }
 
     const isNew =
-      typeof reglamento.id ===
-        'string' &&
-      reglamento.id.startsWith(
-        'temp-'
-      );
+      typeof reglamento.id === 'string' &&
+      reglamento.id.startsWith('temp-');
 
     let reglamentoId: number;
 
@@ -736,12 +778,16 @@ export default function App() {
           drive_link:
             reglamento.driveLink,
 
-          active: true,
+          active:
+            true,
         })
         .select('id')
         .single();
 
-      if (error || !data) {
+      if (
+        error ||
+        !data
+      ) {
         console.error(
           'Error creando reglamento:',
           error
@@ -786,7 +832,8 @@ export default function App() {
             drive_link:
               reglamento.driveLink,
 
-            active: true,
+            active:
+              true,
           })
           .eq(
             'id',
@@ -831,7 +878,8 @@ export default function App() {
     }
 
     if (
-      reglamento.sections.length > 0
+      reglamento.sections.length >
+      0
     ) {
       const sectionsToInsert =
         reglamento.sections.map(
@@ -893,6 +941,10 @@ export default function App() {
 
     await loadReglamentos();
   };
+
+  // =========================================================
+  // REGLAMENTOS - ELIMINAR
+  // =========================================================
 
   const handleDeleteReglamento = async (
     id: number | string
@@ -1003,9 +1055,7 @@ export default function App() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-
         <div className="text-center">
-
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#234156] text-[#f3a828] flex items-center justify-center font-black text-xl mb-3">
             CdR
           </div>
@@ -1013,9 +1063,7 @@ export default function App() {
           <p className="text-sm font-bold text-[#234156]">
             Verificando acceso...
           </p>
-
         </div>
-
       </div>
     );
   }
@@ -1025,20 +1073,7 @@ export default function App() {
   // =========================================================
 
   if (!employeeAuthorized) {
-    return (
-      <EmployeeLogin />
-    );
-  }
-
-  // =========================================================
-  // SEGURIDAD DEL PANEL ADMIN
-  // =========================================================
-
-  if (
-    activeTab === 'admin' &&
-    !isAdmin
-  ) {
-    setActiveTab('inicio');
+    return <EmployeeLogin />;
   }
 
   // =========================================================
@@ -1051,12 +1086,9 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        unreadCount={
-          comunicados.length
-        }
+        unreadCount={comunicados.length}
         isAdmin={isAdmin}
       />
-
 
       {/* USUARIO CONECTADO */}
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
@@ -1087,36 +1119,24 @@ export default function App() {
 
       </div>
 
-
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
 
         {/* INICIO */}
-        {activeTab ===
-          'inicio' && (
+        {activeTab === 'inicio' && (
           <DashboardView
             formatos={formatos}
-            comunicados={
-              comunicados
-            }
+            comunicados={comunicados}
             eventos={eventos}
             isAdmin={isAdmin}
-            onNavigate={
-              setActiveTab
-            }
+            onNavigate={setActiveTab}
             onOpenAddDocumentModal={() =>
-              setIsAddDocOpen(
-                true
-              )
+              setIsAddDocOpen(true)
             }
             onOpenAddComunicadoModal={() =>
-              setIsAddComunicadoOpen(
-                true
-              )
+              setIsAddComunicadoOpen(true)
             }
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(
-                true
-              )
+              setIsAddEventOpen(true)
             }
             onOpenComunicadoDetail={
               setSelectedComunicado
@@ -1124,24 +1144,22 @@ export default function App() {
           />
         )}
 
-
         {/* PANEL ADMINISTRATIVO */}
-        {activeTab ===
-          'admin' &&
+        {activeTab === 'admin' &&
           isAdmin && (
             <AdminPanelView
-            formatos={formatos}
-            onAddDocument={() =>
-              setIsAddDocOpen(true)
-            }
-            onEditDocument={
-              setDocumentoEditando
-            }
-            onDeleteDocument={
-              handleDeleteDocument
-            }
-          />
-
+              formatos={formatos}
+              onAddDocument={() =>
+                setIsAddDocOpen(true)
+              }
+              onEditDocument={
+                setDocumentoEditando
+              }
+              onDeleteDocument={
+                handleDeleteDocument
+              }
+            />
+          )}
 
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
         {activeTab ===
@@ -1153,16 +1171,10 @@ export default function App() {
               />
             ) : (
               <DocumentacionInstitucionalView
-                formatos={
-                  formatos
-                }
-                isAdmin={
-                  isAdmin
-                }
+                formatos={formatos}
+                isAdmin={isAdmin}
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(
-                    true
-                  )
+                  setIsAddDocOpen(true)
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -1174,7 +1186,6 @@ export default function App() {
             )}
           </>
         )}
-
 
         {/* FORMATOS */}
         {activeTab ===
@@ -1186,16 +1197,10 @@ export default function App() {
               />
             ) : (
               <DocumentosView
-                formatos={
-                  formatos
-                }
-                isAdmin={
-                  isAdmin
-                }
+                formatos={formatos}
+                isAdmin={isAdmin}
                 onOpenAddModal={() =>
-                  setIsAddDocOpen(
-                    true
-                  )
+                  setIsAddDocOpen(true)
                 }
                 onEditFormato={
                   setDocumentoEditando
@@ -1208,21 +1213,14 @@ export default function App() {
           </>
         )}
 
-
         {/* COMUNICADOS */}
         {activeTab ===
           'comunicados' && (
           <ComunicadosView
-            comunicados={
-              comunicados
-            }
-            isAdmin={
-              isAdmin
-            }
+            comunicados={comunicados}
+            isAdmin={isAdmin}
             onOpenAddModal={() =>
-              setIsAddComunicadoOpen(
-                true
-              )
+              setIsAddComunicadoOpen(true)
             }
             onSelectComunicado={
               setSelectedComunicado
@@ -1232,7 +1230,6 @@ export default function App() {
             }
           />
         )}
-
 
         {/* REGLAMENTOS */}
         {activeTab ===
@@ -1244,15 +1241,9 @@ export default function App() {
               />
             ) : (
               <ReglamentosView
-                reglamentos={
-                  reglamentos
-                }
-                isAdmin={
-                  isAdmin
-                }
-                onOpenDriveLink={(
-                  url
-                ) =>
+                reglamentos={reglamentos}
+                isAdmin={isAdmin}
+                onOpenDriveLink={(url) =>
                   window.open(
                     url,
                     '_blank',
@@ -1273,22 +1264,15 @@ export default function App() {
           </>
         )}
 
-
         {/* AGENDA */}
         {activeTab ===
           'agenda' && (
           <AgendaView
             eventos={eventos}
-            googleConfig={
-              googleConfig
-            }
-            isAdmin={
-              isAdmin
-            }
+            googleConfig={googleConfig}
+            isAdmin={isAdmin}
             onOpenAddEventModal={() =>
-              setIsAddEventOpen(
-                true
-              )
+              setIsAddEventOpen(true)
             }
             onUpdateGoogleConfig={
               setGoogleConfig
@@ -1301,7 +1285,7 @@ export default function App() {
 
       </main>
 
-
+      {/* FOOTER */}
       <Footer
         isAdmin={isAdmin}
         setIsAdmin={setIsAdmin}
@@ -1313,50 +1297,35 @@ export default function App() {
         }
       />
 
-
-      {/* LOGIN ADMIN ANTIGUO */}
+      {/* LOGIN ADMIN */}
       <AdminLoginModal
-        isOpen={
-          isAdminLoginOpen
-        }
+        isOpen={isAdminLoginOpen}
         onClose={() =>
-          setIsAdminLoginOpen(
-            false
-          )
+          setIsAdminLoginOpen(false)
         }
         onSuccess={() => {
           if (
             currentUserRole ===
             'admin'
           ) {
-            setIsAdmin(
-              true
-            );
+            setIsAdmin(true);
+            setActiveTab('admin');
           }
 
-          setIsAdminLoginOpen(
-            false
-          );
+          setIsAdminLoginOpen(false);
         }}
       />
 
-
-      {/* DOCUMENTOS */}
+      {/* AGREGAR DOCUMENTO */}
       <AddDocumentModal
-        isOpen={
-          isAddDocOpen
-        }
+        isOpen={isAddDocOpen}
         onClose={() =>
-          setIsAddDocOpen(
-            false
-          )
+          setIsAddDocOpen(false)
         }
-        onAdd={
-          handleAddDocument
-        }
+        onAdd={handleAddDocument}
       />
 
-
+      {/* EDITAR DOCUMENTO */}
       <EditDocumentModal
         isOpen={
           !!documentoEditando
@@ -1365,17 +1334,14 @@ export default function App() {
           documentoEditando
         }
         onClose={() =>
-          setDocumentoEditando(
-            null
-          )
+          setDocumentoEditando(null)
         }
         onSave={
           handleEditDocument
         }
       />
 
-
-      {/* REGLAMENTOS */}
+      {/* EDITAR REGLAMENTO */}
       <EditReglamentoModal
         isOpen={
           isEditReglamentoOpen
@@ -1384,51 +1350,39 @@ export default function App() {
           reglamentoEditando
         }
         onClose={() => {
-          setIsEditReglamentoOpen(
-            false
-          );
-
-          setReglamentoEditando(
-            null
-          );
+          setIsEditReglamentoOpen(false);
+          setReglamentoEditando(null);
         }}
         onSave={
           handleSaveReglamento
         }
       />
 
-
-      {/* COMUNICADOS */}
+      {/* AGREGAR COMUNICADO */}
       <AddComunicadoModal
         isOpen={
           isAddComunicadoOpen
         }
         onClose={() =>
-          setIsAddComunicadoOpen(
-            false
-          )
+          setIsAddComunicadoOpen(false)
         }
         onAdd={
           handleAddComunicado
         }
       />
 
-
-      {/* EVENTOS */}
+      {/* AGREGAR EVENTO */}
       <AddEventModal
         isOpen={
           isAddEventOpen
         }
         onClose={() =>
-          setIsAddEventOpen(
-            false
-          )
+          setIsAddEventOpen(false)
         }
         onAdd={
           handleAddEvent
         }
       />
-
 
       {/* DETALLE COMUNICADO */}
       <ComunicadoDetailModal
@@ -1436,16 +1390,13 @@ export default function App() {
           selectedComunicado
         }
         onClose={() =>
-          setSelectedComunicado(
-            null
-          )
+          setSelectedComunicado(null)
         }
       />
 
     </div>
   );
 }
-
 
 // =========================================================
 // CAJA DE CARGA
