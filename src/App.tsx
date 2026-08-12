@@ -11,6 +11,7 @@ import { AdminPanelView } from './components/AdminPanelView';
 import { Footer } from './components/Footer';
 
 import { EmployeeLogin } from './components/EmployeeLogin';
+import { ResetPassword } from './components/ResetPassword';
 
 import { AddDocumentModal } from './components/AddDocumentModal';
 import { EditDocumentModal } from './components/EditDocumentModal';
@@ -72,6 +73,11 @@ export default function App() {
   ] = useState<
     'admin' | 'employee' | ''
   >('');
+
+  const [
+    isPasswordRecovery,
+    setIsPasswordRecovery,
+  ] = useState(false);
 
 
   // =========================================================
@@ -297,16 +303,145 @@ export default function App() {
 
 
   // =========================================================
-  // SESIÓN
+  // DETECTAR URL DE RECUPERACIÓN
+  // =========================================================
+
+  const hasRecoveryUrl = () => {
+    const hash =
+      window.location.hash || '';
+
+    const search =
+      window.location.search || '';
+
+    const hashParams =
+      new URLSearchParams(
+        hash.startsWith('#')
+          ? hash.substring(1)
+          : hash
+      );
+
+    const searchParams =
+      new URLSearchParams(search);
+
+    return (
+      hashParams.get('type') ===
+        'recovery' ||
+      searchParams.get('type') ===
+        'recovery' ||
+      searchParams.get(
+        'recovery'
+      ) === '1'
+    );
+  };
+
+
+  // =========================================================
+  // SESIÓN / RECUPERACIÓN DE CONTRASEÑA
   // =========================================================
 
   useEffect(() => {
+    let mounted = true;
+
+    const {
+      data: {
+        subscription,
+      },
+    } =
+      supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (!mounted) {
+            return;
+          }
+
+          console.log(
+            'Supabase auth event:',
+            event
+          );
+
+          if (
+            event ===
+            'PASSWORD_RECOVERY'
+          ) {
+            setIsPasswordRecovery(
+              true
+            );
+
+            setAuthLoading(false);
+
+            return;
+          }
+
+          if (hasRecoveryUrl()) {
+            setIsPasswordRecovery(
+              true
+            );
+
+            setAuthLoading(false);
+
+            return;
+          }
+
+          if (
+            event ===
+            'SIGNED_OUT'
+          ) {
+            setEmployeeAuthorized(
+              false
+            );
+
+            setCurrentUserEmail(
+              ''
+            );
+
+            setCurrentUserRole(
+              ''
+            );
+
+            setIsAdmin(false);
+
+            setAuthLoading(false);
+
+            return;
+          }
+
+          verifyEmployee(
+            session?.user?.email
+          );
+        }
+      );
+
     const checkInitialSession =
       async () => {
+        if (hasRecoveryUrl()) {
+          setIsPasswordRecovery(
+            true
+          );
+
+          setAuthLoading(false);
+
+          return;
+        }
+
         const {
-          data: { session },
+          data: {
+            session,
+          },
         } =
           await supabase.auth.getSession();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (hasRecoveryUrl()) {
+          setIsPasswordRecovery(
+            true
+          );
+
+          setAuthLoading(false);
+
+          return;
+        }
 
         await verifyEmployee(
           session?.user?.email
@@ -315,18 +450,9 @@ export default function App() {
 
     checkInitialSession();
 
-    const {
-      data: { subscription },
-    } =
-      supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          verifyEmployee(
-            session?.user?.email
-          );
-        }
-      );
-
     return () => {
+      mounted = false;
+
       subscription.unsubscribe();
     };
   }, []);
@@ -642,11 +768,6 @@ export default function App() {
 
       await loadAuthorizedUsers();
 
-      /*
-        Si el administrador modifica
-        su propio rol o estado,
-        volvemos a verificar su acceso.
-      */
       if (
         normalizedEmail ===
         currentUserEmail
@@ -679,11 +800,6 @@ export default function App() {
         return;
       }
 
-      /*
-        Evitamos que el administrador
-        se desactive accidentalmente
-        desde su propia sesión.
-      */
       if (
         user.email
           .toLowerCase() ===
@@ -799,6 +915,7 @@ export default function App() {
       await loadAuthorizedUsers();
     };
 
+
   // =========================================================
   // RESTABLECER CONTRASEÑA DE USUARIO
   // =========================================================
@@ -841,7 +958,7 @@ export default function App() {
       }
 
       const redirectUrl =
-        `${window.location.origin}/`;
+        `${window.location.origin}/?recovery=1`;
 
       const {
         error,
@@ -1151,7 +1268,8 @@ export default function App() {
 
   useEffect(() => {
     if (
-      employeeAuthorized
+      employeeAuthorized &&
+      !isPasswordRecovery
     ) {
       loadDocumentos();
 
@@ -1167,6 +1285,7 @@ export default function App() {
   }, [
     employeeAuthorized,
     currentUserRole,
+    isPasswordRecovery,
   ]);
 
 
@@ -1857,6 +1976,43 @@ export default function App() {
 
 
   // =========================================================
+  // RECUPERACIÓN DE CONTRASEÑA
+  // =========================================================
+
+  if (
+    isPasswordRecovery
+  ) {
+    return (
+      <ResetPassword
+        onSuccess={() => {
+          setIsPasswordRecovery(
+            false
+          );
+
+          setEmployeeAuthorized(
+            false
+          );
+
+          setCurrentUserEmail('');
+
+          setCurrentUserRole('');
+
+          setIsAdmin(false);
+
+          setActiveTab('inicio');
+
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+        }}
+      />
+    );
+  }
+
+
+  // =========================================================
   // CARGANDO
   // =========================================================
 
@@ -1920,6 +2076,7 @@ export default function App() {
 
 
       {/* USUARIO CONECTADO */}
+
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
 
         <span>
@@ -1955,6 +2112,7 @@ export default function App() {
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
 
         {/* INICIO */}
+
         {activeTab ===
           'inicio' && (
           <DashboardView
@@ -1996,6 +2154,7 @@ export default function App() {
 
 
         {/* PANEL ADMINISTRATIVO */}
+
         {activeTab ===
           'admin' &&
           isAdmin && (
@@ -2058,6 +2217,7 @@ export default function App() {
 
 
         {/* DOCUMENTACIÓN INSTITUCIONAL */}
+
         {activeTab ===
           'institucional' && (
           <>
@@ -2091,6 +2251,7 @@ export default function App() {
 
 
         {/* FORMATOS */}
+
         {activeTab ===
           'documentos' && (
           <>
@@ -2124,6 +2285,7 @@ export default function App() {
 
 
         {/* COMUNICADOS */}
+
         {activeTab ===
           'comunicados' && (
           <ComunicadosView
@@ -2149,6 +2311,7 @@ export default function App() {
 
 
         {/* REGLAMENTOS */}
+
         {activeTab ===
           'reglamentos' && (
           <>
@@ -2189,6 +2352,7 @@ export default function App() {
 
 
         {/* AGENDA */}
+
         {activeTab ===
           'agenda' && (
           <AgendaView
@@ -2219,6 +2383,7 @@ export default function App() {
 
 
       {/* FOOTER */}
+
       <Footer
         isAdmin={
           isAdmin
@@ -2240,6 +2405,7 @@ export default function App() {
 
 
       {/* LOGIN ADMIN */}
+
       <AdminLoginModal
         isOpen={
           isAdminLoginOpen
@@ -2271,6 +2437,7 @@ export default function App() {
 
 
       {/* AGREGAR DOCUMENTO */}
+
       <AddDocumentModal
         isOpen={
           isAddDocOpen
@@ -2287,6 +2454,7 @@ export default function App() {
 
 
       {/* EDITAR DOCUMENTO */}
+
       <EditDocumentModal
         isOpen={
           !!documentoEditando
@@ -2306,6 +2474,7 @@ export default function App() {
 
 
       {/* EDITAR REGLAMENTO */}
+
       <EditReglamentoModal
         isOpen={
           isEditReglamentoOpen
@@ -2329,6 +2498,7 @@ export default function App() {
 
 
       {/* AGREGAR COMUNICADO */}
+
       <AddComunicadoModal
         isOpen={
           isAddComunicadoOpen
@@ -2345,6 +2515,7 @@ export default function App() {
 
 
       {/* AGREGAR EVENTO */}
+
       <AddEventModal
         isOpen={
           isAddEventOpen
@@ -2361,6 +2532,7 @@ export default function App() {
 
 
       {/* DETALLE COMUNICADO */}
+
       <ComunicadoDetailModal
         comunicado={
           selectedComunicado
