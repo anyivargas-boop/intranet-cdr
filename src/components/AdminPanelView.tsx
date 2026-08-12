@@ -212,6 +212,17 @@ export const AdminPanelView: React.FC<
         'Documentación Institucional'
     );
 
+    // =========================================================
+    // FORMATOS Y PLANTILLAS
+    // =========================================================
+
+    const workingDocuments =
+    formatos.filter(
+        (fmt) =>
+        fmt.category !==
+        'Documentación Institucional'
+    );
+
   // =========================================================
   // ABRIR MÓDULO
   // =========================================================
@@ -482,6 +493,266 @@ export const AdminPanelView: React.FC<
             </div>
           )}
         </div>
+      </div>
+    );
+  }
+
+    // =========================================================
+  // FORMATOS Y PLANTILLAS
+  // =========================================================
+
+  if (
+    activeSection ===
+    'documentos'
+  ) {
+    return (
+      <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
+
+        {/* BARRA SUPERIOR */}
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSection(null)
+            }
+            className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a módulos
+          </button>
+
+          <button
+            type="button"
+            onClick={onAddDocument}
+            className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar Formato
+          </button>
+
+        </div>
+
+        {/* ENCABEZADO */}
+
+        <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
+          <div className="flex items-start gap-4">
+
+            <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
+              <FileText className="w-6 h-6" />
+            </div>
+
+            <div>
+
+              <h1 className="text-xl md:text-2xl font-extrabold">
+                Administración de Formatos y Plantillas
+              </h1>
+
+              <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl">
+                Administra formatos de trabajo, plantillas, viáticos, formularios y documentos operativos disponibles para el equipo.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* RESUMEN */}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Total de formatos
+            </p>
+
+            <p className="text-2xl font-black text-[#234156] mt-1">
+              {workingDocuments.length}
+            </p>
+
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Categorías
+            </p>
+
+            <p className="text-2xl font-black text-[#234156] mt-1">
+              {
+                new Set(
+                  workingDocuments.map(
+                    (doc) =>
+                      doc.category
+                  )
+                ).size
+              }
+            </p>
+
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Última revisión
+            </p>
+
+            <p className="text-sm font-extrabold text-[#234156] mt-2">
+              {
+                workingDocuments.length > 0
+                  ? workingDocuments
+                      .map(
+                        (doc) =>
+                          doc.lastUpdated
+                      )
+                      .filter(Boolean)
+                      .sort()
+                      .reverse()[0] ||
+                    'Sin fecha'
+                  : 'Sin registros'
+              }
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* LISTADO */}
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+          <div className="px-5 py-4 border-b border-slate-100">
+
+            <h2 className="text-sm font-extrabold text-[#234156]">
+              Formatos y Plantillas
+            </h2>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Documentos operativos visibles en la sección Formatos y Plantillas.
+            </p>
+
+          </div>
+
+          {workingDocuments.length ===
+          0 ? (
+
+            <div className="p-10 text-center">
+
+              <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+              <p className="text-sm font-bold text-slate-700">
+                No hay formatos registrados
+              </p>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Usa “Agregar Formato” para crear el primero.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="divide-y divide-slate-100">
+
+              {workingDocuments.map(
+                (doc) => (
+
+                  <div
+                    key={doc.id}
+                    className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                  >
+
+                    {/* INFORMACIÓN */}
+
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 text-[#234156] flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+
+                        <div className="flex items-center gap-2 flex-wrap">
+
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                            {doc.category}
+                          </span>
+
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                            {doc.fileType}
+                          </span>
+
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                            {doc.version}
+                          </span>
+
+                        </div>
+
+                        <h3 className="text-sm font-extrabold text-[#234156] mt-2">
+                          {doc.title}
+                        </h3>
+
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                          {doc.description}
+                        </p>
+
+                        <p className="text-[10px] text-slate-400 mt-2">
+                          Última actualización:{' '}
+                          <strong>
+                            {doc.lastUpdated ||
+                              'Sin fecha'}
+                          </strong>
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    {/* ACCIONES */}
+
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onEditDocument(doc)
+                        }
+                        className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onDeleteDocument(
+                            doc.id
+                          )
+                        }
+                        className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Eliminar
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          )}
+
+        </div>
+
       </div>
     );
   }
@@ -1069,16 +1340,15 @@ export const AdminPanelView: React.FC<
   // MÓDULOS PENDIENTES
   // =========================================================
 
-  if (
+    if (
     activeSection ===
-      'documentos' ||
+        'comunicados' ||
     activeSection ===
-      'comunicados' ||
+        'reglamentos' ||
     activeSection ===
-      'reglamentos' ||
-    activeSection ===
-      'agenda'
-  ) {
+        'agenda'
+    ) {
+
     const selectedModule =
       modules.find(
         (module) =>
