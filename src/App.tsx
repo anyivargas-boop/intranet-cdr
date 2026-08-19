@@ -738,6 +738,17 @@ export default function App() {
           .trim()
           .toLowerCase();
 
+      const normalizedName =
+        user.name.trim();
+
+      if (!normalizedName) {
+        alert(
+          'Debes ingresar el nombre del usuario.'
+        );
+
+        return false;
+      }
+
       const validDomain =
         normalizedEmail.endsWith(
           '@consejoderedaccion.org'
@@ -758,6 +769,7 @@ export default function App() {
         authorizedUsers.find(
           (existing) =>
             existing.email
+              .trim()
               .toLowerCase() ===
             normalizedEmail
         );
@@ -770,43 +782,76 @@ export default function App() {
         return false;
       }
 
-      const id =
-        crypto.randomUUID();
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.functions.invoke(
+            'invite-user',
+            {
+              body: {
+                name:
+                  normalizedName,
 
-      const {
-        error,
-      } = await supabase
-        .from(
-          'authorized_users'
-        )
-        .insert({
-          id,
-          email:
-            normalizedEmail,
-          name:
-            user.name.trim(),
-          role:
-            user.role,
-          active:
-            true,
-        });
+                email:
+                  normalizedEmail,
 
-      if (error) {
+                role:
+                  user.role,
+              },
+            }
+          );
+
+        if (error) {
+          console.error(
+            'Error ejecutando invite-user:',
+            error
+          );
+
+          alert(
+            `No fue posible crear la invitación.\n\n${error.message}`
+          );
+
+          return false;
+        }
+
+        if (
+          !data ||
+          data.ok !== true
+        ) {
+          console.error(
+            'invite-user respondió con error:',
+            data
+          );
+
+          alert(
+            data?.message ||
+              'No fue posible invitar al usuario.'
+          );
+
+          return false;
+        }
+
+        await loadAuthorizedUsers();
+
+        alert(
+          `Usuario agregado correctamente.\n\nSe envió una invitación a:\n${normalizedEmail}\n\nEl usuario deberá abrir el correo y configurar su contraseña.`
+        );
+
+        return true;
+      } catch (error) {
         console.error(
-          'Error agregando usuario:',
+          'Error inesperado agregando usuario:',
           error
         );
 
         alert(
-          'No fue posible agregar el usuario.'
+          'Ocurrió un error inesperado al agregar el usuario.'
         );
 
         return false;
       }
-
-      await loadAuthorizedUsers();
-
-      return true;
     };
 
 
