@@ -52,15 +52,20 @@ export default function App() {
   const [activeTab, setActiveTab] =
     useState<string>('inicio');
 
+
   // =========================================================
   // ACCESO Y ROLES
   // =========================================================
 
-  const [isAdmin, setIsAdmin] =
-    useState(false);
+  const [
+    adminModeEnabled,
+    setAdminModeEnabled,
+  ] = useState(false);
 
-  const [authLoading, setAuthLoading] =
-    useState(true);
+  const [
+    authLoading,
+    setAuthLoading,
+  ] = useState(true);
 
   const [
     employeeAuthorized,
@@ -89,6 +94,18 @@ export default function App() {
 
 
   // =========================================================
+  // PERMISO ADMIN VS MODO ADMIN
+  // =========================================================
+
+  const canUseAdminPanel =
+    currentUserRole === 'admin';
+
+  const isAdmin =
+    canUseAdminPanel &&
+    adminModeEnabled;
+
+
+  // =========================================================
   // USUARIOS AUTORIZADOS - SUPABASE
   // =========================================================
 
@@ -107,7 +124,10 @@ export default function App() {
   // DOCUMENTOS - SUPABASE
   // =========================================================
 
-  const [formatos, setFormatos] =
+  const [
+    formatos,
+    setFormatos,
+  ] =
     useState<FormatoDocumento[]>([]);
 
   const [
@@ -223,7 +243,7 @@ export default function App() {
       setEmployeeAuthorized(false);
       setCurrentUserEmail('');
       setCurrentUserRole('');
-      setIsAdmin(false);
+      setAdminModeEnabled(false);
       setAuthLoading(false);
 
       return;
@@ -248,7 +268,7 @@ export default function App() {
       setEmployeeAuthorized(false);
       setCurrentUserEmail('');
       setCurrentUserRole('');
-      setIsAdmin(false);
+      setAdminModeEnabled(false);
       setAuthLoading(false);
 
       return;
@@ -281,7 +301,7 @@ export default function App() {
       setEmployeeAuthorized(false);
       setCurrentUserEmail('');
       setCurrentUserRole('');
-      setIsAdmin(false);
+      setAdminModeEnabled(false);
       setAuthLoading(false);
 
       return;
@@ -302,9 +322,11 @@ export default function App() {
       role
     );
 
-    setIsAdmin(
-      role === 'admin'
-    );
+    if (
+      role !== 'admin'
+    ) {
+      setAdminModeEnabled(false);
+    }
 
     setAuthLoading(false);
   };
@@ -341,8 +363,10 @@ export default function App() {
         searchParams.get('type');
 
       if (
-        hashType === 'recovery' ||
-        searchType === 'recovery' ||
+        hashType ===
+          'recovery' ||
+        searchType ===
+          'recovery' ||
         searchParams.get(
           'recovery'
         ) === '1'
@@ -351,8 +375,10 @@ export default function App() {
       }
 
       if (
-        hashType === 'invite' ||
-        searchType === 'invite' ||
+        hashType ===
+          'invite' ||
+        searchType ===
+          'invite' ||
         searchParams.get(
           'invite'
         ) === '1'
@@ -383,6 +409,10 @@ export default function App() {
         false
       );
 
+      setAdminModeEnabled(
+        false
+      );
+
       setAuthLoading(false);
     }
 
@@ -410,6 +440,10 @@ export default function App() {
               false
             );
 
+            setAdminModeEnabled(
+              false
+            );
+
             setAuthLoading(false);
 
             return;
@@ -424,6 +458,10 @@ export default function App() {
             );
 
             setEmployeeAuthorized(
+              false
+            );
+
+            setAdminModeEnabled(
               false
             );
 
@@ -448,7 +486,9 @@ export default function App() {
               ''
             );
 
-            setIsAdmin(false);
+            setAdminModeEnabled(
+              false
+            );
 
             setAuthLoading(false);
 
@@ -473,6 +513,10 @@ export default function App() {
           );
 
           setEmployeeAuthorized(
+            false
+          );
+
+          setAdminModeEnabled(
             false
           );
 
@@ -503,6 +547,10 @@ export default function App() {
           );
 
           setEmployeeAuthorized(
+            false
+          );
+
+          setAdminModeEnabled(
             false
           );
 
@@ -561,7 +609,9 @@ export default function App() {
 
       setCurrentUserRole('');
 
-      setIsAdmin(false);
+      setAdminModeEnabled(
+        false
+      );
 
       setFormatos([]);
 
@@ -620,7 +670,8 @@ export default function App() {
         return;
       }
 
-      const mappedUsers: AuthorizedUser[] =
+      const mappedUsers:
+        AuthorizedUser[] =
         (data || []).map(
           (user) => ({
             id:
@@ -987,7 +1038,7 @@ export default function App() {
 
 
   // =========================================================
-  // RESTABLECER CONTRASEÑA DE USUARIO
+  // RESTABLECER CONTRASEÑA
   // =========================================================
 
   const handleResetUserPassword =
@@ -1104,7 +1155,8 @@ export default function App() {
         return;
       }
 
-      const mappedDocumentos: FormatoDocumento[] =
+      const mappedDocumentos:
+        FormatoDocumento[] =
         (data || []).map(
           (doc) => ({
             id:
@@ -1252,12 +1304,14 @@ export default function App() {
         return;
       }
 
-      const mappedReglamentos: Reglamento[] =
+      const mappedReglamentos:
+        Reglamento[] =
         (
           reglamentosData ||
           []
         ).map((reg) => {
-          const sections: ReglamentoSection[] =
+          const sections:
+            ReglamentoSection[] =
             (
               sectionsData ||
               []
@@ -2065,7 +2119,9 @@ export default function App() {
 
           setCurrentUserRole('');
 
-          setIsAdmin(false);
+          setAdminModeEnabled(
+            false
+          );
 
           setActiveTab('inicio');
 
@@ -2157,10 +2213,23 @@ export default function App() {
           </strong>
         </span>
 
-        {currentUserRole ===
-          'admin' && (
+        {canUseAdminPanel && (
           <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">
             Administrador
+          </span>
+        )}
+
+        {canUseAdminPanel && (
+          <span
+            className={`font-bold px-2 py-0.5 rounded-md border ${
+              adminModeEnabled
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                : 'bg-slate-100 text-slate-600 border-slate-200'
+            }`}
+          >
+            {adminModeEnabled
+              ? 'Modo admin activo'
+              : 'Modo admin inactivo'}
           </span>
         )}
 
@@ -2178,8 +2247,6 @@ export default function App() {
 
 
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
-
-        {/* INICIO */}
 
         {activeTab ===
           'inicio' && (
@@ -2220,8 +2287,6 @@ export default function App() {
           />
         )}
 
-
-        {/* PANEL ADMINISTRATIVO */}
 
         {activeTab ===
           'admin' &&
@@ -2284,8 +2349,6 @@ export default function App() {
           )}
 
 
-        {/* DOCUMENTACIÓN INSTITUCIONAL */}
-
         {activeTab ===
           'institucional' && (
           <>
@@ -2317,8 +2380,6 @@ export default function App() {
           </>
         )}
 
-
-        {/* FORMATOS */}
 
         {activeTab ===
           'documentos' && (
@@ -2352,8 +2413,6 @@ export default function App() {
         )}
 
 
-        {/* COMUNICADOS */}
-
         {activeTab ===
           'comunicados' && (
           <ComunicadosView
@@ -2377,8 +2436,6 @@ export default function App() {
           />
         )}
 
-
-        {/* REGLAMENTOS */}
 
         {activeTab ===
           'reglamentos' && (
@@ -2419,8 +2476,6 @@ export default function App() {
         )}
 
 
-        {/* AGENDA */}
-
         {activeTab ===
           'agenda' && (
           <AgendaView
@@ -2453,9 +2508,35 @@ export default function App() {
       {/* FOOTER */}
 
       <Footer
-        isAdmin={
-          isAdmin
+        canUseAdminPanel={
+          canUseAdminPanel
         }
+
+        adminModeEnabled={
+          adminModeEnabled
+        }
+
+        onEnableAdminMode={() => {
+          setAdminModeEnabled(
+            true
+          );
+        }}
+
+        onDisableAdminMode={() => {
+          setAdminModeEnabled(
+            false
+          );
+
+          if (
+            activeTab ===
+            'admin'
+          ) {
+            setActiveTab(
+              'inicio'
+            );
+          }
+        }}
+
         onOpenAdminPanel={() =>
           setActiveTab(
             'admin'
