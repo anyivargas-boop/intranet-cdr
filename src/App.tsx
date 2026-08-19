@@ -19,7 +19,6 @@ import { EditReglamentoModal } from './components/EditReglamentoModal';
 import { AddComunicadoModal } from './components/AddComunicadoModal';
 import { AddEventModal } from './components/AddEventModal';
 import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
-import { AdminLoginModal } from './components/AdminLoginModal';
 
 import { supabase } from './lib/supabase';
 
@@ -341,13 +340,9 @@ export default function App() {
       const searchType =
         searchParams.get('type');
 
-      // RECUPERACIÓN
-
       if (
-        hashType ===
-          'recovery' ||
-        searchType ===
-          'recovery' ||
+        hashType === 'recovery' ||
+        searchType === 'recovery' ||
         searchParams.get(
           'recovery'
         ) === '1'
@@ -355,13 +350,9 @@ export default function App() {
         return 'recovery';
       }
 
-      // INVITACIÓN
-
       if (
-        hashType ===
-          'invite' ||
-        searchType ===
-          'invite' ||
+        hashType === 'invite' ||
+        searchType === 'invite' ||
         searchParams.get(
           'invite'
         ) === '1'
@@ -380,23 +371,16 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    /*
-      Revisamos la URL inmediatamente.
-
-      Esto es importante porque Supabase puede crear
-      una sesión temporal al abrir un enlace de
-      invitación o recuperación.
-
-      La pantalla para configurar contraseña debe
-      tener prioridad sobre la intranet.
-    */
-
     const initialFlow =
       detectAuthFlowFromUrl();
 
     if (initialFlow) {
       setAuthFlowMode(
         initialFlow
+      );
+
+      setEmployeeAuthorized(
+        false
       );
 
       setAuthLoading(false);
@@ -413,15 +397,6 @@ export default function App() {
           if (!mounted) {
             return;
           }
-
-          console.log(
-            'Supabase auth event:',
-            event
-          );
-
-          // ---------------------------------------------
-          // RECUPERACIÓN
-          // ---------------------------------------------
 
           if (
             event ===
@@ -440,11 +415,6 @@ export default function App() {
             return;
           }
 
-
-          // ---------------------------------------------
-          // REVISAR URL ANTES DE DAR ACCESO
-          // ---------------------------------------------
-
           const currentFlow =
             detectAuthFlowFromUrl();
 
@@ -461,11 +431,6 @@ export default function App() {
 
             return;
           }
-
-
-          // ---------------------------------------------
-          // CERRAR SESIÓN
-          // ---------------------------------------------
 
           if (
             event ===
@@ -487,17 +452,6 @@ export default function App() {
 
             setAuthLoading(false);
 
-            return;
-          }
-
-
-          // ---------------------------------------------
-          // SESIÓN NORMAL
-          // ---------------------------------------------
-
-          if (
-            authFlowMode
-          ) {
             return;
           }
 
@@ -537,11 +491,6 @@ export default function App() {
         if (!mounted) {
           return;
         }
-
-        /*
-          Supabase pudo modificar la URL durante
-          getSession(), así que revisamos de nuevo.
-        */
 
         const flowAfterSession =
           detectAuthFlowFromUrl();
@@ -798,7 +747,7 @@ export default function App() {
         );
 
         alert(
-          'No fue posible agregar el usuario. Revisa las políticas RLS de authorized_users.'
+          'No fue posible agregar el usuario.'
         );
 
         return false;
@@ -1106,7 +1055,7 @@ export default function App() {
       }
 
       alert(
-        `Correo de recuperación solicitado correctamente.\n\nDestino:\n${normalizedEmail}\n\nEl usuario debe revisar su bandeja de entrada y la carpeta de spam.`
+        `Correo de recuperación solicitado correctamente.\n\nDestino:\n${normalizedEmail}`
       );
 
       return true;
@@ -1427,11 +1376,6 @@ export default function App() {
   const [
     isAddEventOpen,
     setIsAddEventOpen,
-  ] = useState(false);
-
-  const [
-    isAdminLoginOpen,
-    setIsAdminLoginOpen,
   ] = useState(false);
 
   const [
@@ -2125,11 +2069,6 @@ export default function App() {
 
           setActiveTab('inicio');
 
-          /*
-            Eliminamos ?invite=1, ?recovery=1
-            y cualquier hash de Supabase.
-          */
-
           window.history.replaceState(
             {},
             document.title,
@@ -2517,51 +2456,11 @@ export default function App() {
         isAdmin={
           isAdmin
         }
-        setIsAdmin={
-          setIsAdmin
-        }
-        onOpenAdminModal={() =>
-          setIsAdminLoginOpen(
-            true
-          )
-        }
         onOpenAdminPanel={() =>
           setActiveTab(
             'admin'
           )
         }
-      />
-
-
-      {/* LOGIN ADMIN */}
-
-      <AdminLoginModal
-        isOpen={
-          isAdminLoginOpen
-        }
-        onClose={() =>
-          setIsAdminLoginOpen(
-            false
-          )
-        }
-        onSuccess={() => {
-          if (
-            currentUserRole ===
-            'admin'
-          ) {
-            setIsAdmin(
-              true
-            );
-
-            setActiveTab(
-              'admin'
-            );
-          }
-
-          setIsAdminLoginOpen(
-            false
-          );
-        }}
       />
 
 
