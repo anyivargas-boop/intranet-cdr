@@ -43,6 +43,12 @@ import {
 } from './types';
 
 
+type AuthFlowMode =
+  | 'recovery'
+  | 'invite'
+  | null;
+
+
 export default function App() {
   const [activeTab, setActiveTab] =
     useState<string>('inicio');
@@ -75,9 +81,12 @@ export default function App() {
   >('');
 
   const [
-    isPasswordRecovery,
-    setIsPasswordRecovery,
-  ] = useState(false);
+    authFlowMode,
+    setAuthFlowMode,
+  ] =
+    useState<AuthFlowMode>(
+      null
+    );
 
 
   // =========================================================
@@ -303,44 +312,96 @@ export default function App() {
 
 
   // =========================================================
-  // DETECTAR URL DE RECUPERACIÓN
+  // DETECTAR RECUPERACIÓN O INVITACIÓN EN LA URL
   // =========================================================
 
-  const hasRecoveryUrl = () => {
-    const hash =
-      window.location.hash || '';
+  const detectAuthFlowFromUrl =
+    (): AuthFlowMode => {
+      const hash =
+        window.location.hash || '';
 
-    const search =
-      window.location.search || '';
+      const search =
+        window.location.search || '';
 
-    const hashParams =
-      new URLSearchParams(
-        hash.startsWith('#')
-          ? hash.substring(1)
-          : hash
-      );
+      const hashParams =
+        new URLSearchParams(
+          hash.startsWith('#')
+            ? hash.substring(1)
+            : hash
+        );
 
-    const searchParams =
-      new URLSearchParams(search);
+      const searchParams =
+        new URLSearchParams(
+          search
+        );
 
-    return (
-      hashParams.get('type') ===
-        'recovery' ||
-      searchParams.get('type') ===
-        'recovery' ||
-      searchParams.get(
-        'recovery'
-      ) === '1'
-    );
-  };
+      const hashType =
+        hashParams.get('type');
+
+      const searchType =
+        searchParams.get('type');
+
+      // RECUPERACIÓN
+
+      if (
+        hashType ===
+          'recovery' ||
+        searchType ===
+          'recovery' ||
+        searchParams.get(
+          'recovery'
+        ) === '1'
+      ) {
+        return 'recovery';
+      }
+
+      // INVITACIÓN
+
+      if (
+        hashType ===
+          'invite' ||
+        searchType ===
+          'invite' ||
+        searchParams.get(
+          'invite'
+        ) === '1'
+      ) {
+        return 'invite';
+      }
+
+      return null;
+    };
 
 
   // =========================================================
-  // SESIÓN / RECUPERACIÓN DE CONTRASEÑA
+  // SESIÓN / RECUPERACIÓN / INVITACIÓN
   // =========================================================
 
   useEffect(() => {
     let mounted = true;
+
+    /*
+      Revisamos la URL inmediatamente.
+
+      Esto es importante porque Supabase puede crear
+      una sesión temporal al abrir un enlace de
+      invitación o recuperación.
+
+      La pantalla para configurar contraseña debe
+      tener prioridad sobre la intranet.
+    */
+
+    const initialFlow =
+      detectAuthFlowFromUrl();
+
+    if (initialFlow) {
+      setAuthFlowMode(
+        initialFlow
+      );
+
+      setAuthLoading(false);
+    }
+
 
     const {
       data: {
@@ -358,12 +419,20 @@ export default function App() {
             event
           );
 
+          // ---------------------------------------------
+          // RECUPERACIÓN
+          // ---------------------------------------------
+
           if (
             event ===
             'PASSWORD_RECOVERY'
           ) {
-            setIsPasswordRecovery(
-              true
+            setAuthFlowMode(
+              'recovery'
+            );
+
+            setEmployeeAuthorized(
+              false
             );
 
             setAuthLoading(false);
@@ -371,15 +440,32 @@ export default function App() {
             return;
           }
 
-          if (hasRecoveryUrl()) {
-            setIsPasswordRecovery(
-              true
+
+          // ---------------------------------------------
+          // REVISAR URL ANTES DE DAR ACCESO
+          // ---------------------------------------------
+
+          const currentFlow =
+            detectAuthFlowFromUrl();
+
+          if (currentFlow) {
+            setAuthFlowMode(
+              currentFlow
+            );
+
+            setEmployeeAuthorized(
+              false
             );
 
             setAuthLoading(false);
 
             return;
           }
+
+
+          // ---------------------------------------------
+          // CERRAR SESIÓN
+          // ---------------------------------------------
 
           if (
             event ===
@@ -404,17 +490,36 @@ export default function App() {
             return;
           }
 
+
+          // ---------------------------------------------
+          // SESIÓN NORMAL
+          // ---------------------------------------------
+
+          if (
+            authFlowMode
+          ) {
+            return;
+          }
+
           verifyEmployee(
             session?.user?.email
           );
         }
       );
 
+
     const checkInitialSession =
       async () => {
-        if (hasRecoveryUrl()) {
-          setIsPasswordRecovery(
-            true
+        const urlFlow =
+          detectAuthFlowFromUrl();
+
+        if (urlFlow) {
+          setAuthFlowMode(
+            urlFlow
+          );
+
+          setEmployeeAuthorized(
+            false
           );
 
           setAuthLoading(false);
@@ -433,9 +538,23 @@ export default function App() {
           return;
         }
 
-        if (hasRecoveryUrl()) {
-          setIsPasswordRecovery(
-            true
+        /*
+          Supabase pudo modificar la URL durante
+          getSession(), así que revisamos de nuevo.
+        */
+
+        const flowAfterSession =
+          detectAuthFlowFromUrl();
+
+        if (
+          flowAfterSession
+        ) {
+          setAuthFlowMode(
+            flowAfterSession
+          );
+
+          setEmployeeAuthorized(
+            false
           );
 
           setAuthLoading(false);
@@ -448,7 +567,9 @@ export default function App() {
         );
       };
 
+
     checkInitialSession();
+
 
     return () => {
       mounted = false;
@@ -1269,7 +1390,7 @@ export default function App() {
   useEffect(() => {
     if (
       employeeAuthorized &&
-      !isPasswordRecovery
+      authFlowMode === null
     ) {
       loadDocumentos();
 
@@ -1285,7 +1406,7 @@ export default function App() {
   }, [
     employeeAuthorized,
     currentUserRole,
-    isPasswordRecovery,
+    authFlowMode,
   ]);
 
 
@@ -1976,17 +2097,20 @@ export default function App() {
 
 
   // =========================================================
-  // RECUPERACIÓN DE CONTRASEÑA
+  // RECUPERACIÓN / INVITACIÓN
   // =========================================================
 
   if (
-    isPasswordRecovery
+    authFlowMode
   ) {
     return (
       <ResetPassword
+        mode={
+          authFlowMode
+        }
         onSuccess={() => {
-          setIsPasswordRecovery(
-            false
+          setAuthFlowMode(
+            null
           );
 
           setEmployeeAuthorized(
@@ -2000,6 +2124,11 @@ export default function App() {
           setIsAdmin(false);
 
           setActiveTab('inicio');
+
+          /*
+            Eliminamos ?invite=1, ?recovery=1
+            y cualquier hash de Supabase.
+          */
 
           window.history.replaceState(
             {},
