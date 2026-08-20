@@ -352,10 +352,8 @@ export default function App() {
         searchParams.get('type');
 
       if (
-        hashType ===
-          'recovery' ||
-        searchType ===
-          'recovery' ||
+        hashType === 'recovery' ||
+        searchType === 'recovery' ||
         searchParams.get(
           'recovery'
         ) === '1'
@@ -364,10 +362,8 @@ export default function App() {
       }
 
       if (
-        hashType ===
-          'invite' ||
-        searchType ===
-          'invite' ||
+        hashType === 'invite' ||
+        searchType === 'invite' ||
         searchParams.get(
           'invite'
         ) === '1'
@@ -404,7 +400,6 @@ export default function App() {
 
       setAuthLoading(false);
     }
-
 
     const {
       data: {
@@ -490,7 +485,6 @@ export default function App() {
         }
       );
 
-
     const checkInitialSession =
       async () => {
         const urlFlow =
@@ -553,9 +547,7 @@ export default function App() {
         );
       };
 
-
     checkInitialSession();
-
 
     return () => {
       mounted = false;
@@ -2489,17 +2481,13 @@ export default function App() {
       />
 
 
-      {/* USUARIO CONECTADO */}
-
       <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
 
         <span>
           Sesión:{' '}
 
           <strong>
-            {
-              currentUserEmail
-            }
+            {currentUserEmail}
           </strong>
         </span>
 
@@ -2586,6 +2574,14 @@ export default function App() {
                 formatos
               }
 
+              comunicados={
+                comunicados
+              }
+
+              comunicadosLoading={
+                comunicadosLoading
+              }
+
               authorizedUsers={
                 authorizedUsers
               }
@@ -2610,6 +2606,20 @@ export default function App() {
 
               onDeleteDocument={
                 handleDeleteDocument
+              }
+
+              onAddComunicado={() =>
+                setIsAddComunicadoOpen(
+                  true
+                )
+              }
+
+              onDeleteComunicado={
+                handleDeleteComunicado
+              }
+
+              onReloadComunicados={
+                loadComunicados
               }
 
               onAddAuthorizedUser={
@@ -2803,8 +2813,6 @@ export default function App() {
       </main>
 
 
-      {/* FOOTER */}
-
       <Footer
         canUseAdminPanel={
           canUseAdminPanel
@@ -2843,8 +2851,6 @@ export default function App() {
       />
 
 
-      {/* AGREGAR DOCUMENTO */}
-
       <AddDocumentModal
         isOpen={
           isAddDocOpen
@@ -2859,8 +2865,6 @@ export default function App() {
         }
       />
 
-
-      {/* EDITAR DOCUMENTO */}
 
       <EditDocumentModal
         isOpen={
@@ -2879,8 +2883,6 @@ export default function App() {
         }
       />
 
-
-      {/* EDITAR REGLAMENTO */}
 
       <EditReglamentoModal
         isOpen={
@@ -2904,8 +2906,6 @@ export default function App() {
       />
 
 
-      {/* AGREGAR COMUNICADO */}
-
       <AddComunicadoModal
         isOpen={
           isAddComunicadoOpen
@@ -2921,8 +2921,6 @@ export default function App() {
       />
 
 
-      {/* AGREGAR EVENTO */}
-
       <AddEventModal
         isOpen={
           isAddEventOpen
@@ -2937,8 +2935,6 @@ export default function App() {
         }
       />
 
-
-      {/* DETALLE COMUNICADO */}
 
       <ComunicadoDetailModal
         comunicado={

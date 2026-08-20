@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
   ShieldCheck,
   Building2,
@@ -18,16 +19,23 @@ import {
   X,
   Save,
   KeyRound,
+  Paperclip,
+  Pin,
 } from 'lucide-react';
 
 import {
   FormatoDocumento,
+  Comunicado,
   AuthorizedUser,
   AuthorizedUserRole,
 } from '../types';
 
+
 interface AdminPanelViewProps {
   formatos: FormatoDocumento[];
+
+  comunicados: Comunicado[];
+  comunicadosLoading: boolean;
 
   authorizedUsers: AuthorizedUser[];
   authorizedUsersLoading: boolean;
@@ -42,6 +50,14 @@ interface AdminPanelViewProps {
   onDeleteDocument: (
     id: number | string
   ) => void;
+
+  onAddComunicado: () => void;
+
+  onDeleteComunicado: (
+    id: string
+  ) => Promise<void>;
+
+  onReloadComunicados: () => Promise<void>;
 
   onAddAuthorizedUser: (
     user: {
@@ -70,10 +86,14 @@ interface AdminPanelViewProps {
   onReloadAuthorizedUsers: () => Promise<void>;
 }
 
+
 export const AdminPanelView: React.FC<
   AdminPanelViewProps
 > = ({
   formatos,
+
+  comunicados,
+  comunicadosLoading,
 
   authorizedUsers,
   authorizedUsersLoading,
@@ -82,6 +102,10 @@ export const AdminPanelView: React.FC<
   onAddDocument,
   onEditDocument,
   onDeleteDocument,
+
+  onAddComunicado,
+  onDeleteComunicado,
+  onReloadComunicados,
 
   onAddAuthorizedUser,
   onUpdateAuthorizedUser,
@@ -97,7 +121,10 @@ export const AdminPanelView: React.FC<
   const [
     activeSection,
     setActiveSection,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null
+  );
+
 
   // =========================================================
   // MODAL USUARIO
@@ -111,7 +138,10 @@ export const AdminPanelView: React.FC<
   const [
     editingUser,
     setEditingUser,
-  ] = useState<AuthorizedUser | null>(null);
+  ] =
+    useState<AuthorizedUser | null>(
+      null
+    );
 
   const [
     userName,
@@ -144,7 +174,11 @@ export const AdminPanelView: React.FC<
   const [
     resettingPasswordId,
     setResettingPasswordId,
-  ] = useState<string | null>(null);
+  ] =
+    useState<string | null>(
+      null
+    );
+
 
   // =========================================================
   // MÓDULOS
@@ -152,57 +186,70 @@ export const AdminPanelView: React.FC<
 
   const modules = [
     {
-      id: 'institucional',
+      id:
+        'institucional',
       title:
         'Documentación Institucional',
       description:
         'Administra certificados, documentos legales, Cámara de Comercio, RUT y documentación corporativa.',
-      icon: Building2,
+      icon:
+        Building2,
     },
     {
-      id: 'documentos',
+      id:
+        'documentos',
       title:
         'Formatos y Plantillas',
       description:
         'Administra formatos, plantillas, viáticos, solicitudes, formularios y documentos de trabajo.',
-      icon: FileText,
+      icon:
+        FileText,
     },
     {
-      id: 'comunicados',
+      id:
+        'comunicados',
       title:
         'Comunicados',
       description:
         'Publica, revisa y elimina comunicados, anuncios, circulares y novedades para el equipo.',
-      icon: Bell,
+      icon:
+        Bell,
     },
     {
-      id: 'reglamentos',
+      id:
+        'reglamentos',
       title:
         'Reglamentos y Políticas',
       description:
         'Administra políticas, manuales, reglamentos, capítulos, resúmenes y enlaces oficiales.',
-      icon: BookOpen,
+      icon:
+        BookOpen,
     },
     {
-      id: 'agenda',
+      id:
+        'agenda',
       title:
         'Agenda y Eventos',
       description:
         'Administra talleres, capacitaciones, reuniones, fechas límite y eventos internos.',
-      icon: Calendar,
+      icon:
+        Calendar,
     },
     {
-      id: 'usuarios',
+      id:
+        'usuarios',
       title:
         'Usuarios y Accesos',
       description:
         'Administra usuarios autorizados, roles, estado de acceso y permisos administrativos.',
-      icon: Users,
+      icon:
+        Users,
     },
   ];
 
+
   // =========================================================
-  // DOCUMENTOS INSTITUCIONALES
+  // DOCUMENTOS
   // =========================================================
 
   const institutionalDocuments =
@@ -212,16 +259,13 @@ export const AdminPanelView: React.FC<
         'Documentación Institucional'
     );
 
-    // =========================================================
-    // FORMATOS Y PLANTILLAS
-    // =========================================================
-
-    const workingDocuments =
+  const workingDocuments =
     formatos.filter(
-        (fmt) =>
+      (fmt) =>
         fmt.category !==
         'Documentación Institucional'
     );
+
 
   // =========================================================
   // ABRIR MÓDULO
@@ -233,18 +277,30 @@ export const AdminPanelView: React.FC<
     setActiveSection(id);
   };
 
+
   // =========================================================
   // NUEVO USUARIO
   // =========================================================
 
-  const handleOpenNewUser = () => {
-    setEditingUser(null);
-    setUserName('');
-    setUserEmail('');
-    setUserRole('employee');
-    setUserActive(true);
-    setIsUserModalOpen(true);
-  };
+  const handleOpenNewUser =
+    () => {
+      setEditingUser(null);
+
+      setUserName('');
+
+      setUserEmail('');
+
+      setUserRole(
+        'employee'
+      );
+
+      setUserActive(true);
+
+      setIsUserModalOpen(
+        true
+      );
+    };
+
 
   // =========================================================
   // EDITAR USUARIO
@@ -254,119 +310,185 @@ export const AdminPanelView: React.FC<
     user: AuthorizedUser
   ) => {
     setEditingUser(user);
-    setUserName(user.name);
-    setUserEmail(user.email);
-    setUserRole(user.role);
-    setUserActive(user.active);
-    setIsUserModalOpen(true);
+
+    setUserName(
+      user.name
+    );
+
+    setUserEmail(
+      user.email
+    );
+
+    setUserRole(
+      user.role
+    );
+
+    setUserActive(
+      user.active
+    );
+
+    setIsUserModalOpen(
+      true
+    );
   };
 
+
   // =========================================================
-  // CERRAR MODAL
+  // CERRAR MODAL USUARIO
   // =========================================================
 
-  const handleCloseUserModal = () => {
-    if (savingUser) {
-      return;
-    }
+  const handleCloseUserModal =
+    () => {
+      if (savingUser) {
+        return;
+      }
 
-    setIsUserModalOpen(false);
-    setEditingUser(null);
-    setUserName('');
-    setUserEmail('');
-    setUserRole('employee');
-    setUserActive(true);
-  };
+      setIsUserModalOpen(
+        false
+      );
+
+      setEditingUser(null);
+
+      setUserName('');
+
+      setUserEmail('');
+
+      setUserRole(
+        'employee'
+      );
+
+      setUserActive(true);
+    };
+
 
   // =========================================================
   // GUARDAR USUARIO
   // =========================================================
 
-  const handleSaveUser = async (
-    e: React.FormEvent
-  ) => {
-    e.preventDefault();
+  const handleSaveUser =
+    async (
+      e:
+        React.FormEvent
+    ) => {
+      e.preventDefault();
 
-    const cleanName =
-      userName.trim();
+      const cleanName =
+        userName.trim();
 
-    const cleanEmail =
-      userEmail
-        .trim()
-        .toLowerCase();
+      const cleanEmail =
+        userEmail
+          .trim()
+          .toLowerCase();
 
-    if (
-      !cleanName ||
-      !cleanEmail
-    ) {
-      alert(
-        'Debes ingresar el nombre y el correo electrónico.'
+      if (
+        !cleanName ||
+        !cleanEmail
+      ) {
+        alert(
+          'Debes ingresar el nombre y el correo electrónico.'
+        );
+
+        return;
+      }
+
+      setSavingUser(
+        true
       );
 
-      return;
-    }
+      let success =
+        false;
 
-    setSavingUser(true);
+      try {
+        if (editingUser) {
+          success =
+            await onUpdateAuthorizedUser({
+              ...editingUser,
 
-    let success = false;
+              name:
+                cleanName,
 
-    try {
-      if (editingUser) {
-        success =
-          await onUpdateAuthorizedUser({
-            ...editingUser,
-            name: cleanName,
-            email: cleanEmail,
-            role: userRole,
-            active: userActive,
-          });
-      } else {
-        success =
-          await onAddAuthorizedUser({
-            name: cleanName,
-            email: cleanEmail,
-            role: userRole,
-          });
+              email:
+                cleanEmail,
+
+              role:
+                userRole,
+
+              active:
+                userActive,
+            });
+        } else {
+          success =
+            await onAddAuthorizedUser({
+              name:
+                cleanName,
+
+              email:
+                cleanEmail,
+
+              role:
+                userRole,
+            });
+        }
+      } finally {
+        setSavingUser(
+          false
+        );
       }
-    } finally {
-      setSavingUser(false);
-    }
 
-    if (success) {
-      setIsUserModalOpen(false);
-      setEditingUser(null);
-      setUserName('');
-      setUserEmail('');
-      setUserRole('employee');
-      setUserActive(true);
-    }
-  };
+      if (success) {
+        setIsUserModalOpen(
+          false
+        );
+
+        setEditingUser(
+          null
+        );
+
+        setUserName('');
+
+        setUserEmail('');
+
+        setUserRole(
+          'employee'
+        );
+
+        setUserActive(
+          true
+        );
+      }
+    };
+
 
   // =========================================================
   // RESTABLECER CONTRASEÑA
   // =========================================================
 
-  const handleResetPassword = async (
-    user: AuthorizedUser
-  ) => {
-    if (resettingPasswordId) {
-      return;
-    }
+  const handleResetPassword =
+    async (
+      user:
+        AuthorizedUser
+    ) => {
+      if (
+        resettingPasswordId
+      ) {
+        return;
+      }
 
-    setResettingPasswordId(
-      user.id
-    );
-
-    try {
-      await onResetUserPassword(
-        user
-      );
-    } finally {
       setResettingPasswordId(
-        null
+        user.id
       );
-    }
-  };
+
+      try {
+        await onResetUserPassword(
+          user
+        );
+      } finally {
+        setResettingPasswordId(
+          null
+        );
+      }
+    };
+
 
   // =========================================================
   // DOCUMENTACIÓN INSTITUCIONAL
@@ -380,29 +502,40 @@ export const AdminPanelView: React.FC<
       <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
           <button
             type="button"
             onClick={() =>
-              setActiveSection(null)
+              setActiveSection(
+                null
+              )
             }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
+
             Volver a módulos
           </button>
 
           <button
             type="button"
-            onClick={onAddDocument}
+            onClick={
+              onAddDocument
+            }
             className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
+
             Agregar Documento
           </button>
+
         </div>
 
+
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
           <div className="flex items-start gap-4">
+
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
@@ -416,12 +549,19 @@ export const AdminPanelView: React.FC<
                 Crea, edita o elimina documentos institucionales visibles para el equipo.
               </p>
             </div>
+
           </div>
+
         </div>
 
+
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {institutionalDocuments.length === 0 ? (
+
+          {institutionalDocuments.length ===
+          0 ? (
+
             <div className="p-10 text-center">
+
               <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
               <p className="text-sm font-bold text-slate-700">
@@ -431,36 +571,57 @@ export const AdminPanelView: React.FC<
               <p className="text-xs text-slate-400 mt-1">
                 Usa “Agregar Documento” para crear el primero.
               </p>
+
             </div>
+
           ) : (
+
             <div className="divide-y divide-slate-100">
+
               {institutionalDocuments.map(
                 (doc) => (
                   <div
-                    key={doc.id}
+                    key={
+                      doc.id
+                    }
                     className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
+
                     <div className="flex-1">
+
                       <div className="flex items-center gap-2 flex-wrap">
+
                         <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-                          {doc.version}
+                          {
+                            doc.version
+                          }
                         </span>
 
                         <span className="text-[10px] font-bold text-slate-400">
-                          {doc.lastUpdated}
+                          {
+                            doc.lastUpdated
+                          }
                         </span>
+
                       </div>
 
                       <h3 className="text-sm font-extrabold text-[#234156] mt-2">
-                        {doc.title}
+                        {
+                          doc.title
+                        }
                       </h3>
 
                       <p className="text-xs text-slate-500 mt-1">
-                        {doc.description}
+                        {
+                          doc.description
+                        }
                       </p>
+
                     </div>
 
+
                     <div className="flex items-center gap-2 shrink-0">
+
                       <button
                         type="button"
                         onClick={() =>
@@ -471,6 +632,7 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
+
                         Editar
                       </button>
 
@@ -484,20 +646,28 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
+
                         Eliminar
                       </button>
+
                     </div>
+
                   </div>
                 )
               )}
+
             </div>
+
           )}
+
         </div>
+
       </div>
     );
   }
 
-    // =========================================================
+
+  // =========================================================
   // FORMATOS Y PLANTILLAS
   // =========================================================
 
@@ -508,33 +678,36 @@ export const AdminPanelView: React.FC<
     return (
       <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
-        {/* BARRA SUPERIOR */}
-
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
           <button
             type="button"
             onClick={() =>
-              setActiveSection(null)
+              setActiveSection(
+                null
+              )
             }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
+
             Volver a módulos
           </button>
 
           <button
             type="button"
-            onClick={onAddDocument}
+            onClick={
+              onAddDocument
+            }
             className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
+
             Agregar Formato
           </button>
 
         </div>
 
-        {/* ENCABEZADO */}
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
@@ -560,7 +733,6 @@ export const AdminPanelView: React.FC<
 
         </div>
 
-        {/* RESUMEN */}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
@@ -571,10 +743,13 @@ export const AdminPanelView: React.FC<
             </p>
 
             <p className="text-2xl font-black text-[#234156] mt-1">
-              {workingDocuments.length}
+              {
+                workingDocuments.length
+              }
             </p>
 
           </div>
+
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
 
@@ -586,7 +761,9 @@ export const AdminPanelView: React.FC<
               {
                 new Set(
                   workingDocuments.map(
-                    (doc) =>
+                    (
+                      doc
+                    ) =>
                       doc.category
                   )
                 ).size
@@ -594,6 +771,7 @@ export const AdminPanelView: React.FC<
             </p>
 
           </div>
+
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
 
@@ -603,13 +781,18 @@ export const AdminPanelView: React.FC<
 
             <p className="text-sm font-extrabold text-[#234156] mt-2">
               {
-                workingDocuments.length > 0
+                workingDocuments.length >
+                0
                   ? workingDocuments
                       .map(
-                        (doc) =>
+                        (
+                          doc
+                        ) =>
                           doc.lastUpdated
                       )
-                      .filter(Boolean)
+                      .filter(
+                        Boolean
+                      )
                       .sort()
                       .reverse()[0] ||
                     'Sin fecha'
@@ -621,7 +804,6 @@ export const AdminPanelView: React.FC<
 
         </div>
 
-        {/* LISTADO */}
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
@@ -637,6 +819,7 @@ export const AdminPanelView: React.FC<
 
           </div>
 
+
           {workingDocuments.length ===
           0 ? (
 
@@ -646,10 +829,6 @@ export const AdminPanelView: React.FC<
 
               <p className="text-sm font-bold text-slate-700">
                 No hay formatos registrados
-              </p>
-
-              <p className="text-xs text-slate-400 mt-1">
-                Usa “Agregar Formato” para crear el primero.
               </p>
 
             </div>
@@ -662,11 +841,11 @@ export const AdminPanelView: React.FC<
                 (doc) => (
 
                   <div
-                    key={doc.id}
+                    key={
+                      doc.id
+                    }
                     className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                   >
-
-                    {/* INFORMACIÓN */}
 
                     <div className="flex items-start gap-3 min-w-0 flex-1">
 
@@ -679,51 +858,55 @@ export const AdminPanelView: React.FC<
                         <div className="flex items-center gap-2 flex-wrap">
 
                           <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-                            {doc.category}
+                            {
+                              doc.category
+                            }
                           </span>
 
                           <span className="text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                            {doc.fileType}
+                            {
+                              doc.fileType
+                            }
                           </span>
 
                           <span className="text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                            {doc.version}
+                            {
+                              doc.version
+                            }
                           </span>
 
                         </div>
 
                         <h3 className="text-sm font-extrabold text-[#234156] mt-2">
-                          {doc.title}
+                          {
+                            doc.title
+                          }
                         </h3>
 
                         <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                          {doc.description}
-                        </p>
-
-                        <p className="text-[10px] text-slate-400 mt-2">
-                          Última actualización:{' '}
-                          <strong>
-                            {doc.lastUpdated ||
-                              'Sin fecha'}
-                          </strong>
+                          {
+                            doc.description
+                          }
                         </p>
 
                       </div>
 
                     </div>
 
-                    {/* ACCIONES */}
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
 
                       <button
                         type="button"
                         onClick={() =>
-                          onEditDocument(doc)
+                          onEditDocument(
+                            doc
+                          )
                         }
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
+
                         Editar
                       </button>
 
@@ -737,6 +920,7 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
+
                         Eliminar
                       </button>
 
@@ -757,6 +941,352 @@ export const AdminPanelView: React.FC<
     );
   }
 
+
+  // =========================================================
+  // COMUNICADOS
+  // =========================================================
+
+  if (
+    activeSection ===
+    'comunicados'
+  ) {
+    const pinnedCount =
+      comunicados.filter(
+        (
+          comunicado
+        ) =>
+          comunicado.pinned
+      ).length;
+
+    const categoriesCount =
+      new Set(
+        comunicados.map(
+          (
+            comunicado
+          ) =>
+            comunicado.category
+        )
+      ).size;
+
+    return (
+      <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSection(
+                null
+              )
+            }
+            className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+
+            Volver a módulos
+          </button>
+
+
+          <div className="flex items-center gap-2">
+
+            <button
+              type="button"
+              onClick={
+                onReloadComunicados
+              }
+              disabled={
+                comunicadosLoading
+              }
+              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-[#234156] px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${
+                  comunicadosLoading
+                    ? 'animate-spin'
+                    : ''
+                }`}
+              />
+
+              Actualizar
+            </button>
+
+
+            <button
+              type="button"
+              onClick={
+                onAddComunicado
+              }
+              className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+
+              Publicar comunicado
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
+          <div className="flex items-start gap-4">
+
+            <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
+              <Bell className="w-6 h-6" />
+            </div>
+
+            <div>
+
+              <h1 className="text-xl md:text-2xl font-extrabold">
+                Administración de Comunicados
+              </h1>
+
+              <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl">
+                Publica, revisa y elimina comunicados, anuncios, circulares y novedades visibles para el equipo.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Comunicados
+            </p>
+
+            <p className="text-2xl font-black text-[#234156] mt-1">
+              {
+                comunicados.length
+              }
+            </p>
+
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Destacados
+            </p>
+
+            <p className="text-2xl font-black text-amber-700 mt-1">
+              {
+                pinnedCount
+              }
+            </p>
+
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+              Categorías
+            </p>
+
+            <p className="text-2xl font-black text-[#234156] mt-1">
+              {
+                categoriesCount
+              }
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+          <div className="px-5 py-4 border-b border-slate-100">
+
+            <h2 className="text-sm font-extrabold text-[#234156]">
+              Comunicados publicados
+            </h2>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Contenido disponible actualmente en la Intranet.
+            </p>
+
+          </div>
+
+
+          {comunicadosLoading ? (
+
+            <div className="p-10 text-center">
+
+              <RefreshCw className="w-7 h-7 text-[#234156] animate-spin mx-auto mb-3" />
+
+              <p className="text-xs font-bold text-slate-500">
+                Cargando comunicados...
+              </p>
+
+            </div>
+
+          ) : comunicados.length ===
+            0 ? (
+
+            <div className="p-10 text-center">
+
+              <Bell className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+              <p className="text-sm font-bold text-slate-700">
+                No hay comunicados publicados
+              </p>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Usa “Publicar comunicado” para crear el primero.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="divide-y divide-slate-100">
+
+              {comunicados.map(
+                (
+                  comunicado
+                ) => (
+
+                  <div
+                    key={
+                      comunicado.id
+                    }
+                    className="p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4"
+                  >
+
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          comunicado.pinned
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-slate-100 text-[#234156]'
+                        }`}
+                      >
+                        {comunicado.pinned ? (
+                          <Pin className="w-5 h-5" />
+                        ) : (
+                          <Bell className="w-5 h-5" />
+                        )}
+                      </div>
+
+
+                      <div className="min-w-0 flex-1">
+
+                        <div className="flex items-center gap-2 flex-wrap">
+
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                            {
+                              comunicado.category
+                            }
+                          </span>
+
+                          {comunicado.pinned && (
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider bg-[#234156] text-white px-2 py-0.5 rounded-full">
+                              Destacado
+                            </span>
+                          )}
+
+                          <span className="text-[10px] font-bold text-slate-400">
+                            {
+                              comunicado.date
+                            }
+                          </span>
+
+                        </div>
+
+
+                        <h3 className="text-sm font-extrabold text-[#234156] mt-2">
+                          {
+                            comunicado.title
+                          }
+                        </h3>
+
+
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                          {
+                            comunicado.summary
+                          }
+                        </p>
+
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+
+                          {comunicado.author && (
+                            <span className="text-[10px] text-slate-400">
+                              Remitente:{' '}
+
+                              <strong>
+                                {
+                                  comunicado.author
+                                }
+                              </strong>
+                            </span>
+                          )}
+
+                          {comunicado.attachments &&
+                            comunicado.attachments.length >
+                              0 && (
+                              <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                <Paperclip className="w-3 h-3" />
+
+                                {
+                                  comunicado.attachments[0]
+                                    .name
+                                }
+                              </span>
+                            )}
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+
+                    <div className="flex items-center gap-2 shrink-0">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onDeleteComunicado(
+                            comunicado.id
+                          )
+                        }
+                        className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+
+                        Eliminar
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          )}
+
+        </div>
+
+      </div>
+    );
+  }
+
+
   // =========================================================
   // USUARIOS Y ACCESOS
   // =========================================================
@@ -768,21 +1298,25 @@ export const AdminPanelView: React.FC<
     return (
       <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
 
-        {/* BARRA SUPERIOR */}
-
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
           <button
             type="button"
             onClick={() =>
-              setActiveSection(null)
+              setActiveSection(
+                null
+              )
             }
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
+
             Volver a módulos
           </button>
 
+
           <div className="flex items-center gap-2">
+
             <button
               type="button"
               onClick={
@@ -804,6 +1338,7 @@ export const AdminPanelView: React.FC<
               Actualizar
             </button>
 
+
             <button
               type="button"
               onClick={
@@ -812,20 +1347,25 @@ export const AdminPanelView: React.FC<
               className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
             >
               <Plus className="w-4 h-4" />
+
               Agregar Usuario
             </button>
+
           </div>
+
         </div>
 
-        {/* ENCABEZADO */}
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
+
           <div className="flex items-start gap-4">
+
             <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
               <Users className="w-6 h-6" />
             </div>
 
             <div>
+
               <h1 className="text-xl md:text-2xl font-extrabold">
                 Usuarios y Accesos
               </h1>
@@ -833,42 +1373,56 @@ export const AdminPanelView: React.FC<
               <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl">
                 Administra las personas autorizadas para ingresar a la intranet, sus roles, estado de acceso y recuperación de contraseña.
               </p>
+
             </div>
+
           </div>
+
         </div>
 
-        {/* AVISO */}
 
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+
           <div className="flex items-start gap-3">
+
             <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
 
             <div>
+
               <p className="text-xs font-extrabold text-[#234156]">
                 Autorización y contraseña
               </p>
 
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Los permisos de acceso se administran en esta sección. La contraseña se gestiona mediante Supabase Authentication. El botón “Restablecer contraseña” enviará un enlace al correo del usuario.
+                Los permisos de acceso se administran en esta sección. La contraseña se gestiona mediante Supabase Authentication.
               </p>
+
             </div>
+
           </div>
+
         </div>
 
-        {/* CONTADORES */}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Usuarios
             </p>
 
             <p className="text-2xl font-black text-[#234156] mt-1">
-              {authorizedUsers.length}
+              {
+                authorizedUsers.length
+              }
             </p>
+
           </div>
 
+
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Activos
             </p>
@@ -876,14 +1430,19 @@ export const AdminPanelView: React.FC<
             <p className="text-2xl font-black text-emerald-700 mt-1">
               {
                 authorizedUsers.filter(
-                  (user) =>
+                  (
+                    user
+                  ) =>
                     user.active
                 ).length
               }
             </p>
+
           </div>
 
+
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
+
             <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
               Administradores
             </p>
@@ -891,21 +1450,25 @@ export const AdminPanelView: React.FC<
             <p className="text-2xl font-black text-amber-700 mt-1">
               {
                 authorizedUsers.filter(
-                  (user) =>
+                  (
+                    user
+                  ) =>
                     user.role ===
                       'admin' &&
                     user.active
                 ).length
               }
             </p>
+
           </div>
+
         </div>
 
-        {/* LISTA */}
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
           <div className="px-5 py-4 border-b border-slate-100">
+
             <h2 className="text-sm font-extrabold text-[#234156]">
               Usuarios autorizados
             </h2>
@@ -913,30 +1476,43 @@ export const AdminPanelView: React.FC<
             <p className="text-xs text-slate-500 mt-1">
               Correos con autorización para acceder a la intranet.
             </p>
+
           </div>
 
+
           {authorizedUsersLoading ? (
+
             <div className="p-10 text-center">
+
               <RefreshCw className="w-7 h-7 text-[#234156] animate-spin mx-auto mb-3" />
 
               <p className="text-xs font-bold text-slate-500">
                 Cargando usuarios...
               </p>
+
             </div>
+
           ) : authorizedUsers.length ===
             0 ? (
+
             <div className="p-10 text-center">
+
               <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
               <p className="text-sm font-bold text-slate-700">
                 No hay usuarios autorizados
               </p>
+
             </div>
+
           ) : (
+
             <div className="divide-y divide-slate-100">
 
               {authorizedUsers.map(
-                (user) => {
+                (
+                  user
+                ) => {
                   const isCurrentUser =
                     user.email
                       .toLowerCase() ===
@@ -949,10 +1525,11 @@ export const AdminPanelView: React.FC<
 
                   return (
                     <div
-                      key={user.id}
+                      key={
+                        user.id
+                      }
                       className="p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4"
                     >
-                      {/* INFORMACIÓN */}
 
                       <div className="flex items-start gap-3 min-w-0">
 
@@ -970,12 +1547,16 @@ export const AdminPanelView: React.FC<
                           )}
                         </div>
 
+
                         <div className="min-w-0">
 
                           <div className="flex items-center gap-2 flex-wrap">
+
                             <h3 className="text-sm font-extrabold text-[#234156]">
-                              {user.name ||
-                                'Sin nombre'}
+                              {
+                                user.name ||
+                                'Sin nombre'
+                              }
                             </h3>
 
                             {isCurrentUser && (
@@ -1009,26 +1590,20 @@ export const AdminPanelView: React.FC<
                                 ? 'Activo'
                                 : 'Inactivo'}
                             </span>
+
                           </div>
 
+
                           <p className="text-xs text-slate-500 mt-1 break-all">
-                            {user.email}
+                            {
+                              user.email
+                            }
                           </p>
 
-                          {user.createdAt && (
-                            <p className="text-[10px] text-slate-400 mt-1">
-                              Registrado:{' '}
-                              {new Date(
-                                user.createdAt
-                              ).toLocaleDateString(
-                                'es-CO'
-                              )}
-                            </p>
-                          )}
                         </div>
+
                       </div>
 
-                      {/* ACCIONES */}
 
                       <div className="flex flex-wrap items-center gap-2 shrink-0">
 
@@ -1042,8 +1617,10 @@ export const AdminPanelView: React.FC<
                           className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                         >
                           <Pencil className="w-3.5 h-3.5" />
+
                           Editar
                         </button>
+
 
                         <button
                           type="button"
@@ -1055,8 +1632,7 @@ export const AdminPanelView: React.FC<
                           disabled={
                             isResetting
                           }
-                          className="flex items-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Enviar enlace de restablecimiento de contraseña"
+                          className="flex items-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-50"
                         >
                           {isResetting ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -1068,6 +1644,7 @@ export const AdminPanelView: React.FC<
                             ? 'Enviando...'
                             : 'Restablecer contraseña'}
                         </button>
+
 
                         <button
                           type="button"
@@ -1084,7 +1661,7 @@ export const AdminPanelView: React.FC<
                             user.active
                               ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
                               : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                          } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          } disabled:opacity-40`}
                         >
                           {user.active ? (
                             <UserX className="w-3.5 h-3.5" />
@@ -1097,6 +1674,7 @@ export const AdminPanelView: React.FC<
                             : 'Activar'}
                         </button>
 
+
                         <button
                           type="button"
                           onClick={() =>
@@ -1107,23 +1685,26 @@ export const AdminPanelView: React.FC<
                           disabled={
                             isCurrentUser
                           }
-                          className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-40"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
+
                           Eliminar
                         </button>
 
                       </div>
+
                     </div>
                   );
                 }
               )}
 
             </div>
+
           )}
+
         </div>
 
-        {/* MODAL USUARIO */}
 
         {isUserModalOpen && (
           <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1139,6 +1720,7 @@ export const AdminPanelView: React.FC<
                   </div>
 
                   <div>
+
                     <h3 className="text-base font-extrabold text-[#234156]">
                       {editingUser
                         ? 'Editar usuario'
@@ -1148,9 +1730,11 @@ export const AdminPanelView: React.FC<
                     <p className="text-xs text-slate-500">
                       Usuarios y Accesos CdR
                     </p>
+
                   </div>
 
                 </div>
+
 
                 <button
                   type="button"
@@ -1164,7 +1748,9 @@ export const AdminPanelView: React.FC<
                 >
                   <X className="w-5 h-5" />
                 </button>
+
               </div>
+
 
               <form
                 onSubmit={
@@ -1174,6 +1760,7 @@ export const AdminPanelView: React.FC<
               >
 
                 <div>
+
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Nombre *
                   </label>
@@ -1184,16 +1771,21 @@ export const AdminPanelView: React.FC<
                     value={
                       userName
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      e
+                    ) =>
                       setUserName(
                         e.target.value
                       )
                     }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
                   />
+
                 </div>
 
+
                 <div>
+
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Correo institucional *
                   </label>
@@ -1204,7 +1796,9 @@ export const AdminPanelView: React.FC<
                     value={
                       userEmail
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      e
+                    ) =>
                       setUserEmail(
                         e.target.value
                       )
@@ -1212,12 +1806,11 @@ export const AdminPanelView: React.FC<
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#234156] text-sm"
                   />
 
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Se permiten correos de @consejoderedaccion.org y @colombiacheck.org.
-                  </p>
                 </div>
 
+
                 <div>
+
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#234156] mb-1">
                     Rol *
                   </label>
@@ -1226,7 +1819,9 @@ export const AdminPanelView: React.FC<
                     value={
                       userRole
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      e
+                    ) =>
                       setUserRole(
                         e.target
                           .value as AuthorizedUserRole
@@ -1242,7 +1837,9 @@ export const AdminPanelView: React.FC<
                       Administrador
                     </option>
                   </select>
+
                 </div>
+
 
                 {editingUser && (
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
@@ -1250,6 +1847,7 @@ export const AdminPanelView: React.FC<
                     <label className="flex items-center justify-between gap-4 cursor-pointer">
 
                       <div>
+
                         <p className="text-xs font-extrabold text-[#234156]">
                           Acceso activo
                         </p>
@@ -1257,14 +1855,18 @@ export const AdminPanelView: React.FC<
                         <p className="text-[10px] text-slate-500 mt-0.5">
                           Si se desactiva, este correo dejará de tener acceso autorizado.
                         </p>
+
                       </div>
+
 
                       <input
                         type="checkbox"
                         checked={
                           userActive
                         }
-                        onChange={(e) =>
+                        onChange={(
+                          e
+                        ) =>
                           setUserActive(
                             e.target.checked
                           )
@@ -1279,17 +1881,10 @@ export const AdminPanelView: React.FC<
                       />
 
                     </label>
+
                   </div>
                 )}
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <p className="text-[10px] text-amber-900 leading-relaxed">
-                    <strong>
-                      Importante:
-                    </strong>{' '}
-                    agregar un correo aquí autoriza su acceso a la intranet. La contraseña se administra mediante Supabase Authentication.
-                  </p>
-                </div>
 
                 <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
 
@@ -1305,6 +1900,7 @@ export const AdminPanelView: React.FC<
                   >
                     Cancelar
                   </button>
+
 
                   <button
                     type="submit"
@@ -1327,8 +1923,11 @@ export const AdminPanelView: React.FC<
                   </button>
 
                 </div>
+
               </form>
+
             </div>
+
           </div>
         )}
 
@@ -1336,22 +1935,22 @@ export const AdminPanelView: React.FC<
     );
   }
 
+
   // =========================================================
   // MÓDULOS PENDIENTES
   // =========================================================
 
-    if (
+  if (
     activeSection ===
-        'comunicados' ||
+      'reglamentos' ||
     activeSection ===
-        'reglamentos' ||
-    activeSection ===
-        'agenda'
-    ) {
-
+      'agenda'
+  ) {
     const selectedModule =
       modules.find(
-        (module) =>
+        (
+          module
+        ) =>
           module.id ===
           activeSection
       );
@@ -1366,13 +1965,17 @@ export const AdminPanelView: React.FC<
         <button
           type="button"
           onClick={() =>
-            setActiveSection(null)
+            setActiveSection(
+              null
+            )
           }
           className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
         >
           <ArrowLeft className="w-4 h-4" />
+
           Volver a módulos
         </button>
+
 
         <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
 
@@ -1383,16 +1986,25 @@ export const AdminPanelView: React.FC<
             </div>
 
             <div>
+
               <h1 className="text-xl md:text-2xl font-extrabold">
-                {selectedModule?.title}
+                {
+                  selectedModule?.title
+                }
               </h1>
 
               <p className="text-xs md:text-sm text-slate-200 mt-1">
-                {selectedModule?.description}
+                {
+                  selectedModule?.description
+                }
               </p>
+
             </div>
+
           </div>
+
         </div>
+
 
         <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
 
@@ -1403,13 +2015,15 @@ export const AdminPanelView: React.FC<
           </h2>
 
           <p className="text-xs text-slate-500 mt-2 max-w-xl mx-auto">
-            Esta sección ya abre correctamente desde el Panel Administrativo. En el siguiente paso conectaremos sus herramientas para crear, editar y eliminar contenido.
+            Esta sección ya abre correctamente desde el Panel Administrativo. En el siguiente paso conectaremos sus herramientas.
           </p>
 
         </div>
+
       </div>
     );
   }
+
 
   // =========================================================
   // PANEL PRINCIPAL
@@ -1427,6 +2041,7 @@ export const AdminPanelView: React.FC<
           </div>
 
           <div>
+
             <h1 className="text-xl md:text-2xl font-extrabold">
               Panel Administrativo CdR
             </h1>
@@ -1434,10 +2049,13 @@ export const AdminPanelView: React.FC<
             <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl leading-relaxed">
               Centro de gestión de contenidos de la intranet. Desde aquí puedes administrar documentos, formatos, comunicados, reglamentos, agenda y accesos de usuarios.
             </p>
+
           </div>
 
         </div>
+
       </div>
+
 
       <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4">
 
@@ -1446,6 +2064,7 @@ export const AdminPanelView: React.FC<
           <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
 
           <div>
+
             <p className="text-xs font-extrabold text-[#234156]">
               Área exclusiva para administradores
             </p>
@@ -1453,14 +2072,18 @@ export const AdminPanelView: React.FC<
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               Los cambios realizados desde estos módulos pueden modificar la información visible para todos los empleados autorizados en la intranet.
             </p>
+
           </div>
 
         </div>
+
       </div>
+
 
       <div>
 
         <div className="mb-4">
+
           <h2 className="text-base font-extrabold text-[#234156]">
             Módulos de administración
           </h2>
@@ -1468,19 +2091,25 @@ export const AdminPanelView: React.FC<
           <p className="text-xs text-slate-500 mt-1">
             Selecciona la sección que deseas administrar.
           </p>
+
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
           {modules.map(
-            (module) => {
+            (
+              module
+            ) => {
               const Icon =
                 module.icon;
 
               return (
                 <button
                   type="button"
-                  key={module.id}
+                  key={
+                    module.id
+                  }
                   onClick={() =>
                     handleOpenModule(
                       module.id
@@ -1496,20 +2125,30 @@ export const AdminPanelView: React.FC<
                     </div>
 
                     <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#234156] group-hover:translate-x-1 transition-all" />
+
                   </div>
 
+
                   <h3 className="text-sm font-extrabold text-[#234156] mt-4">
-                    {module.title}
+                    {
+                      module.title
+                    }
                   </h3>
 
+
                   <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                    {module.description}
+                    {
+                      module.description
+                    }
                   </p>
 
+
                   <div className="mt-4 pt-3 border-t border-slate-100">
+
                     <span className="text-[11px] font-extrabold text-[#234156]">
                       Administrar sección
                     </span>
+
                   </div>
 
                 </button>
@@ -1518,6 +2157,7 @@ export const AdminPanelView: React.FC<
           )}
 
         </div>
+
       </div>
 
     </div>
