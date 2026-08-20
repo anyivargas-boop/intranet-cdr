@@ -23,7 +23,6 @@ import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
 import { supabase } from './lib/supabase';
 
 import {
-  initialComunicados,
   initialEventos,
   initialGoogleConfig,
 } from './data/initialData';
@@ -31,6 +30,7 @@ import {
 import {
   FormatoDocumento,
   Comunicado,
+  ComunicadoCategory,
   Reglamento,
   ReglamentoSection,
   EventoAgenda,
@@ -137,22 +137,18 @@ export default function App() {
 
 
   // =========================================================
-  // COMUNICADOS - LOCAL POR AHORA
+  // COMUNICADOS - SUPABASE
   // =========================================================
 
   const [
     comunicados,
     setComunicados,
-  ] = useState<Comunicado[]>(() => {
-    const saved =
-      localStorage.getItem(
-        'cdr_comunicados'
-      );
+  ] = useState<Comunicado[]>([]);
 
-    return saved
-      ? JSON.parse(saved)
-      : initialComunicados;
-  });
+  const [
+    comunicadosLoading,
+    setComunicadosLoading,
+  ] = useState(false);
 
 
   // =========================================================
@@ -209,13 +205,6 @@ export default function App() {
   // =========================================================
   // LOCAL STORAGE
   // =========================================================
-
-  useEffect(() => {
-    localStorage.setItem(
-      'cdr_comunicados',
-      JSON.stringify(comunicados)
-    );
-  }, [comunicados]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -614,6 +603,8 @@ export default function App() {
       );
 
       setFormatos([]);
+
+      setComunicados([]);
 
       setReglamentos([]);
 
@@ -1268,6 +1259,135 @@ export default function App() {
 
 
   // =========================================================
+  // CARGAR COMUNICADOS
+  // =========================================================
+
+  const loadComunicados =
+    async () => {
+      setComunicadosLoading(
+        true
+      );
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('comunicados')
+        .select('*')
+        .eq(
+          'active',
+          true
+        )
+        .order(
+          'pinned',
+          {
+            ascending: false,
+          }
+        )
+        .order(
+          'published_at',
+          {
+            ascending: false,
+          }
+        );
+
+      if (error) {
+        console.error(
+          'Error cargando comunicados:',
+          error
+        );
+
+        setComunicados([]);
+
+        setComunicadosLoading(
+          false
+        );
+
+        return;
+      }
+
+      const mappedComunicados:
+        Comunicado[] =
+        (data || []).map(
+          (com) => {
+            const attachments =
+              (
+                com.attachment_name ||
+                com.attachment_url
+              )
+                ? [
+                    {
+                      name:
+                        com.attachment_name ||
+                        'Documento adjunto',
+
+                      url:
+                        com.attachment_url ||
+                        '',
+
+                      type:
+                        com.attachment_type ||
+                        'document',
+                    },
+                  ]
+                : undefined;
+
+            return {
+              id:
+                com.id,
+
+              title:
+                com.title || '',
+
+              category:
+                (
+                  com.category ||
+                  'Institucional'
+                ) as ComunicadoCategory,
+
+              summary:
+                com.summary || '',
+
+              content:
+                com.content || '',
+
+              date:
+                com.published_at
+                  ? new Date(
+                      com.published_at
+                    )
+                      .toISOString()
+                      .split('T')[0]
+                  : '',
+
+              author:
+                com.author || '',
+
+              authorRole:
+                com.author_role ||
+                '',
+
+              pinned:
+                Boolean(
+                  com.pinned
+                ),
+
+              attachments,
+            };
+          }
+        );
+
+      setComunicados(
+        mappedComunicados
+      );
+
+      setComunicadosLoading(
+        false
+      );
+    };
+
+
+  // =========================================================
   // CARGAR REGLAMENTOS
   // =========================================================
 
@@ -1441,6 +1561,8 @@ export default function App() {
       authFlowMode === null
     ) {
       loadDocumentos();
+
+      loadComunicados();
 
       loadReglamentos();
 
@@ -1738,6 +1860,165 @@ export default function App() {
       }
 
       await loadDocumentos();
+    };
+
+
+  // =========================================================
+  // COMUNICADOS - AGREGAR
+  // =========================================================
+
+  const handleAddComunicado =
+    async (
+      newCom:
+        Comunicado
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede publicar comunicados.'
+        );
+
+        return;
+      }
+
+      const firstAttachment =
+        newCom.attachments?.[0];
+
+      const {
+        error,
+      } = await supabase
+        .from('comunicados')
+        .insert({
+          title:
+            newCom.title,
+
+          category:
+            newCom.category,
+
+          summary:
+            newCom.summary,
+
+          content:
+            newCom.content,
+
+          author:
+            newCom.author,
+
+          author_role:
+            newCom.authorRole,
+
+          pinned:
+            newCom.pinned,
+
+          attachment_name:
+            firstAttachment?.name ||
+            null,
+
+          attachment_url:
+            firstAttachment?.url ||
+            null,
+
+          attachment_type:
+            firstAttachment?.type ||
+            null,
+
+          published_at:
+            newCom.date
+              ? new Date(
+                  `${newCom.date}T12:00:00`
+                ).toISOString()
+              : new Date()
+                  .toISOString(),
+
+          active:
+            true,
+        });
+
+      if (error) {
+        console.error(
+          'Error publicando comunicado:',
+          error
+        );
+
+        alert(
+          'No fue posible publicar el comunicado.'
+        );
+
+        return;
+      }
+
+      setIsAddComunicadoOpen(
+        false
+      );
+
+      await loadComunicados();
+    };
+
+
+  // =========================================================
+  // COMUNICADOS - ELIMINAR
+  // =========================================================
+
+  const handleDeleteComunicado =
+    async (
+      id:
+        string
+    ) => {
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        alert(
+          'Solo un administrador puede eliminar comunicados.'
+        );
+
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          '¿Seguro que deseas eliminar este comunicado?'
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const {
+        error,
+      } = await supabase
+        .from('comunicados')
+        .delete()
+        .eq(
+          'id',
+          id
+        );
+
+      if (error) {
+        console.error(
+          'Error eliminando comunicado:',
+          error
+        );
+
+        alert(
+          'No fue posible eliminar el comunicado.'
+        );
+
+        return;
+      }
+
+      if (
+        selectedComunicado?.id ===
+        id
+      ) {
+        setSelectedComunicado(
+          null
+        );
+      }
+
+      await loadComunicados();
     };
 
 
@@ -2064,42 +2345,6 @@ export default function App() {
       }
 
       await loadReglamentos();
-    };
-
-
-  // =========================================================
-  // COMUNICADOS
-  // =========================================================
-
-  const handleAddComunicado =
-    (
-      newCom:
-        Comunicado
-    ) => {
-      setComunicados(
-        (prev) => [
-          newCom,
-          ...prev,
-        ]
-      );
-    };
-
-
-  const handleDeleteComunicado =
-    (
-      id:
-        string
-    ) => {
-      setComunicados(
-        (prev) =>
-          prev.filter(
-            (
-              comunicado
-            ) =>
-              comunicado.id !==
-              id
-          )
-      );
     };
 
 
@@ -2460,25 +2705,33 @@ export default function App() {
 
         {activeTab ===
           'comunicados' && (
-          <ComunicadosView
-            comunicados={
-              comunicados
-            }
-            isAdmin={
-              isAdmin
-            }
-            onOpenAddModal={() =>
-              setIsAddComunicadoOpen(
-                true
-              )
-            }
-            onSelectComunicado={
-              setSelectedComunicado
-            }
-            onDeleteComunicado={
-              handleDeleteComunicado
-            }
-          />
+          <>
+            {comunicadosLoading ? (
+              <LoadingBox
+                text="Cargando comunicados..."
+              />
+            ) : (
+              <ComunicadosView
+                comunicados={
+                  comunicados
+                }
+                isAdmin={
+                  isAdmin
+                }
+                onOpenAddModal={() =>
+                  setIsAddComunicadoOpen(
+                    true
+                  )
+                }
+                onSelectComunicado={
+                  setSelectedComunicado
+                }
+                onDeleteComunicado={
+                  handleDeleteComunicado
+                }
+              />
+            )}
+          </>
         )}
 
 
