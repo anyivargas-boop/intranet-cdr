@@ -17,6 +17,7 @@ import {
   Video,
   Link as LinkIcon,
   Paperclip,
+  Bell,
 } from 'lucide-react';
 
 
@@ -80,6 +81,16 @@ const getDriveImageUrl = (
   if (!fileId) {
     return url;
   }
+
+  /*
+   * IMPORTANTE:
+   * Aquí antes tenías una cadena Markdown:
+   *
+   * [https://drive...](https://drive...)
+   *
+   * Eso NO sirve dentro de src="".
+   * Debe devolverse únicamente la URL real.
+   */
 
   return `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`;
 };
@@ -550,8 +561,14 @@ const prepareContent = (
   }
 
 
+  /*
+   * Detectamos contenido HTML guardado desde el editor.
+   * Si ya viene con <p>, <strong>, <ul>, etc.,
+   * NO lo escapamos.
+   */
+
   const looksLikeHtml =
-    /<\/?[a-z][\s\S]*>/i.test(
+    /<\/?[a-z][\s\S]*?>/i.test(
       content
     );
 
@@ -588,38 +605,42 @@ const ImageMedia = ({
 
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
 
-      <a
-        href={
-          item.url
-        }
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full"
-      >
+      {/* =================================================== */}
+      {/* IMAGEN COMPLETA */}
+      {/* =================================================== */}
+
+      <div className="w-full bg-slate-50 p-2 sm:p-3">
 
         <img
           src={
             imageUrl
           }
           alt={
-            item.name
+            item.name ||
+            'Imagen del comunicado'
           }
           loading="lazy"
           className="
             block
             w-full
             h-auto
+            max-w-full
             object-contain
-            bg-slate-100
+            rounded-xl
+            bg-slate-50
           "
         />
 
-      </a>
+      </div>
 
 
-      <div className="px-3 sm:px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      {/* =================================================== */}
+      {/* INFORMACIÓN DE LA IMAGEN */}
+      {/* =================================================== */}
+
+      <div className="px-3 sm:px-4 py-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 
         <div className="flex items-start sm:items-center gap-2 min-w-0">
 
@@ -675,6 +696,10 @@ const VideoMedia = ({
     );
 
 
+  // =======================================================
+  // YOUTUBE
+  // =======================================================
+
   if (
     youtubeId
   ) {
@@ -716,6 +741,10 @@ const VideoMedia = ({
     );
   }
 
+
+  // =======================================================
+  // GOOGLE DRIVE
+  // =======================================================
 
   if (
     drivePreview
@@ -988,194 +1017,202 @@ export const ComunicadoDetailModal:
         z-[200]
         bg-slate-950/75
         sm:backdrop-blur-sm
-        flex
-        items-stretch
-        sm:items-center
-        justify-center
-        p-0
-        sm:p-4
-        overflow-hidden
+        overflow-y-auto
+        overflow-x-hidden
+        overscroll-contain
+        touch-pan-y
+        [-webkit-overflow-scrolling:touch]
       "
     >
 
       {/* ===================================================== */}
-      {/* CONTENEDOR DEL MODAL */}
+      {/* ENVOLTURA GENERAL */}
       {/* ===================================================== */}
 
       <div
         className="
-          bg-white
           w-full
-          h-[100dvh]
-          sm:h-auto
-          sm:max-h-[92dvh]
-          sm:max-w-4xl
-          rounded-none
-          sm:rounded-2xl
-          border-0
-          sm:border
-          sm:border-slate-300
-          shadow-2xl
-          text-slate-900
+          min-h-full
           flex
-          flex-col
-          overflow-hidden
-          min-w-0
+          items-start
+          justify-center
+          p-0
+          sm:p-4
+          md:p-6
         "
       >
 
         {/* =================================================== */}
-        {/* CABECERA FIJA */}
-        {/* =================================================== */}
-
-        <div className="shrink-0 bg-white px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 border-b border-slate-100">
-
-          <div className="flex justify-between items-start gap-3">
-
-            <div className="min-w-0 flex-1">
-
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-
-                <span className="max-w-full text-[10px] font-extrabold text-slate-900 bg-[#f3a828] px-2.5 py-1 rounded border border-amber-300 uppercase tracking-wider break-words">
-                  {
-                    comunicado.category
-                  }
-                </span>
-
-
-                {comunicado.pinned && (
-                  <span className="max-w-full text-[10px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded border border-red-200 break-words">
-                    📌 Comunicado Fijado
-                  </span>
-                )}
-
-              </div>
-
-
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#234156] leading-tight break-words [overflow-wrap:anywhere]">
-                {
-                  comunicado.title
-                }
-              </h2>
-
-
-              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-5 mt-4 text-xs text-slate-500 font-medium min-w-0">
-
-                <span className="flex items-center gap-2 font-semibold min-w-0">
-
-                  <Calendar className="w-4 h-4 text-[#234156] shrink-0" />
-
-                  <span className="break-words">
-                    {
-                      comunicado.date
-                    }
-                  </span>
-
-                </span>
-
-
-                {(comunicado.author ||
-                  comunicado.authorRole) && (
-                  <span className="flex items-start gap-2 font-semibold min-w-0">
-
-                    <User className="w-4 h-4 text-[#234156] shrink-0 mt-0.5" />
-
-                    <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-
-                      {
-                        comunicado.author
-                      }
-
-                      {comunicado.authorRole && (
-                        <>
-                          {' '}
-                          (
-                          {
-                            comunicado.authorRole
-                          }
-                          )
-                        </>
-                      )}
-
-                    </span>
-
-                  </span>
-                )}
-
-              </div>
-
-            </div>
-
-
-            <button
-              type="button"
-              onClick={
-                onClose
-              }
-              aria-label="Cerrar comunicado"
-              className="
-                w-10
-                h-10
-                rounded-xl
-                flex
-                items-center
-                justify-center
-                text-slate-400
-                hover:text-slate-700
-                hover:bg-slate-100
-                shrink-0
-              "
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-          </div>
-
-        </div>
-
-
-        {/* =================================================== */}
-        {/* ZONA QUE SÍ HACE SCROLL */}
+        {/* CONTENEDOR DEL COMUNICADO */}
         {/* =================================================== */}
 
         <div
           className="
-            flex-1
-            min-h-0
-            overflow-y-auto
-            overflow-x-hidden
-            overscroll-contain
-            touch-pan-y
-            [-webkit-overflow-scrolling:touch]
+            bg-white
+            w-full
+            min-h-[100dvh]
+            sm:min-h-0
+            sm:h-auto
+            sm:max-w-5xl
+            rounded-none
+            sm:rounded-2xl
+            border-0
+            sm:border
+            sm:border-slate-300
+            shadow-2xl
+            text-slate-900
+            min-w-0
+            overflow-hidden
+            sm:my-3
           "
         >
 
+          {/* ================================================= */}
+          {/* CABECERA */}
+          {/* ================================================= */}
+
+          <div className="bg-white px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-5 border-b border-slate-100">
+
+            <div className="flex justify-between items-start gap-3">
+
+              <div className="min-w-0 flex-1">
+
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+
+                  <span className="max-w-full text-[10px] font-extrabold text-slate-900 bg-[#f3a828] px-2.5 py-1 rounded border border-amber-300 uppercase tracking-wider break-words">
+                    {
+                      comunicado.category
+                    }
+                  </span>
+
+
+                  {comunicado.pinned && (
+                    <span className="max-w-full text-[10px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded border border-red-200 break-words">
+                      📌 Comunicado Fijado
+                    </span>
+                  )}
+
+                </div>
+
+
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#234156] leading-tight break-words [overflow-wrap:anywhere]">
+                  {
+                    comunicado.title
+                  }
+                </h2>
+
+
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-5 mt-4 text-xs text-slate-500 font-medium min-w-0">
+
+                  {comunicado.date && (
+                    <span className="flex items-center gap-2 font-semibold min-w-0">
+
+                      <Calendar className="w-4 h-4 text-[#234156] shrink-0" />
+
+                      <span className="break-words">
+                        {
+                          comunicado.date
+                        }
+                      </span>
+
+                    </span>
+                  )}
+
+
+                  {(comunicado.author ||
+                    comunicado.authorRole) && (
+                    <span className="flex items-start gap-2 font-semibold min-w-0">
+
+                      <User className="w-4 h-4 text-[#234156] shrink-0 mt-0.5" />
+
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+
+                        {
+                          comunicado.author
+                        }
+
+                        {comunicado.authorRole && (
+                          <>
+                            {' '}
+                            (
+                            {
+                              comunicado.authorRole
+                            }
+                            )
+                          </>
+                        )}
+
+                      </span>
+
+                    </span>
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <button
+                type="button"
+                onClick={
+                  onClose
+                }
+                aria-label="Cerrar comunicado"
+                className="
+                  w-10
+                  h-10
+                  rounded-xl
+                  flex
+                  items-center
+                  justify-center
+                  text-slate-400
+                  hover:text-slate-700
+                  hover:bg-slate-100
+                  shrink-0
+                "
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+            </div>
+
+          </div>
+
+
+          {/* ================================================= */}
+          {/* CONTENIDO DEL COMUNICADO */}
+          {/* YA NO TIENE SCROLL INTERNO */}
+          {/* ================================================= */}
+
           <div className="w-full min-w-0 p-4 sm:p-6 md:p-8">
 
+
             {/* ================================================= */}
-            {/* IMÁGENES */}
+            {/* RESUMEN */}
             {/* ================================================= */}
 
-            {images.length >
-              0 && (
-              <div className="w-full min-w-0 space-y-4 mb-7">
+            {comunicado.summary && (
+              <div className="w-full bg-amber-50 border border-amber-300 rounded-2xl p-4 sm:p-5 mb-7">
 
-                {images.map(
-                  (
-                    item,
-                    index
-                  ) => (
-                    <ImageMedia
-                      key={
-                        item.id ||
-                        `image-${index}`
+                <div className="flex items-start gap-3">
+
+                  <Bell className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+
+                  <div className="min-w-0">
+
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-orange-700">
+                      Resumen
+                    </p>
+
+                    <p className="text-sm sm:text-[15px] leading-6 text-slate-700 mt-2 break-words">
+                      {
+                        comunicado.summary
                       }
-                      item={
-                        item
-                      }
-                    />
-                  )
-                )}
+                    </p>
+
+                  </div>
+
+                </div>
 
               </div>
             )}
@@ -1185,61 +1222,140 @@ export const ComunicadoDetailModal:
             {/* CONTENIDO */}
             {/* ================================================= */}
 
-            <div
-              className="
-                comunicado-content
-                w-full
-                min-w-0
-                text-sm
-                sm:text-[15px]
-                text-slate-700
-                leading-7
-                break-words
-                [overflow-wrap:anywhere]
+            {preparedContent && (
+              <div className="w-full min-w-0">
 
-                [&_p]:mb-4
-                [&_p]:max-w-full
-                [&_p]:break-words
+                <div className="flex items-center gap-2 mb-4">
 
-                [&_strong]:font-extrabold
-                [&_strong]:text-slate-900
+                  <FileText className="w-5 h-5 text-[#234156] shrink-0" />
 
-                [&_em]:italic
+                  <h3 className="text-base font-extrabold text-[#234156]">
+                    Información
+                  </h3>
 
-                [&_u]:underline
+                </div>
 
-                [&_ul]:list-disc
-                [&_ul]:pl-5
-                [&_ul]:sm:pl-6
-                [&_ul]:mb-4
-                [&_ul]:space-y-1
-                [&_ul]:max-w-full
 
-                [&_ol]:list-decimal
-                [&_ol]:pl-5
-                [&_ol]:sm:pl-6
-                [&_ol]:mb-4
-                [&_ol]:space-y-1
-                [&_ol]:max-w-full
+                <div
+                  className="
+                    comunicado-content
+                    w-full
+                    min-w-0
+                    text-sm
+                    sm:text-[15px]
+                    text-slate-700
+                    leading-7
+                    break-words
+                    [overflow-wrap:anywhere]
 
-                [&_li]:pl-1
-                [&_li]:break-words
+                    [&_p]:mb-4
+                    [&_p]:max-w-full
+                    [&_p]:break-words
 
-                [&_a]:text-blue-700
-                [&_a]:font-bold
-                [&_a]:underline
-                [&_a]:underline-offset-2
-                [&_a]:hover:text-blue-900
-                [&_a]:break-all
+                    [&_strong]:font-extrabold
+                    [&_strong]:text-slate-900
 
-                [&_img]:max-w-full
-                [&_img]:h-auto
-              "
-              dangerouslySetInnerHTML={{
-                __html:
-                  preparedContent,
-              }}
-            />
+                    [&_em]:italic
+
+                    [&_u]:underline
+
+                    [&_br]:block
+
+                    [&_ul]:list-disc
+                    [&_ul]:pl-5
+                    [&_ul]:sm:pl-6
+                    [&_ul]:mb-4
+                    [&_ul]:space-y-1
+                    [&_ul]:max-w-full
+
+                    [&_ol]:list-decimal
+                    [&_ol]:pl-5
+                    [&_ol]:sm:pl-6
+                    [&_ol]:mb-4
+                    [&_ol]:space-y-1
+                    [&_ol]:max-w-full
+
+                    [&_li]:pl-1
+                    [&_li]:break-words
+
+                    [&_a]:text-blue-700
+                    [&_a]:font-bold
+                    [&_a]:underline
+                    [&_a]:underline-offset-2
+                    [&_a]:hover:text-blue-900
+                    [&_a]:break-all
+
+                    [&_img]:max-w-full
+                    [&_img]:h-auto
+
+                    [&_h1]:text-2xl
+                    [&_h1]:font-extrabold
+                    [&_h1]:text-[#234156]
+                    [&_h1]:mb-4
+
+                    [&_h2]:text-xl
+                    [&_h2]:font-extrabold
+                    [&_h2]:text-[#234156]
+                    [&_h2]:mb-4
+
+                    [&_h3]:text-lg
+                    [&_h3]:font-extrabold
+                    [&_h3]:text-[#234156]
+                    [&_h3]:mb-3
+                  "
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      preparedContent,
+                  }}
+                />
+
+              </div>
+            )}
+
+
+            {/* ================================================= */}
+            {/* IMÁGENES */}
+            {/* VAN COMPLETAS HACIA ABAJO */}
+            {/* ================================================= */}
+
+            {images.length >
+              0 && (
+              <div className="w-full min-w-0 mt-8 pt-6 border-t border-slate-100">
+
+                <div className="flex items-center gap-2 mb-4">
+
+                  <ImageIcon className="w-5 h-5 text-[#234156] shrink-0" />
+
+                  <h4 className="text-xs font-extrabold text-[#234156] uppercase tracking-wider">
+                    Recursos del comunicado
+                  </h4>
+
+                </div>
+
+
+                <div className="w-full min-w-0 space-y-6">
+
+                  {images.map(
+                    (
+                      item,
+                      index
+                    ) => (
+                      <ImageMedia
+                        key={
+                          item.id ||
+                          `image-${index}`
+                        }
+                        item={
+                          item
+                        }
+                      />
+                    )
+                  )}
+
+                </div>
+
+              </div>
+            )}
 
 
             {/* ================================================= */}
