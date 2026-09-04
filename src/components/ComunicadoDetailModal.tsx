@@ -82,16 +82,6 @@ const getDriveImageUrl = (
     return url;
   }
 
-  /*
-   * IMPORTANTE:
-   * Aquí antes tenías una cadena Markdown:
-   *
-   * [https://drive...](https://drive...)
-   *
-   * Eso NO sirve dentro de src="".
-   * Debe devolverse únicamente la URL real.
-   */
-
   return `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`;
 };
 
@@ -561,12 +551,6 @@ const prepareContent = (
   }
 
 
-  /*
-   * Detectamos contenido HTML guardado desde el editor.
-   * Si ya viene con <p>, <strong>, <ul>, etc.,
-   * NO lo escapamos.
-   */
-
   const looksLikeHtml =
     /<\/?[a-z][\s\S]*?>/i.test(
       content
@@ -608,10 +592,11 @@ const ImageMedia = ({
     <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
 
       {/* =================================================== */}
-      {/* IMAGEN COMPLETA */}
+      {/* IMAGEN */}
+      {/* MÓVIL 100% / PC 60% */}
       {/* =================================================== */}
 
-      <div className="w-full bg-slate-50 p-2 sm:p-3">
+      <div className="w-full bg-slate-50 p-2 sm:p-3 flex justify-center">
 
         <img
           src={
@@ -625,6 +610,7 @@ const ImageMedia = ({
           className="
             block
             w-full
+            md:w-[60%]
             h-auto
             max-w-full
             object-contain
@@ -696,10 +682,6 @@ const VideoMedia = ({
     );
 
 
-  // =======================================================
-  // YOUTUBE
-  // =======================================================
-
   if (
     youtubeId
   ) {
@@ -741,10 +723,6 @@ const VideoMedia = ({
     );
   }
 
-
-  // =======================================================
-  // GOOGLE DRIVE
-  // =======================================================
 
   if (
     drivePreview
@@ -1025,10 +1003,6 @@ export const ComunicadoDetailModal:
       "
     >
 
-      {/* ===================================================== */}
-      {/* ENVOLTURA GENERAL */}
-      {/* ===================================================== */}
-
       <div
         className="
           w-full
@@ -1041,10 +1015,6 @@ export const ComunicadoDetailModal:
           md:p-6
         "
       >
-
-        {/* =================================================== */}
-        {/* CONTENEDOR DEL COMUNICADO */}
-        {/* =================================================== */}
 
         <div
           className="
@@ -1180,8 +1150,7 @@ export const ComunicadoDetailModal:
 
 
           {/* ================================================= */}
-          {/* CONTENIDO DEL COMUNICADO */}
-          {/* YA NO TIENE SCROLL INTERNO */}
+          {/* CONTENIDO */}
           {/* ================================================= */}
 
           <div className="w-full min-w-0 p-4 sm:p-6 md:p-8">
@@ -1219,7 +1188,7 @@ export const ComunicadoDetailModal:
 
 
             {/* ================================================= */}
-            {/* CONTENIDO */}
+            {/* INFORMACIÓN */}
             {/* ================================================= */}
 
             {preparedContent && (
@@ -1315,7 +1284,6 @@ export const ComunicadoDetailModal:
 
             {/* ================================================= */}
             {/* IMÁGENES */}
-            {/* VAN COMPLETAS HACIA ABAJO */}
             {/* ================================================= */}
 
             {images.length >
