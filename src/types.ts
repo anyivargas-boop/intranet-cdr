@@ -43,6 +43,23 @@ export type ComunicadoCategory =
   | 'Formación';
 
 
+export type ComunicadoMediaType =
+  | 'image'
+  | 'video'
+  | 'document'
+  | 'link';
+
+
+export interface ComunicadoMedia {
+  id?: string;
+  comunicadoId?: string;
+  mediaType: ComunicadoMediaType;
+  name: string;
+  url: string;
+  sortOrder?: number;
+}
+
+
 export interface ComunicadoAttachment {
   name: string;
   url: string;
@@ -60,7 +77,12 @@ export interface Comunicado {
   author: string;
   authorRole: string;
   pinned: boolean;
+
+  // Compatibilidad con los adjuntos anteriores
   attachments?: ComunicadoAttachment[];
+
+  // Nuevo sistema de imágenes, videos, documentos y enlaces
+  media?: ComunicadoMedia[];
 }
 
 
