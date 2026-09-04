@@ -4,7 +4,6 @@ import {
   FileText,
   Bell,
   BookOpen,
-  Calendar,
   LayoutDashboard,
   Building2,
   Menu,
@@ -48,11 +47,6 @@ export const Header: React.FC<HeaderProps> = ({
       id: 'reglamentos',
       label: 'Reglamentos',
       icon: BookOpen,
-    },
-    {
-      id: 'agenda',
-      label: 'Agenda CdR',
-      icon: Calendar,
     },
   ];
 
