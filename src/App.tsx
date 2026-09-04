@@ -9,7 +9,6 @@ import { DocumentacionInstitucionalView } from './components/DocumentacionInstit
 import { DocumentosView } from './components/DocumentosView';
 import { ComunicadosView } from './components/ComunicadosView';
 import { ReglamentosView } from './components/ReglamentosView';
-import { AgendaView } from './components/AgendaView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { Footer } from './components/Footer';
 
@@ -21,15 +20,9 @@ import { EditDocumentModal } from './components/EditDocumentModal';
 import { EditReglamentoModal } from './components/EditReglamentoModal';
 import { AddComunicadoModal } from './components/AddComunicadoModal';
 import { EditComunicadoModal } from './components/EditComunicadoModal';
-import { AddEventModal } from './components/AddEventModal';
 import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
 
 import { supabase } from './lib/supabase';
-
-import {
-  initialEventos,
-  initialGoogleConfig,
-} from './data/initialData';
 
 import {
   FormatoDocumento,
@@ -39,8 +32,6 @@ import {
   ComunicadoMediaType,
   Reglamento,
   ReglamentoSection,
-  EventoAgenda,
-  GoogleIntegrationsConfig,
   CategoryType,
   FileType,
   AuthorizedUser,
@@ -189,84 +180,6 @@ export default function App() {
     reglamentosLoading,
     setReglamentosLoading,
   ] = useState(false);
-
-
-  // =========================================================
-  // AGENDA
-  // =========================================================
-
-  const [
-    eventos,
-    setEventos,
-  ] =
-    useState<
-      EventoAgenda[]
-    >(() => {
-      const saved =
-        localStorage.getItem(
-          'cdr_eventos'
-        );
-
-      return saved
-        ? JSON.parse(
-            saved
-          )
-        : initialEventos;
-    });
-
-
-  const [
-    googleConfig,
-    setGoogleConfig,
-  ] =
-    useState<
-      GoogleIntegrationsConfig
-    >(() => {
-      const saved =
-        localStorage.getItem(
-          'cdr_googleConfig'
-        );
-
-      return saved
-        ? JSON.parse(
-            saved
-          )
-        : initialGoogleConfig;
-    });
-
-
-  // =========================================================
-  // LOCAL STORAGE
-  // =========================================================
-
-  useEffect(
-    () => {
-      localStorage.setItem(
-        'cdr_eventos',
-        JSON.stringify(
-          eventos
-        )
-      );
-    },
-    [
-      eventos,
-    ]
-  );
-
-
-  useEffect(
-    () => {
-      localStorage.setItem(
-        'cdr_googleConfig',
-        JSON.stringify(
-          googleConfig
-        )
-      );
-    },
-    [
-      googleConfig,
-    ]
-  );
 
 
   // =========================================================
@@ -2083,11 +1996,6 @@ export default function App() {
   ] = useState(false);
 
   const [
-    isAddEventOpen,
-    setIsAddEventOpen,
-  ] = useState(false);
-
-  const [
     documentoEditando,
     setDocumentoEditando,
   ] =
@@ -3327,48 +3235,6 @@ export default function App() {
 
 
   // =========================================================
-  // EVENTOS
-  // =========================================================
-
-  const handleAddEvent =
-    (
-      newEvt:
-        EventoAgenda
-    ) => {
-
-      setEventos(
-        (
-          prev
-        ) => [
-          newEvt,
-          ...prev,
-        ]
-      );
-    };
-
-
-  const handleDeleteEvent =
-    (
-      id:
-        string
-    ) => {
-
-      setEventos(
-        (
-          prev
-        ) =>
-          prev.filter(
-            (
-              evento
-            ) =>
-              evento.id !==
-              id
-          )
-      );
-    };
-
-
-  // =========================================================
   // RECUPERACIÓN / INVITACIÓN
   // =========================================================
 
@@ -3483,7 +3349,7 @@ export default function App() {
 
 
       {/* ===================================================== */}
-      {/* BARRA DE SESIÓN RESPONSIVE */}
+      {/* BARRA DE SESIÓN */}
       {/* ===================================================== */}
 
       <div className="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 lg:px-10 py-2 shrink-0">
@@ -3496,7 +3362,9 @@ export default function App() {
               Sesión:{' '}
 
               <strong className="break-all sm:break-normal">
-                {currentUserEmail}
+                {
+                  currentUserEmail
+                }
               </strong>
             </span>
 
@@ -3529,9 +3397,11 @@ export default function App() {
                     : 'bg-slate-100 text-slate-600 border-slate-200'
                 }`}
               >
-                {adminModeEnabled
-                  ? 'Modo admin activo'
-                  : 'Modo admin inactivo'}
+                {
+                  adminModeEnabled
+                    ? 'Modo admin activo'
+                    : 'Modo admin inactivo'
+                }
               </span>
 
             </div>
@@ -3542,8 +3412,16 @@ export default function App() {
       </div>
 
 
+      {/* ===================================================== */}
+      {/* CONTENIDO */}
+      {/* ===================================================== */}
+
       <main className="flex-grow p-4 md:p-8">
 
+
+        {/* =================================================== */}
+        {/* INICIO */}
+        {/* =================================================== */}
 
         {activeTab ===
           'inicio' && (
@@ -3553,9 +3431,6 @@ export default function App() {
             }
             comunicados={
               comunicados
-            }
-            eventos={
-              eventos
             }
             isAdmin={
               isAdmin
@@ -3573,17 +3448,16 @@ export default function App() {
                 true
               )
             }
-            onOpenAddEventModal={() =>
-              setIsAddEventOpen(
-                true
-              )
-            }
             onOpenComunicadoDetail={
               setSelectedComunicado
             }
           />
         )}
 
+
+        {/* =================================================== */}
+        {/* ADMINISTRACIÓN */}
+        {/* =================================================== */}
 
         {activeTab ===
           'admin' &&
@@ -3599,6 +3473,14 @@ export default function App() {
 
             comunicadosLoading={
               comunicadosLoading
+            }
+
+            reglamentos={
+              reglamentos
+            }
+
+            reglamentosLoading={
+              reglamentosLoading
             }
 
             authorizedUsers={
@@ -3645,6 +3527,22 @@ export default function App() {
               loadComunicados
             }
 
+            onAddReglamento={
+              handleOpenAddReglamento
+            }
+
+            onEditReglamento={
+              handleOpenEditReglamento
+            }
+
+            onDeleteReglamento={
+              handleDeleteReglamento
+            }
+
+            onReloadReglamentos={
+              loadReglamentos
+            }
+
             onAddAuthorizedUser={
               handleAddAuthorizedUser
             }
@@ -3671,6 +3569,10 @@ export default function App() {
           />
         )}
 
+
+        {/* =================================================== */}
+        {/* DOCUMENTACIÓN INSTITUCIONAL */}
+        {/* =================================================== */}
 
         {activeTab ===
           'institucional' && (
@@ -3704,6 +3606,10 @@ export default function App() {
         )}
 
 
+        {/* =================================================== */}
+        {/* FORMATOS */}
+        {/* =================================================== */}
+
         {activeTab ===
           'documentos' && (
           <>
@@ -3736,6 +3642,10 @@ export default function App() {
         )}
 
 
+        {/* =================================================== */}
+        {/* COMUNICADOS */}
+        {/* =================================================== */}
+
         {activeTab ===
           'comunicados' && (
           <>
@@ -3767,6 +3677,10 @@ export default function App() {
           </>
         )}
 
+
+        {/* =================================================== */}
+        {/* REGLAMENTOS */}
+        {/* =================================================== */}
 
         {activeTab ===
           'reglamentos' && (
@@ -3806,35 +3720,12 @@ export default function App() {
           </>
         )}
 
-
-        {activeTab ===
-          'agenda' && (
-          <AgendaView
-            eventos={
-              eventos
-            }
-            googleConfig={
-              googleConfig
-            }
-            isAdmin={
-              isAdmin
-            }
-            onOpenAddEventModal={() =>
-              setIsAddEventOpen(
-                true
-              )
-            }
-            onUpdateGoogleConfig={
-              setGoogleConfig
-            }
-            onDeleteEvent={
-              handleDeleteEvent
-            }
-          />
-        )}
-
       </main>
 
+
+      {/* ===================================================== */}
+      {/* FOOTER */}
+      {/* ===================================================== */}
 
       <Footer
         canUseAdminPanel={
@@ -3875,6 +3766,10 @@ export default function App() {
       />
 
 
+      {/* ===================================================== */}
+      {/* MODAL AGREGAR DOCUMENTO */}
+      {/* ===================================================== */}
+
       <AddDocumentModal
         isOpen={
           isAddDocOpen
@@ -3889,6 +3784,10 @@ export default function App() {
         }
       />
 
+
+      {/* ===================================================== */}
+      {/* MODAL EDITAR DOCUMENTO */}
+      {/* ===================================================== */}
 
       <EditDocumentModal
         isOpen={
@@ -3907,6 +3806,10 @@ export default function App() {
         }
       />
 
+
+      {/* ===================================================== */}
+      {/* MODAL REGLAMENTOS */}
+      {/* ===================================================== */}
 
       <EditReglamentoModal
         isOpen={
@@ -3931,6 +3834,10 @@ export default function App() {
       />
 
 
+      {/* ===================================================== */}
+      {/* MODAL AGREGAR COMUNICADO */}
+      {/* ===================================================== */}
+
       <AddComunicadoModal
         isOpen={
           isAddComunicadoOpen
@@ -3945,6 +3852,10 @@ export default function App() {
         }
       />
 
+
+      {/* ===================================================== */}
+      {/* MODAL EDITAR COMUNICADO */}
+      {/* ===================================================== */}
 
       <EditComunicadoModal
         isOpen={
@@ -3964,20 +3875,9 @@ export default function App() {
       />
 
 
-      <AddEventModal
-        isOpen={
-          isAddEventOpen
-        }
-        onClose={() =>
-          setIsAddEventOpen(
-            false
-          )
-        }
-        onAdd={
-          handleAddEvent
-        }
-      />
-
+      {/* ===================================================== */}
+      {/* DETALLE COMUNICADO */}
+      {/* ===================================================== */}
 
       <ComunicadoDetailModal
         comunicado={
@@ -4012,7 +3912,9 @@ const LoadingBox = ({
       </div>
 
       <p className="text-xs font-bold text-[#234156]">
-        {text}
+        {
+          text
+        }
       </p>
 
     </div>
