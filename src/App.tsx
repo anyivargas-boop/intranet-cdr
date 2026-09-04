@@ -31,6 +31,8 @@ import {
   FormatoDocumento,
   Comunicado,
   ComunicadoCategory,
+  ComunicadoMedia,
+  ComunicadoMediaType,
   Reglamento,
   ReglamentoSection,
   EventoAgenda,
@@ -87,10 +89,9 @@ export default function App() {
   const [
     authFlowMode,
     setAuthFlowMode,
-  ] =
-    useState<AuthFlowMode>(
-      null
-    );
+  ] = useState<AuthFlowMode>(
+    null
+  );
 
 
   // =========================================================
@@ -127,8 +128,7 @@ export default function App() {
   const [
     formatos,
     setFormatos,
-  ] =
-    useState<FormatoDocumento[]>([]);
+  ] = useState<FormatoDocumento[]>([]);
 
   const [
     documentosLoading,
@@ -1251,7 +1251,7 @@ export default function App() {
 
 
   // =========================================================
-  // CARGAR COMUNICADOS
+  // CARGAR COMUNICADOS + MULTIMEDIA
   // =========================================================
 
   const loadComunicados =
@@ -1261,8 +1261,10 @@ export default function App() {
       );
 
       const {
-        data,
-        error,
+        data:
+          comunicadosData,
+        error:
+          comunicadosError,
       } = await supabase
         .from('comunicados')
         .select('*')
@@ -1283,10 +1285,12 @@ export default function App() {
           }
         );
 
-      if (error) {
+      if (
+        comunicadosError
+      ) {
         console.error(
           'Error cargando comunicados:',
-          error
+          comunicadosError
         );
 
         setComunicados([]);
@@ -1298,10 +1302,47 @@ export default function App() {
         return;
       }
 
+
+      // =====================================================
+      // CARGAR RECURSOS MULTIMEDIA
+      // =====================================================
+
+      const {
+        data:
+          mediaData,
+        error:
+          mediaError,
+      } = await supabase
+        .from(
+          'comunicado_media'
+        )
+        .select(
+          'id, comunicado_id, media_type, name, url, sort_order'
+        )
+        .order(
+          'sort_order',
+          {
+            ascending: true,
+          }
+        );
+
+
+      if (mediaError) {
+        console.error(
+          'Error cargando multimedia de comunicados:',
+          mediaError
+        );
+      }
+
+
       const mappedComunicados:
         Comunicado[] =
-        (data || []).map(
+        (
+          comunicadosData ||
+          []
+        ).map(
           (com) => {
+            // Adjuntos anteriores
             const attachments =
               (
                 com.attachment_name ||
@@ -1323,6 +1364,52 @@ export default function App() {
                     },
                   ]
                 : undefined;
+
+
+            // Nuevo sistema multimedia
+            const media:
+              ComunicadoMedia[] =
+              (
+                mediaData ||
+                []
+              )
+                .filter(
+                  (
+                    item
+                  ) =>
+                    item.comunicado_id ===
+                    com.id
+                )
+                .map(
+                  (
+                    item
+                  ) => ({
+                    id:
+                      item.id,
+
+                    comunicadoId:
+                      item.comunicado_id,
+
+                    mediaType:
+                      (
+                        item.media_type ||
+                        'link'
+                      ) as ComunicadoMediaType,
+
+                    name:
+                      item.name ||
+                      '',
+
+                    url:
+                      item.url ||
+                      '',
+
+                    sortOrder:
+                      item.sort_order ||
+                      0,
+                  })
+                );
+
 
             return {
               id:
@@ -1365,9 +1452,12 @@ export default function App() {
                 ),
 
               attachments,
+
+              media,
             };
           }
         );
+
 
       setComunicados(
         mappedComunicados
@@ -1474,12 +1564,16 @@ export default function App() {
               []
             )
               .filter(
-                (section) =>
+                (
+                  section
+                ) =>
                   section.reglamento_id ===
                   reg.id
               )
               .map(
-                (section) => ({
+                (
+                  section
+                ) => ({
                   id:
                     section.id,
 
@@ -1627,7 +1721,8 @@ export default function App() {
 
   const handleAddDocument =
     async (
-      newDoc: FormatoDocumento
+      newDoc:
+        FormatoDocumento
     ) => {
       if (
         currentUserRole !==
@@ -1875,11 +1970,20 @@ export default function App() {
         return;
       }
 
+
       const firstAttachment =
         newCom.attachments?.[0];
 
+
+      // =====================================================
+      // 1. CREAR COMUNICADO
+      // =====================================================
+
       const {
-        error,
+        data:
+          comunicadoCreado,
+        error:
+          comunicadoError,
       } = await supabase
         .from('comunicados')
         .insert({
@@ -1926,12 +2030,20 @@ export default function App() {
 
           active:
             true,
-        });
+        })
+        .select(
+          'id'
+        )
+        .single();
 
-      if (error) {
+
+      if (
+        comunicadoError ||
+        !comunicadoCreado
+      ) {
         console.error(
           'Error publicando comunicado:',
-          error
+          comunicadoError
         );
 
         alert(
@@ -1940,6 +2052,101 @@ export default function App() {
 
         return;
       }
+
+
+      const comunicadoId =
+        comunicadoCreado.id;
+
+
+      // =====================================================
+      // 2. GUARDAR MULTIMEDIA
+      // =====================================================
+
+      const validMedia =
+        (
+          newCom.media ||
+          []
+        ).filter(
+          (
+            item
+          ) =>
+            item.name
+              .trim() &&
+            item.url
+              .trim()
+        );
+
+
+      if (
+        validMedia.length >
+        0
+      ) {
+        const mediaToInsert =
+          validMedia.map(
+            (
+              item,
+              index
+            ) => ({
+              comunicado_id:
+                comunicadoId,
+
+              media_type:
+                item.mediaType,
+
+              name:
+                item.name.trim(),
+
+              url:
+                item.url.trim(),
+
+              sort_order:
+                item.sortOrder ??
+                index,
+            })
+          );
+
+
+        const {
+          error:
+            mediaInsertError,
+        } = await supabase
+          .from(
+            'comunicado_media'
+          )
+          .insert(
+            mediaToInsert
+          );
+
+
+        if (
+          mediaInsertError
+        ) {
+          console.error(
+            'Error guardando multimedia:',
+            mediaInsertError
+          );
+
+          // Si falla multimedia,
+          // eliminamos el comunicado recién creado
+          // para no dejar un registro incompleto.
+          await supabase
+            .from(
+              'comunicados'
+            )
+            .delete()
+            .eq(
+              'id',
+              comunicadoId
+            );
+
+          alert(
+            'No fue posible guardar los recursos multimedia. El comunicado no fue publicado.'
+          );
+
+          return;
+        }
+      }
+
 
       setIsAddComunicadoOpen(
         false
@@ -1977,6 +2184,11 @@ export default function App() {
       if (!confirmed) {
         return;
       }
+
+
+      // Los registros de comunicado_media
+      // se eliminan automáticamente gracias a
+      // ON DELETE CASCADE en Supabase.
 
       const {
         error,
@@ -2215,7 +2427,8 @@ export default function App() {
       if (
         reglamento
           .sections
-          .length > 0
+          .length >
+        0
       ) {
         const sectionsToInsert =
           reglamento.sections.map(
@@ -2350,7 +2563,9 @@ export default function App() {
         EventoAgenda
     ) => {
       setEventos(
-        (prev) => [
+        (
+          prev
+        ) => [
           newEvt,
           ...prev,
         ]
@@ -2364,7 +2579,9 @@ export default function App() {
         string
     ) => {
       setEventos(
-        (prev) =>
+        (
+          prev
+        ) =>
           prev.filter(
             (
               evento
@@ -2405,7 +2622,9 @@ export default function App() {
             false
           );
 
-          setActiveTab('inicio');
+          setActiveTab(
+            'inicio'
+          );
 
           window.history.replaceState(
             {},
@@ -2487,7 +2706,9 @@ export default function App() {
           Sesión:{' '}
 
           <strong>
-            {currentUserEmail}
+            {
+              currentUserEmail
+            }
           </strong>
         </span>
 
