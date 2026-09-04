@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
@@ -17,6 +20,7 @@ import { AddDocumentModal } from './components/AddDocumentModal';
 import { EditDocumentModal } from './components/EditDocumentModal';
 import { EditReglamentoModal } from './components/EditReglamentoModal';
 import { AddComunicadoModal } from './components/AddComunicadoModal';
+import { EditComunicadoModal } from './components/EditComunicadoModal';
 import { AddEventModal } from './components/AddEventModal';
 import { ComunicadoDetailModal } from './components/ComunicadoDetailModal';
 
@@ -51,8 +55,13 @@ type AuthFlowMode =
 
 
 export default function App() {
-  const [activeTab, setActiveTab] =
-    useState<string>('inicio');
+  const [
+    activeTab,
+    setActiveTab,
+  ] =
+    useState<string>(
+      'inicio'
+    );
 
 
   // =========================================================
@@ -83,15 +92,18 @@ export default function App() {
     currentUserRole,
     setCurrentUserRole,
   ] = useState<
-    'admin' | 'employee' | ''
+    'admin' |
+    'employee' |
+    ''
   >('');
 
   const [
     authFlowMode,
     setAuthFlowMode,
-  ] = useState<AuthFlowMode>(
-    null
-  );
+  ] =
+    useState<AuthFlowMode>(
+      null
+    );
 
 
   // =========================================================
@@ -99,7 +111,8 @@ export default function App() {
   // =========================================================
 
   const canUseAdminPanel =
-    currentUserRole === 'admin';
+    currentUserRole ===
+    'admin';
 
   const isAdmin =
     canUseAdminPanel &&
@@ -107,13 +120,16 @@ export default function App() {
 
 
   // =========================================================
-  // USUARIOS AUTORIZADOS - SUPABASE
+  // USUARIOS AUTORIZADOS
   // =========================================================
 
   const [
     authorizedUsers,
     setAuthorizedUsers,
-  ] = useState<AuthorizedUser[]>([]);
+  ] =
+    useState<
+      AuthorizedUser[]
+    >([]);
 
   const [
     authorizedUsersLoading,
@@ -122,13 +138,16 @@ export default function App() {
 
 
   // =========================================================
-  // DOCUMENTOS - SUPABASE
+  // DOCUMENTOS
   // =========================================================
 
   const [
     formatos,
     setFormatos,
-  ] = useState<FormatoDocumento[]>([]);
+  ] =
+    useState<
+      FormatoDocumento[]
+    >([]);
 
   const [
     documentosLoading,
@@ -137,13 +156,16 @@ export default function App() {
 
 
   // =========================================================
-  // COMUNICADOS - SUPABASE
+  // COMUNICADOS
   // =========================================================
 
   const [
     comunicados,
     setComunicados,
-  ] = useState<Comunicado[]>([]);
+  ] =
+    useState<
+      Comunicado[]
+    >([]);
 
   const [
     comunicadosLoading,
@@ -152,13 +174,16 @@ export default function App() {
 
 
   // =========================================================
-  // REGLAMENTOS - SUPABASE
+  // REGLAMENTOS
   // =========================================================
 
   const [
     reglamentos,
     setReglamentos,
-  ] = useState<Reglamento[]>([]);
+  ] =
+    useState<
+      Reglamento[]
+    >([]);
 
   const [
     reglamentosLoading,
@@ -167,176 +192,278 @@ export default function App() {
 
 
   // =========================================================
-  // AGENDA - LOCAL POR AHORA
+  // AGENDA
   // =========================================================
 
   const [
     eventos,
     setEventos,
-  ] = useState<EventoAgenda[]>(() => {
-    const saved =
-      localStorage.getItem(
-        'cdr_eventos'
-      );
+  ] =
+    useState<
+      EventoAgenda[]
+    >(() => {
+      const saved =
+        localStorage.getItem(
+          'cdr_eventos'
+        );
 
-    return saved
-      ? JSON.parse(saved)
-      : initialEventos;
-  });
+      return saved
+        ? JSON.parse(
+            saved
+          )
+        : initialEventos;
+    });
+
 
   const [
     googleConfig,
     setGoogleConfig,
   ] =
-    useState<GoogleIntegrationsConfig>(
-      () => {
-        const saved =
-          localStorage.getItem(
-            'cdr_googleConfig'
-          );
+    useState<
+      GoogleIntegrationsConfig
+    >(() => {
+      const saved =
+        localStorage.getItem(
+          'cdr_googleConfig'
+        );
 
-        return saved
-          ? JSON.parse(saved)
-          : initialGoogleConfig;
-      }
-    );
+      return saved
+        ? JSON.parse(
+            saved
+          )
+        : initialGoogleConfig;
+    });
 
 
   // =========================================================
   // LOCAL STORAGE
   // =========================================================
 
-  useEffect(() => {
-    localStorage.setItem(
-      'cdr_eventos',
-      JSON.stringify(eventos)
-    );
-  }, [eventos]);
+  useEffect(
+    () => {
+      localStorage.setItem(
+        'cdr_eventos',
+        JSON.stringify(
+          eventos
+        )
+      );
+    },
+    [
+      eventos,
+    ]
+  );
 
-  useEffect(() => {
-    localStorage.setItem(
-      'cdr_googleConfig',
-      JSON.stringify(googleConfig)
-    );
-  }, [googleConfig]);
+
+  useEffect(
+    () => {
+      localStorage.setItem(
+        'cdr_googleConfig',
+        JSON.stringify(
+          googleConfig
+        )
+      );
+    },
+    [
+      googleConfig,
+    ]
+  );
 
 
   // =========================================================
   // VERIFICAR EMPLEADO
   // =========================================================
 
-  const verifyEmployee = async (
-    email?: string | null
-  ) => {
-    if (!email) {
-      setEmployeeAuthorized(false);
-      setCurrentUserEmail('');
-      setCurrentUserRole('');
-      setAdminModeEnabled(false);
-      setAuthLoading(false);
+  const verifyEmployee =
+    async (
+      email?:
+        string |
+        null
+    ) => {
 
-      return;
-    }
+      if (!email) {
+        setEmployeeAuthorized(
+          false
+        );
 
-    const normalizedEmail =
-      email
-        .trim()
-        .toLowerCase();
+        setCurrentUserEmail(
+          ''
+        );
 
-    const validDomain =
-      normalizedEmail.endsWith(
-        '@consejoderedaccion.org'
-      ) ||
-      normalizedEmail.endsWith(
-        '@colombiacheck.org'
+        setCurrentUserRole(
+          ''
+        );
+
+        setAdminModeEnabled(
+          false
+        );
+
+        setAuthLoading(
+          false
+        );
+
+        return;
+      }
+
+
+      const normalizedEmail =
+        email
+          .trim()
+          .toLowerCase();
+
+
+      const validDomain =
+        normalizedEmail
+          .endsWith(
+            '@consejoderedaccion.org'
+          ) ||
+        normalizedEmail
+          .endsWith(
+            '@colombiacheck.org'
+          );
+
+
+      if (
+        !validDomain
+      ) {
+        await supabase.auth
+          .signOut();
+
+        setEmployeeAuthorized(
+          false
+        );
+
+        setCurrentUserEmail(
+          ''
+        );
+
+        setCurrentUserRole(
+          ''
+        );
+
+        setAdminModeEnabled(
+          false
+        );
+
+        setAuthLoading(
+          false
+        );
+
+        return;
+      }
+
+
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            'authorized_users'
+          )
+          .select(
+            'email, active, role'
+          )
+          .eq(
+            'email',
+            normalizedEmail
+          )
+          .eq(
+            'active',
+            true
+          )
+          .maybeSingle();
+
+
+      if (
+        error ||
+        !data
+      ) {
+        await supabase.auth
+          .signOut();
+
+        setEmployeeAuthorized(
+          false
+        );
+
+        setCurrentUserEmail(
+          ''
+        );
+
+        setCurrentUserRole(
+          ''
+        );
+
+        setAdminModeEnabled(
+          false
+        );
+
+        setAuthLoading(
+          false
+        );
+
+        return;
+      }
+
+
+      const role =
+        data.role ===
+        'admin'
+          ? 'admin'
+          : 'employee';
+
+
+      setEmployeeAuthorized(
+        true
       );
 
-    if (!validDomain) {
-      await supabase.auth.signOut();
-
-      setEmployeeAuthorized(false);
-      setCurrentUserEmail('');
-      setCurrentUserRole('');
-      setAdminModeEnabled(false);
-      setAuthLoading(false);
-
-      return;
-    }
-
-    const {
-      data,
-      error,
-    } = await supabase
-      .from('authorized_users')
-      .select(
-        'email, active, role'
-      )
-      .eq(
-        'email',
+      setCurrentUserEmail(
         normalizedEmail
-      )
-      .eq(
-        'active',
-        true
-      )
-      .maybeSingle();
+      );
 
-    if (
-      error ||
-      !data
-    ) {
-      await supabase.auth.signOut();
+      setCurrentUserRole(
+        role
+      );
 
-      setEmployeeAuthorized(false);
-      setCurrentUserEmail('');
-      setCurrentUserRole('');
-      setAdminModeEnabled(false);
-      setAuthLoading(false);
 
-      return;
-    }
+      if (
+        role !==
+        'admin'
+      ) {
+        setAdminModeEnabled(
+          false
+        );
+      }
 
-    const role =
-      data.role === 'admin'
-        ? 'admin'
-        : 'employee';
 
-    setEmployeeAuthorized(true);
-
-    setCurrentUserEmail(
-      normalizedEmail
-    );
-
-    setCurrentUserRole(
-      role
-    );
-
-    if (
-      role !== 'admin'
-    ) {
-      setAdminModeEnabled(false);
-    }
-
-    setAuthLoading(false);
-  };
+      setAuthLoading(
+        false
+      );
+    };
 
 
   // =========================================================
-  // DETECTAR RECUPERACIÓN O INVITACIÓN EN LA URL
+  // DETECTAR RECUPERACIÓN O INVITACIÓN
   // =========================================================
 
   const detectAuthFlowFromUrl =
     (): AuthFlowMode => {
+
       const hash =
-        window.location.hash || '';
+        window.location.hash ||
+        '';
 
       const search =
-        window.location.search || '';
+        window.location.search ||
+        '';
 
       const hashParams =
         new URLSearchParams(
-          hash.startsWith('#')
-            ? hash.substring(1)
+          hash.startsWith(
+            '#'
+          )
+            ? hash.substring(
+                1
+              )
             : hash
         );
 
@@ -345,233 +472,307 @@ export default function App() {
           search
         );
 
+
       const hashType =
-        hashParams.get('type');
+        hashParams.get(
+          'type'
+        );
 
       const searchType =
-        searchParams.get('type');
+        searchParams.get(
+          'type'
+        );
+
 
       if (
-        hashType === 'recovery' ||
-        searchType === 'recovery' ||
+        hashType ===
+          'recovery' ||
+        searchType ===
+          'recovery' ||
         searchParams.get(
           'recovery'
-        ) === '1'
+        ) ===
+          '1'
       ) {
         return 'recovery';
       }
 
+
       if (
-        hashType === 'invite' ||
-        searchType === 'invite' ||
+        hashType ===
+          'invite' ||
+        searchType ===
+          'invite' ||
         searchParams.get(
           'invite'
-        ) === '1'
+        ) ===
+          '1'
       ) {
         return 'invite';
       }
+
 
       return null;
     };
 
 
   // =========================================================
-  // SESIÓN / RECUPERACIÓN / INVITACIÓN
+  // SESIÓN
   // =========================================================
 
-  useEffect(() => {
-    let mounted = true;
+  useEffect(
+    () => {
+      let mounted =
+        true;
 
-    const initialFlow =
-      detectAuthFlowFromUrl();
 
-    if (initialFlow) {
-      setAuthFlowMode(
+      const initialFlow =
+        detectAuthFlowFromUrl();
+
+
+      if (
         initialFlow
-      );
+      ) {
+        setAuthFlowMode(
+          initialFlow
+        );
 
-      setEmployeeAuthorized(
-        false
-      );
+        setEmployeeAuthorized(
+          false
+        );
 
-      setAdminModeEnabled(
-        false
-      );
+        setAdminModeEnabled(
+          false
+        );
 
-      setAuthLoading(false);
-    }
+        setAuthLoading(
+          false
+        );
+      }
 
-    const {
-      data: {
-        subscription,
-      },
-    } =
-      supabase.auth.onAuthStateChange(
-        (event, session) => {
-          if (!mounted) {
-            return;
-          }
 
-          if (
-            event ===
-            'PASSWORD_RECOVERY'
-          ) {
-            setAuthFlowMode(
-              'recovery'
-            );
+      const {
+        data: {
+          subscription,
+        },
+      } =
+        supabase.auth
+          .onAuthStateChange(
+            (
+              event,
+              session
+            ) => {
 
-            setEmployeeAuthorized(
-              false
-            );
+              if (
+                !mounted
+              ) {
+                return;
+              }
 
-            setAdminModeEnabled(
-              false
-            );
 
-            setAuthLoading(false);
+              if (
+                event ===
+                'PASSWORD_RECOVERY'
+              ) {
+                setAuthFlowMode(
+                  'recovery'
+                );
 
-            return;
-          }
+                setEmployeeAuthorized(
+                  false
+                );
 
-          const currentFlow =
+                setAdminModeEnabled(
+                  false
+                );
+
+                setAuthLoading(
+                  false
+                );
+
+                return;
+              }
+
+
+              const currentFlow =
+                detectAuthFlowFromUrl();
+
+
+              if (
+                currentFlow
+              ) {
+                setAuthFlowMode(
+                  currentFlow
+                );
+
+                setEmployeeAuthorized(
+                  false
+                );
+
+                setAdminModeEnabled(
+                  false
+                );
+
+                setAuthLoading(
+                  false
+                );
+
+                return;
+              }
+
+
+              if (
+                event ===
+                'SIGNED_OUT'
+              ) {
+                setEmployeeAuthorized(
+                  false
+                );
+
+                setCurrentUserEmail(
+                  ''
+                );
+
+                setCurrentUserRole(
+                  ''
+                );
+
+                setAdminModeEnabled(
+                  false
+                );
+
+                setAuthLoading(
+                  false
+                );
+
+                return;
+              }
+
+
+              verifyEmployee(
+                session?.user
+                  ?.email
+              );
+            }
+          );
+
+
+      const checkInitialSession =
+        async () => {
+
+          const urlFlow =
             detectAuthFlowFromUrl();
 
-          if (currentFlow) {
-            setAuthFlowMode(
-              currentFlow
-            );
-
-            setEmployeeAuthorized(
-              false
-            );
-
-            setAdminModeEnabled(
-              false
-            );
-
-            setAuthLoading(false);
-
-            return;
-          }
 
           if (
-            event ===
-            'SIGNED_OUT'
+            urlFlow
           ) {
+            setAuthFlowMode(
+              urlFlow
+            );
+
             setEmployeeAuthorized(
               false
-            );
-
-            setCurrentUserEmail(
-              ''
-            );
-
-            setCurrentUserRole(
-              ''
             );
 
             setAdminModeEnabled(
               false
             );
 
-            setAuthLoading(false);
+            setAuthLoading(
+              false
+            );
 
             return;
           }
 
-          verifyEmployee(
-            session?.user?.email
-          );
-        }
-      );
 
-    const checkInitialSession =
-      async () => {
-        const urlFlow =
-          detectAuthFlowFromUrl();
+          const {
+            data: {
+              session,
+            },
+          } =
+            await supabase.auth
+              .getSession();
 
-        if (urlFlow) {
-          setAuthFlowMode(
-            urlFlow
-          );
 
-          setEmployeeAuthorized(
-            false
-          );
+          if (
+            !mounted
+          ) {
+            return;
+          }
 
-          setAdminModeEnabled(
-            false
-          );
 
-          setAuthLoading(false);
+          const flowAfterSession =
+            detectAuthFlowFromUrl();
 
-          return;
-        }
 
-        const {
-          data: {
-            session,
-          },
-        } =
-          await supabase.auth.getSession();
-
-        if (!mounted) {
-          return;
-        }
-
-        const flowAfterSession =
-          detectAuthFlowFromUrl();
-
-        if (
-          flowAfterSession
-        ) {
-          setAuthFlowMode(
+          if (
             flowAfterSession
+          ) {
+            setAuthFlowMode(
+              flowAfterSession
+            );
+
+            setEmployeeAuthorized(
+              false
+            );
+
+            setAdminModeEnabled(
+              false
+            );
+
+            setAuthLoading(
+              false
+            );
+
+            return;
+          }
+
+
+          await verifyEmployee(
+            session?.user
+              ?.email
           );
+        };
 
-          setEmployeeAuthorized(
-            false
-          );
 
-          setAdminModeEnabled(
-            false
-          );
+      checkInitialSession();
 
-          setAuthLoading(false);
 
-          return;
-        }
+      return () => {
+        mounted =
+          false;
 
-        await verifyEmployee(
-          session?.user?.email
-        );
+        subscription
+          .unsubscribe();
       };
-
-    checkInitialSession();
-
-    return () => {
-      mounted = false;
-
-      subscription.unsubscribe();
-    };
-  }, []);
+    },
+    []
+  );
 
 
   // =========================================================
   // PROTEGER PANEL ADMIN
   // =========================================================
 
-  useEffect(() => {
-    if (
-      activeTab === 'admin' &&
-      !isAdmin
-    ) {
-      setActiveTab('inicio');
-    }
-  }, [
-    activeTab,
-    isAdmin,
-  ]);
+  useEffect(
+    () => {
+      if (
+        activeTab ===
+          'admin' &&
+        !isAdmin
+      ) {
+        setActiveTab(
+          'inicio'
+        );
+      }
+    },
+    [
+      activeTab,
+      isAdmin,
+    ]
+  );
 
 
   // =========================================================
@@ -580,38 +781,55 @@ export default function App() {
 
   const handleEmployeeLogout =
     async () => {
-      await supabase.auth.signOut();
+
+      await supabase.auth
+        .signOut();
 
       setEmployeeAuthorized(
         false
       );
 
-      setCurrentUserEmail('');
+      setCurrentUserEmail(
+        ''
+      );
 
-      setCurrentUserRole('');
+      setCurrentUserRole(
+        ''
+      );
 
       setAdminModeEnabled(
         false
       );
 
-      setFormatos([]);
+      setFormatos(
+        []
+      );
 
-      setComunicados([]);
+      setComunicados(
+        []
+      );
 
-      setReglamentos([]);
+      setReglamentos(
+        []
+      );
 
-      setAuthorizedUsers([]);
+      setAuthorizedUsers(
+        []
+      );
 
-      setActiveTab('inicio');
+      setActiveTab(
+        'inicio'
+      );
     };
 
 
   // =========================================================
-  // CARGAR USUARIOS AUTORIZADOS
+  // CARGAR USUARIOS
   // =========================================================
 
   const loadAuthorizedUsers =
     async () => {
+
       if (
         currentUserRole !==
         'admin'
@@ -619,32 +837,43 @@ export default function App() {
         return;
       }
 
+
       setAuthorizedUsersLoading(
         true
       );
 
+
       const {
         data,
         error,
-      } = await supabase
-        .from('authorized_users')
-        .select(
-          'id, email, name, role, active, created_at'
-        )
-        .order(
-          'name',
-          {
-            ascending: true,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'authorized_users'
+          )
+          .select(
+            'id, email, name, role, active, created_at'
+          )
+          .order(
+            'name',
+            {
+              ascending:
+                true,
+            }
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error cargando usuarios autorizados:',
           error
         );
 
-        setAuthorizedUsers([]);
+        setAuthorizedUsers(
+          []
+        );
 
         setAuthorizedUsersLoading(
           false
@@ -653,18 +882,26 @@ export default function App() {
         return;
       }
 
+
       const mappedUsers:
         AuthorizedUser[] =
-        (data || []).map(
-          (user) => ({
+        (
+          data ||
+          []
+        ).map(
+          (
+            user
+          ) => ({
             id:
               user.id,
 
             email:
-              user.email || '',
+              user.email ||
+              '',
 
             name:
-              user.name || '',
+              user.name ||
+              '',
 
             role:
               user.role ===
@@ -683,6 +920,7 @@ export default function App() {
           })
         );
 
+
       setAuthorizedUsers(
         mappedUsers
       );
@@ -694,7 +932,7 @@ export default function App() {
 
 
   // =========================================================
-  // AGREGAR USUARIO AUTORIZADO
+  // AGREGAR USUARIO
   // =========================================================
 
   const handleAddAuthorizedUser =
@@ -702,9 +940,11 @@ export default function App() {
       user: {
         name: string;
         email: string;
-        role: AuthorizedUserRole;
+        role:
+          AuthorizedUserRole;
       }
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -716,15 +956,20 @@ export default function App() {
         return false;
       }
 
+
       const normalizedEmail =
         user.email
           .trim()
           .toLowerCase();
 
       const normalizedName =
-        user.name.trim();
+        user.name
+          .trim();
 
-      if (!normalizedName) {
+
+      if (
+        !normalizedName
+      ) {
         alert(
           'Debes ingresar el nombre del usuario.'
         );
@@ -732,15 +977,21 @@ export default function App() {
         return false;
       }
 
-      const validDomain =
-        normalizedEmail.endsWith(
-          '@consejoderedaccion.org'
-        ) ||
-        normalizedEmail.endsWith(
-          '@colombiacheck.org'
-        );
 
-      if (!validDomain) {
+      const validDomain =
+        normalizedEmail
+          .endsWith(
+            '@consejoderedaccion.org'
+          ) ||
+        normalizedEmail
+          .endsWith(
+            '@colombiacheck.org'
+          );
+
+
+      if (
+        !validDomain
+      ) {
         alert(
           'El correo debe pertenecer a @consejoderedaccion.org o @colombiacheck.org.'
         );
@@ -748,16 +999,23 @@ export default function App() {
         return false;
       }
 
-      const existingUser =
-        authorizedUsers.find(
-          (existing) =>
-            existing.email
-              .trim()
-              .toLowerCase() ===
-            normalizedEmail
-        );
 
-      if (existingUser) {
+      const existingUser =
+        authorizedUsers
+          .find(
+            (
+              existing
+            ) =>
+              existing.email
+                .trim()
+                .toLowerCase() ===
+              normalizedEmail
+          );
+
+
+      if (
+        existingUser
+      ) {
         alert(
           'Este correo ya está registrado en Usuarios y Accesos.'
         );
@@ -765,28 +1023,34 @@ export default function App() {
         return false;
       }
 
+
       try {
         const {
           data,
           error,
         } =
-          await supabase.functions.invoke(
-            'invite-user',
-            {
-              body: {
-                name:
-                  normalizedName,
+          await supabase
+            .functions
+            .invoke(
+              'invite-user',
+              {
+                body: {
+                  name:
+                    normalizedName,
 
-                email:
-                  normalizedEmail,
+                  email:
+                    normalizedEmail,
 
-                role:
-                  user.role,
-              },
-            }
-          );
+                  role:
+                    user.role,
+                },
+              }
+            );
 
-        if (error) {
+
+        if (
+          error
+        ) {
           console.error(
             'Error ejecutando invite-user:',
             error
@@ -799,9 +1063,11 @@ export default function App() {
           return false;
         }
 
+
         if (
           !data ||
-          data.ok !== true
+          data.ok !==
+            true
         ) {
           console.error(
             'invite-user respondió con error:',
@@ -810,20 +1076,26 @@ export default function App() {
 
           alert(
             data?.message ||
-              'No fue posible invitar al usuario.'
+            'No fue posible invitar al usuario.'
           );
 
           return false;
         }
 
+
         await loadAuthorizedUsers();
+
 
         alert(
           `Usuario agregado correctamente.\n\nSe envió una invitación a:\n${normalizedEmail}\n\nEl usuario deberá abrir el correo y configurar su contraseña.`
         );
 
+
         return true;
-      } catch (error) {
+
+      } catch (
+        error
+      ) {
         console.error(
           'Error inesperado agregando usuario:',
           error
@@ -839,13 +1111,15 @@ export default function App() {
 
 
   // =========================================================
-  // EDITAR USUARIO AUTORIZADO
+  // EDITAR USUARIO
   // =========================================================
 
   const handleUpdateAuthorizedUser =
     async (
-      user: AuthorizedUser
+      user:
+        AuthorizedUser
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -857,20 +1131,27 @@ export default function App() {
         return false;
       }
 
+
       const normalizedEmail =
         user.email
           .trim()
           .toLowerCase();
 
-      const validDomain =
-        normalizedEmail.endsWith(
-          '@consejoderedaccion.org'
-        ) ||
-        normalizedEmail.endsWith(
-          '@colombiacheck.org'
-        );
 
-      if (!validDomain) {
+      const validDomain =
+        normalizedEmail
+          .endsWith(
+            '@consejoderedaccion.org'
+          ) ||
+        normalizedEmail
+          .endsWith(
+            '@colombiacheck.org'
+          );
+
+
+      if (
+        !validDomain
+      ) {
         alert(
           'El correo debe pertenecer a @consejoderedaccion.org o @colombiacheck.org.'
         );
@@ -878,31 +1159,37 @@ export default function App() {
         return false;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from(
-          'authorized_users'
-        )
-        .update({
-          email:
-            normalizedEmail,
+      } =
+        await supabase
+          .from(
+            'authorized_users'
+          )
+          .update({
+            email:
+              normalizedEmail,
 
-          name:
-            user.name.trim(),
+            name:
+              user.name
+                .trim(),
 
-          role:
-            user.role,
+            role:
+              user.role,
 
-          active:
-            user.active,
-        })
-        .eq(
-          'id',
-          user.id
-        );
+            active:
+              user.active,
+          })
+          .eq(
+            'id',
+            user.id
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error actualizando usuario:',
           error
@@ -915,7 +1202,9 @@ export default function App() {
         return false;
       }
 
+
       await loadAuthorizedUsers();
+
 
       if (
         normalizedEmail ===
@@ -925,6 +1214,7 @@ export default function App() {
           normalizedEmail
         );
       }
+
 
       return true;
     };
@@ -936,8 +1226,10 @@ export default function App() {
 
   const handleToggleAuthorizedUser =
     async (
-      user: AuthorizedUser
+      user:
+        AuthorizedUser
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -948,6 +1240,7 @@ export default function App() {
 
         return;
       }
+
 
       if (
         user.email
@@ -963,22 +1256,27 @@ export default function App() {
         return;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from(
-          'authorized_users'
-        )
-        .update({
-          active:
-            !user.active,
-        })
-        .eq(
-          'id',
-          user.id
-        );
+      } =
+        await supabase
+          .from(
+            'authorized_users'
+          )
+          .update({
+            active:
+              !user.active,
+          })
+          .eq(
+            'id',
+            user.id
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error cambiando estado del usuario:',
           error
@@ -991,18 +1289,21 @@ export default function App() {
         return;
       }
 
+
       await loadAuthorizedUsers();
     };
 
 
   // =========================================================
-  // ELIMINAR AUTORIZACIÓN
+  // ELIMINAR USUARIO
   // =========================================================
 
   const handleDeleteAuthorizedUser =
     async (
-      user: AuthorizedUser
+      user:
+        AuthorizedUser
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1013,6 +1314,7 @@ export default function App() {
 
         return;
       }
+
 
       if (
         user.email
@@ -1027,28 +1329,37 @@ export default function App() {
         return;
       }
 
+
       const confirmed =
         window.confirm(
           `¿Seguro que deseas eliminar la autorización de ${user.name || user.email}?`
         );
 
-      if (!confirmed) {
+
+      if (
+        !confirmed
+      ) {
         return;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from(
-          'authorized_users'
-        )
-        .delete()
-        .eq(
-          'id',
-          user.id
-        );
+      } =
+        await supabase
+          .from(
+            'authorized_users'
+          )
+          .delete()
+          .eq(
+            'id',
+            user.id
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error eliminando autorización:',
           error
@@ -1061,6 +1372,7 @@ export default function App() {
         return;
       }
 
+
       await loadAuthorizedUsers();
     };
 
@@ -1071,8 +1383,10 @@ export default function App() {
 
   const handleResetUserPassword =
     async (
-      user: AuthorizedUser
+      user:
+        AuthorizedUser
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1084,12 +1398,16 @@ export default function App() {
         return false;
       }
 
+
       const normalizedEmail =
         user.email
           .trim()
           .toLowerCase();
 
-      if (!normalizedEmail) {
+
+      if (
+        !normalizedEmail
+      ) {
         alert(
           'Este usuario no tiene un correo electrónico válido.'
         );
@@ -1097,30 +1415,40 @@ export default function App() {
         return false;
       }
 
+
       const confirmed =
         window.confirm(
           `¿Deseas enviar un enlace para restablecer la contraseña de ${user.name || normalizedEmail}?\n\nEl correo será enviado a:\n${normalizedEmail}`
         );
 
-      if (!confirmed) {
+
+      if (
+        !confirmed
+      ) {
         return false;
       }
+
 
       const redirectUrl =
         `${window.location.origin}/?recovery=1`;
 
+
       const {
         error,
       } =
-        await supabase.auth.resetPasswordForEmail(
-          normalizedEmail,
-          {
-            redirectTo:
-              redirectUrl,
-          }
-        );
+        await supabase.auth
+          .resetPasswordForEmail(
+            normalizedEmail,
+            {
+              redirectTo:
+                redirectUrl,
+            }
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error enviando recuperación de contraseña:',
           error
@@ -1133,9 +1461,11 @@ export default function App() {
         return false;
       }
 
+
       alert(
         `Correo de recuperación solicitado correctamente.\n\nDestino:\n${normalizedEmail}`
       );
+
 
       return true;
     };
@@ -1147,34 +1477,47 @@ export default function App() {
 
   const loadDocumentos =
     async () => {
+
       setDocumentosLoading(
         true
       );
 
+
       const {
         data,
         error,
-      } = await supabase
-        .from('documentos')
-        .select('*')
-        .eq(
-          'active',
-          true
-        )
-        .order(
-          'id',
-          {
-            ascending: true,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'documentos'
+          )
+          .select(
+            '*'
+          )
+          .eq(
+            'active',
+            true
+          )
+          .order(
+            'id',
+            {
+              ascending:
+                true,
+            }
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error cargando documentos:',
           error
         );
 
-        setFormatos([]);
+        setFormatos(
+          []
+        );
 
         setDocumentosLoading(
           false
@@ -1183,15 +1526,22 @@ export default function App() {
         return;
       }
 
+
       const mappedDocumentos:
         FormatoDocumento[] =
-        (data || []).map(
-          (doc) => ({
+        (
+          data ||
+          []
+        ).map(
+          (
+            doc
+          ) => ({
             id:
               doc.id,
 
             title:
-              doc.title || '',
+              doc.title ||
+              '',
 
             category:
               (
@@ -1240,6 +1590,7 @@ export default function App() {
           })
         );
 
+
       setFormatos(
         mappedDocumentos
       );
@@ -1256,34 +1607,44 @@ export default function App() {
 
   const loadComunicados =
     async () => {
+
       setComunicadosLoading(
         true
       );
+
 
       const {
         data:
           comunicadosData,
         error:
           comunicadosError,
-      } = await supabase
-        .from('comunicados')
-        .select('*')
-        .eq(
-          'active',
-          true
-        )
-        .order(
-          'pinned',
-          {
-            ascending: false,
-          }
-        )
-        .order(
-          'published_at',
-          {
-            ascending: false,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'comunicados'
+          )
+          .select(
+            '*'
+          )
+          .eq(
+            'active',
+            true
+          )
+          .order(
+            'pinned',
+            {
+              ascending:
+                false,
+            }
+          )
+          .order(
+            'published_at',
+            {
+              ascending:
+                false,
+            }
+          );
+
 
       if (
         comunicadosError
@@ -1293,7 +1654,9 @@ export default function App() {
           comunicadosError
         );
 
-        setComunicados([]);
+        setComunicados(
+          []
+        );
 
         setComunicadosLoading(
           false
@@ -1303,31 +1666,31 @@ export default function App() {
       }
 
 
-      // =====================================================
-      // CARGAR RECURSOS MULTIMEDIA
-      // =====================================================
-
       const {
         data:
           mediaData,
         error:
           mediaError,
-      } = await supabase
-        .from(
-          'comunicado_media'
-        )
-        .select(
-          'id, comunicado_id, media_type, name, url, sort_order'
-        )
-        .order(
-          'sort_order',
-          {
-            ascending: true,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'comunicado_media'
+          )
+          .select(
+            'id, comunicado_id, media_type, name, url, sort_order'
+          )
+          .order(
+            'sort_order',
+            {
+              ascending:
+                true,
+            }
+          );
 
 
-      if (mediaError) {
+      if (
+        mediaError
+      ) {
         console.error(
           'Error cargando multimedia de comunicados:',
           mediaError
@@ -1341,8 +1704,10 @@ export default function App() {
           comunicadosData ||
           []
         ).map(
-          (com) => {
-            // Adjuntos anteriores
+          (
+            com
+          ) => {
+
             const attachments =
               (
                 com.attachment_name ||
@@ -1366,7 +1731,6 @@ export default function App() {
                 : undefined;
 
 
-            // Nuevo sistema multimedia
             const media:
               ComunicadoMedia[] =
               (
@@ -1405,7 +1769,7 @@ export default function App() {
                       '',
 
                     sortOrder:
-                      item.sort_order ||
+                      item.sort_order ??
                       0,
                   })
                 );
@@ -1416,7 +1780,8 @@ export default function App() {
                 com.id,
 
               title:
-                com.title || '',
+                com.title ||
+                '',
 
               category:
                 (
@@ -1425,10 +1790,12 @@ export default function App() {
                 ) as ComunicadoCategory,
 
               summary:
-                com.summary || '',
+                com.summary ||
+                '',
 
               content:
-                com.content || '',
+                com.content ||
+                '',
 
               date:
                 com.published_at
@@ -1436,11 +1803,14 @@ export default function App() {
                       com.published_at
                     )
                       .toISOString()
-                      .split('T')[0]
+                      .split(
+                        'T'
+                      )[0]
                   : '',
 
               author:
-                com.author || '',
+                com.author ||
+                '',
 
               authorRole:
                 com.author_role ||
@@ -1475,28 +1845,37 @@ export default function App() {
 
   const loadReglamentos =
     async () => {
+
       setReglamentosLoading(
         true
       );
+
 
       const {
         data:
           reglamentosData,
         error:
           reglamentosError,
-      } = await supabase
-        .from('reglamentos')
-        .select('*')
-        .eq(
-          'active',
-          true
-        )
-        .order(
-          'id',
-          {
-            ascending: true,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'reglamentos'
+          )
+          .select(
+            '*'
+          )
+          .eq(
+            'active',
+            true
+          )
+          .order(
+            'id',
+            {
+              ascending:
+                true,
+            }
+          );
+
 
       if (
         reglamentosError
@@ -1506,7 +1885,9 @@ export default function App() {
           reglamentosError
         );
 
-        setReglamentos([]);
+        setReglamentos(
+          []
+        );
 
         setReglamentosLoading(
           false
@@ -1515,26 +1896,32 @@ export default function App() {
         return;
       }
 
+
       const {
         data:
           sectionsData,
         error:
           sectionsError,
-      } = await supabase
-        .from(
-          'reglamento_sections'
-        )
-        .select('*')
-        .eq(
-          'active',
-          true
-        )
-        .order(
-          'sort_order',
-          {
-            ascending: true,
-          }
-        );
+      } =
+        await supabase
+          .from(
+            'reglamento_sections'
+          )
+          .select(
+            '*'
+          )
+          .eq(
+            'active',
+            true
+          )
+          .order(
+            'sort_order',
+            {
+              ascending:
+                true,
+            }
+          );
+
 
       if (
         sectionsError
@@ -1551,81 +1938,89 @@ export default function App() {
         return;
       }
 
+
       const mappedReglamentos:
         Reglamento[] =
         (
           reglamentosData ||
           []
-        ).map((reg) => {
-          const sections:
-            ReglamentoSection[] =
-            (
-              sectionsData ||
-              []
-            )
-              .filter(
-                (
-                  section
-                ) =>
-                  section.reglamento_id ===
-                  reg.id
+        ).map(
+          (
+            reg
+          ) => {
+
+            const sections:
+              ReglamentoSection[] =
+              (
+                sectionsData ||
+                []
               )
-              .map(
-                (
-                  section
-                ) => ({
-                  id:
-                    section.id,
+                .filter(
+                  (
+                    section
+                  ) =>
+                    section.reglamento_id ===
+                    reg.id
+                )
+                .map(
+                  (
+                    section
+                  ) => ({
+                    id:
+                      section.id,
 
-                  title:
-                    section.title ||
-                    '',
+                    title:
+                      section.title ||
+                      '',
 
-                  content:
-                    section.content ||
-                    '',
+                    content:
+                      section.content ||
+                      '',
 
-                  sectionUrl:
-                    section.section_url ||
-                    '',
+                    sectionUrl:
+                      section.section_url ||
+                      '',
 
-                  sortOrder:
-                    section.sort_order ||
-                    0,
-                })
-              );
+                    sortOrder:
+                      section.sort_order ||
+                      0,
+                  })
+                );
 
-          return {
-            id:
-              reg.id,
 
-            title:
-              reg.title ||
-              '',
+            return {
+              id:
+                reg.id,
 
-            description:
-              reg.description ||
-              '',
+              title:
+                reg.title ||
+                '',
 
-            category:
-              reg.category ||
-              '',
+              description:
+                reg.description ||
+                '',
 
-            lastRevision:
-              reg.last_revision ||
-              '',
+              category:
+                reg.category ||
+                '',
 
-            articlesCount:
-              reg.articles_count ||
-              0,
+              lastRevision:
+                reg.last_revision ||
+                '',
 
-            driveLink:
-              reg.drive_link ||
-              '',
+              articlesCount:
+                reg.articles_count ||
+                0,
 
-            sections,
-          };
-        });
+              driveLink:
+                reg.drive_link ||
+                '',
+
+              sections,
+            };
+          }
+        );
+
 
       setReglamentos(
         mappedReglamentos
@@ -1638,32 +2033,39 @@ export default function App() {
 
 
   // =========================================================
-  // CARGAR DATOS DESPUÉS DEL LOGIN
+  // CARGAR DATOS TRAS LOGIN
   // =========================================================
 
-  useEffect(() => {
-    if (
-      employeeAuthorized &&
-      authFlowMode === null
-    ) {
-      loadDocumentos();
-
-      loadComunicados();
-
-      loadReglamentos();
+  useEffect(
+    () => {
 
       if (
-        currentUserRole ===
-        'admin'
+        employeeAuthorized &&
+        authFlowMode ===
+          null
       ) {
-        loadAuthorizedUsers();
+        loadDocumentos();
+
+        loadComunicados();
+
+        loadReglamentos();
+
+
+        if (
+          currentUserRole ===
+          'admin'
+        ) {
+          loadAuthorizedUsers();
+        }
       }
-    }
-  }, [
-    employeeAuthorized,
-    currentUserRole,
-    authFlowMode,
-  ]);
+
+    },
+    [
+      employeeAuthorized,
+      currentUserRole,
+      authFlowMode,
+    ]
+  );
 
 
   // =========================================================
@@ -1689,17 +2091,19 @@ export default function App() {
     documentoEditando,
     setDocumentoEditando,
   ] =
-    useState<FormatoDocumento | null>(
+    useState<
+      FormatoDocumento |
       null
-    );
+    >(null);
 
   const [
     reglamentoEditando,
     setReglamentoEditando,
   ] =
-    useState<Reglamento | null>(
+    useState<
+      Reglamento |
       null
-    );
+    >(null);
 
   const [
     isEditReglamentoOpen,
@@ -1707,12 +2111,22 @@ export default function App() {
   ] = useState(false);
 
   const [
+    comunicadoEditando,
+    setComunicadoEditando,
+  ] =
+    useState<
+      Comunicado |
+      null
+    >(null);
+
+  const [
     selectedComunicado,
     setSelectedComunicado,
   ] =
-    useState<Comunicado | null>(
+    useState<
+      Comunicado |
       null
-    );
+    >(null);
 
 
   // =========================================================
@@ -1724,6 +2138,7 @@ export default function App() {
       newDoc:
         FormatoDocumento
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1735,54 +2150,61 @@ export default function App() {
         return;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from('documentos')
-        .insert({
-          title:
-            newDoc.title,
+      } =
+        await supabase
+          .from(
+            'documentos'
+          )
+          .insert({
+            title:
+              newDoc.title,
 
-          category:
-            newDoc.category,
+            category:
+              newDoc.category,
 
-          description:
-            newDoc.description,
+            description:
+              newDoc.description,
 
-          drive_url:
-            newDoc.driveUrl,
+            drive_url:
+              newDoc.driveUrl,
 
-          download_url:
-            newDoc.downloadUrl ||
-            newDoc.driveUrl,
+            download_url:
+              newDoc.downloadUrl ||
+              newDoc.driveUrl,
 
-          file_type:
-            newDoc.fileType,
+            file_type:
+              newDoc.fileType,
 
-          version:
-            newDoc.version,
+            version:
+              newDoc.version,
 
-          last_updated:
-            newDoc.lastUpdated ||
-            null,
+            last_updated:
+              newDoc.lastUpdated ||
+              null,
 
-          icon_bg_color:
-            newDoc.iconBgColor ||
-            null,
+            icon_bg_color:
+              newDoc.iconBgColor ||
+              null,
 
-          icon_text_color:
-            newDoc.iconTextColor ||
-            null,
+            icon_text_color:
+              newDoc.iconTextColor ||
+              null,
 
-          downloads_count:
-            newDoc.downloadsCount ||
-            0,
+            downloads_count:
+              newDoc.downloadsCount ||
+              0,
 
-          active:
-            true,
-        });
+            active:
+              true,
+          });
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error agregando documento:',
           error
@@ -1794,6 +2216,7 @@ export default function App() {
 
         return;
       }
+
 
       await loadDocumentos();
     };
@@ -1808,6 +2231,7 @@ export default function App() {
       documentoActualizado:
         FormatoDocumento
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1819,60 +2243,67 @@ export default function App() {
         return;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from('documentos')
-        .update({
-          title:
-            documentoActualizado.title,
-
-          category:
-            documentoActualizado.category,
-
-          description:
-            documentoActualizado.description,
-
-          drive_url:
-            documentoActualizado.driveUrl,
-
-          download_url:
-            documentoActualizado.downloadUrl ||
-            documentoActualizado.driveUrl,
-
-          file_type:
-            documentoActualizado.fileType,
-
-          version:
-            documentoActualizado.version,
-
-          last_updated:
-            documentoActualizado.lastUpdated ||
-            null,
-
-          icon_bg_color:
-            documentoActualizado.iconBgColor ||
-            null,
-
-          icon_text_color:
-            documentoActualizado.iconTextColor ||
-            null,
-
-          downloads_count:
-            documentoActualizado.downloadsCount ||
-            0,
-
-          active:
-            true,
-        })
-        .eq(
-          'id',
-          Number(
-            documentoActualizado.id
+      } =
+        await supabase
+          .from(
+            'documentos'
           )
-        );
+          .update({
+            title:
+              documentoActualizado.title,
 
-      if (error) {
+            category:
+              documentoActualizado.category,
+
+            description:
+              documentoActualizado.description,
+
+            drive_url:
+              documentoActualizado.driveUrl,
+
+            download_url:
+              documentoActualizado.downloadUrl ||
+              documentoActualizado.driveUrl,
+
+            file_type:
+              documentoActualizado.fileType,
+
+            version:
+              documentoActualizado.version,
+
+            last_updated:
+              documentoActualizado.lastUpdated ||
+              null,
+
+            icon_bg_color:
+              documentoActualizado.iconBgColor ||
+              null,
+
+            icon_text_color:
+              documentoActualizado.iconTextColor ||
+              null,
+
+            downloads_count:
+              documentoActualizado.downloadsCount ||
+              0,
+
+            active:
+              true,
+          })
+          .eq(
+            'id',
+            Number(
+              documentoActualizado.id
+            )
+          );
+
+
+      if (
+        error
+      ) {
         console.error(
           'Error editando documento:',
           error
@@ -1884,6 +2315,7 @@ export default function App() {
 
         return;
       }
+
 
       setDocumentoEditando(
         null
@@ -1900,9 +2332,10 @@ export default function App() {
   const handleDeleteDocument =
     async (
       id:
-        | number
-        | string
+        number |
+        string
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1914,26 +2347,39 @@ export default function App() {
         return;
       }
 
+
       const confirmed =
         window.confirm(
           '¿Seguro que deseas eliminar este documento?'
         );
 
-      if (!confirmed) {
+
+      if (
+        !confirmed
+      ) {
         return;
       }
 
+
       const {
         error,
-      } = await supabase
-        .from('documentos')
-        .delete()
-        .eq(
-          'id',
-          Number(id)
-        );
+      } =
+        await supabase
+          .from(
+            'documentos'
+          )
+          .delete()
+          .eq(
+            'id',
+            Number(
+              id
+            )
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error eliminando documento:',
           error
@@ -1945,6 +2391,7 @@ export default function App() {
 
         return;
       }
+
 
       await loadDocumentos();
     };
@@ -1959,6 +2406,7 @@ export default function App() {
       newCom:
         Comunicado
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -1975,66 +2423,65 @@ export default function App() {
         newCom.attachments?.[0];
 
 
-      // =====================================================
-      // 1. CREAR COMUNICADO
-      // =====================================================
-
       const {
         data:
           comunicadoCreado,
         error:
           comunicadoError,
-      } = await supabase
-        .from('comunicados')
-        .insert({
-          title:
-            newCom.title,
+      } =
+        await supabase
+          .from(
+            'comunicados'
+          )
+          .insert({
+            title:
+              newCom.title,
 
-          category:
-            newCom.category,
+            category:
+              newCom.category,
 
-          summary:
-            newCom.summary,
+            summary:
+              newCom.summary,
 
-          content:
-            newCom.content,
+            content:
+              newCom.content,
 
-          author:
-            newCom.author,
+            author:
+              newCom.author,
 
-          author_role:
-            newCom.authorRole,
+            author_role:
+              newCom.authorRole,
 
-          pinned:
-            newCom.pinned,
+            pinned:
+              newCom.pinned,
 
-          attachment_name:
-            firstAttachment?.name ||
-            null,
+            attachment_name:
+              firstAttachment?.name ||
+              null,
 
-          attachment_url:
-            firstAttachment?.url ||
-            null,
+            attachment_url:
+              firstAttachment?.url ||
+              null,
 
-          attachment_type:
-            firstAttachment?.type ||
-            null,
+            attachment_type:
+              firstAttachment?.type ||
+              null,
 
-          published_at:
-            newCom.date
-              ? new Date(
-                  `${newCom.date}T12:00:00`
-                ).toISOString()
-              : new Date()
-                  .toISOString(),
+            published_at:
+              newCom.date
+                ? new Date(
+                    `${newCom.date}T12:00:00`
+                  ).toISOString()
+                : new Date()
+                    .toISOString(),
 
-          active:
-            true,
-        })
-        .select(
-          'id'
-        )
-        .single();
+            active:
+              true,
+          })
+          .select(
+            'id'
+          )
+          .single();
 
 
       if (
@@ -2046,21 +2493,15 @@ export default function App() {
           comunicadoError
         );
 
-        alert(
+        throw new Error(
           'No fue posible publicar el comunicado.'
         );
-
-        return;
       }
 
 
       const comunicadoId =
         comunicadoCreado.id;
 
-
-      // =====================================================
-      // 2. GUARDAR MULTIMEDIA
-      // =====================================================
 
       const validMedia =
         (
@@ -2094,10 +2535,12 @@ export default function App() {
                 item.mediaType,
 
               name:
-                item.name.trim(),
+                item.name
+                  .trim(),
 
               url:
-                item.url.trim(),
+                item.url
+                  .trim(),
 
               sort_order:
                 item.sortOrder ??
@@ -2109,13 +2552,14 @@ export default function App() {
         const {
           error:
             mediaInsertError,
-        } = await supabase
-          .from(
-            'comunicado_media'
-          )
-          .insert(
-            mediaToInsert
-          );
+        } =
+          await supabase
+            .from(
+              'comunicado_media'
+            )
+            .insert(
+              mediaToInsert
+            );
 
 
         if (
@@ -2126,9 +2570,7 @@ export default function App() {
             mediaInsertError
           );
 
-          // Si falla multimedia,
-          // eliminamos el comunicado recién creado
-          // para no dejar un registro incompleto.
+
           await supabase
             .from(
               'comunicados'
@@ -2139,11 +2581,10 @@ export default function App() {
               comunicadoId
             );
 
-          alert(
-            'No fue posible guardar los recursos multimedia. El comunicado no fue publicado.'
-          );
 
-          return;
+          throw new Error(
+            'No fue posible guardar los recursos multimedia.'
+          );
         }
       }
 
@@ -2151,6 +2592,301 @@ export default function App() {
       setIsAddComunicadoOpen(
         false
       );
+
+      await loadComunicados();
+    };
+
+
+  // =========================================================
+  // COMUNICADOS - EDITAR
+  // =========================================================
+
+  const handleEditComunicado =
+    (
+      comunicado:
+        Comunicado
+    ) => {
+
+      setComunicadoEditando(
+        comunicado
+      );
+
+      setSelectedComunicado(
+        null
+      );
+    };
+
+
+  // =========================================================
+  // COMUNICADOS - GUARDAR EDICIÓN
+  // =========================================================
+
+  const handleSaveComunicado =
+    async (
+      comunicadoActualizado:
+        Comunicado
+    ) => {
+
+      if (
+        currentUserRole !==
+        'admin'
+      ) {
+        throw new Error(
+          'No tienes permisos para editar comunicados.'
+        );
+      }
+
+
+      const comunicadoId =
+        comunicadoActualizado.id;
+
+
+      // Guardamos copia de multimedia anterior
+      // para poder restaurarla si algo falla.
+
+      const previousMedia =
+        comunicadoEditando
+          ?.media ||
+        [];
+
+
+      // =====================================================
+      // 1. ACTUALIZAR COMUNICADO
+      // =====================================================
+
+      const {
+        error:
+          comunicadoUpdateError,
+      } =
+        await supabase
+          .from(
+            'comunicados'
+          )
+          .update({
+            title:
+              comunicadoActualizado.title,
+
+            category:
+              comunicadoActualizado.category,
+
+            summary:
+              comunicadoActualizado.summary,
+
+            content:
+              comunicadoActualizado.content,
+
+            author:
+              comunicadoActualizado.author,
+
+            author_role:
+              comunicadoActualizado.authorRole,
+
+            pinned:
+              comunicadoActualizado.pinned,
+
+            // El sistema nuevo usa comunicado_media.
+            // Quitamos el adjunto antiguo para no duplicar.
+
+            attachment_name:
+              null,
+
+            attachment_url:
+              null,
+
+            attachment_type:
+              null,
+
+            active:
+              true,
+          })
+          .eq(
+            'id',
+            comunicadoId
+          );
+
+
+      if (
+        comunicadoUpdateError
+      ) {
+        console.error(
+          'Error actualizando comunicado:',
+          comunicadoUpdateError
+        );
+
+        throw comunicadoUpdateError;
+      }
+
+
+      // =====================================================
+      // 2. BORRAR MULTIMEDIA ANTERIOR
+      // =====================================================
+
+      const {
+        error:
+          deleteMediaError,
+      } =
+        await supabase
+          .from(
+            'comunicado_media'
+          )
+          .delete()
+          .eq(
+            'comunicado_id',
+            comunicadoId
+          );
+
+
+      if (
+        deleteMediaError
+      ) {
+        console.error(
+          'Error eliminando multimedia anterior:',
+          deleteMediaError
+        );
+
+        throw deleteMediaError;
+      }
+
+
+      // =====================================================
+      // 3. INSERTAR MULTIMEDIA ACTUAL
+      // =====================================================
+
+      const validMedia =
+        (
+          comunicadoActualizado.media ||
+          []
+        ).filter(
+          (
+            item
+          ) =>
+            item.name
+              .trim() &&
+            item.url
+              .trim()
+        );
+
+
+      if (
+        validMedia.length >
+        0
+      ) {
+        const mediaToInsert =
+          validMedia.map(
+            (
+              item,
+              index
+            ) => ({
+              comunicado_id:
+                comunicadoId,
+
+              media_type:
+                item.mediaType,
+
+              name:
+                item.name
+                  .trim(),
+
+              url:
+                item.url
+                  .trim(),
+
+              sort_order:
+                item.sortOrder ??
+                index,
+            })
+          );
+
+
+        const {
+          error:
+            insertMediaError,
+        } =
+          await supabase
+            .from(
+              'comunicado_media'
+            )
+            .insert(
+              mediaToInsert
+            );
+
+
+        if (
+          insertMediaError
+        ) {
+          console.error(
+            'Error insertando multimedia actualizada:',
+            insertMediaError
+          );
+
+
+          // Intentar restaurar multimedia anterior
+
+          if (
+            previousMedia.length >
+            0
+          ) {
+            const restoreMedia =
+              previousMedia
+                .filter(
+                  (
+                    item
+                  ) =>
+                    item.name
+                      .trim() &&
+                    item.url
+                      .trim()
+                )
+                .map(
+                  (
+                    item,
+                    index
+                  ) => ({
+                    comunicado_id:
+                      comunicadoId,
+
+                    media_type:
+                      item.mediaType,
+
+                    name:
+                      item.name
+                        .trim(),
+
+                    url:
+                      item.url
+                        .trim(),
+
+                    sort_order:
+                      item.sortOrder ??
+                      index,
+                  })
+                );
+
+
+            if (
+              restoreMedia.length >
+              0
+            ) {
+              await supabase
+                .from(
+                  'comunicado_media'
+                )
+                .insert(
+                  restoreMedia
+                );
+            }
+          }
+
+
+          throw insertMediaError;
+        }
+      }
+
+
+      setComunicadoEditando(
+        null
+      );
+
 
       await loadComunicados();
     };
@@ -2165,6 +2901,7 @@ export default function App() {
       id:
         string
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -2176,31 +2913,37 @@ export default function App() {
         return;
       }
 
+
       const confirmed =
         window.confirm(
           '¿Seguro que deseas eliminar este comunicado?'
         );
 
-      if (!confirmed) {
+
+      if (
+        !confirmed
+      ) {
         return;
       }
 
 
-      // Los registros de comunicado_media
-      // se eliminan automáticamente gracias a
-      // ON DELETE CASCADE en Supabase.
-
       const {
         error,
-      } = await supabase
-        .from('comunicados')
-        .delete()
-        .eq(
-          'id',
-          id
-        );
+      } =
+        await supabase
+          .from(
+            'comunicados'
+          )
+          .delete()
+          .eq(
+            'id',
+            id
+          );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error eliminando comunicado:',
           error
@@ -2213,14 +2956,28 @@ export default function App() {
         return;
       }
 
+
       if (
-        selectedComunicado?.id ===
+        selectedComunicado
+          ?.id ===
         id
       ) {
         setSelectedComunicado(
           null
         );
       }
+
+
+      if (
+        comunicadoEditando
+          ?.id ===
+        id
+      ) {
+        setComunicadoEditando(
+          null
+        );
+      }
+
 
       await loadComunicados();
     };
@@ -2232,6 +2989,7 @@ export default function App() {
 
   const handleOpenAddReglamento =
     () => {
+
       setReglamentoEditando(
         null
       );
@@ -2247,6 +3005,7 @@ export default function App() {
       reglamento:
         Reglamento
     ) => {
+
       setReglamentoEditando(
         reglamento
       );
@@ -2262,6 +3021,7 @@ export default function App() {
       reglamento:
         Reglamento
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -2273,17 +3033,23 @@ export default function App() {
         return;
       }
 
+
       const isNew =
         typeof reglamento.id ===
           'string' &&
-        reglamento.id.startsWith(
-          'temp-'
-        );
+        reglamento.id
+          .startsWith(
+            'temp-'
+          );
+
 
       let reglamentoId:
         number;
 
-      if (isNew) {
+
+      if (
+        isNew
+      ) {
         const {
           data,
           error,
@@ -2321,6 +3087,7 @@ export default function App() {
             )
             .single();
 
+
         if (
           error ||
           !data
@@ -2337,13 +3104,17 @@ export default function App() {
           return;
         }
 
+
         reglamentoId =
           data.id;
+
       } else {
+
         reglamentoId =
           Number(
             reglamento.id
           );
+
 
         const {
           error,
@@ -2381,7 +3152,10 @@ export default function App() {
               reglamentoId
             );
 
-        if (error) {
+
+        if (
+          error
+        ) {
           console.error(
             'Error actualizando reglamento:',
             error
@@ -2394,6 +3168,7 @@ export default function App() {
           return;
         }
       }
+
 
       const {
         error:
@@ -2408,6 +3183,7 @@ export default function App() {
             'reglamento_id',
             reglamentoId
           );
+
 
       if (
         deleteSectionsError
@@ -2424,38 +3200,41 @@ export default function App() {
         return;
       }
 
+
       if (
-        reglamento
-          .sections
+        reglamento.sections
           .length >
         0
       ) {
         const sectionsToInsert =
-          reglamento.sections.map(
-            (
-              section,
-              index
-            ) => ({
-              reglamento_id:
-                reglamentoId,
+          reglamento.sections
+            .map(
+              (
+                section,
+                index
+              ) => ({
+                reglamento_id:
+                  reglamentoId,
 
-              title:
-                section.title,
+                title:
+                  section.title,
 
-              content:
-                section.content,
+                content:
+                  section.content,
 
-              section_url:
-                section.sectionUrl ||
-                '',
+                section_url:
+                  section.sectionUrl ||
+                  '',
 
-              sort_order:
-                index + 1,
+                sort_order:
+                  index +
+                  1,
 
-              active:
-                true,
-            })
-          );
+                active:
+                  true,
+              })
+            );
+
 
         const {
           error:
@@ -2468,6 +3247,7 @@ export default function App() {
             .insert(
               sectionsToInsert
             );
+
 
         if (
           sectionsInsertError
@@ -2485,6 +3265,7 @@ export default function App() {
         }
       }
 
+
       setIsEditReglamentoOpen(
         false
       );
@@ -2500,9 +3281,10 @@ export default function App() {
   const handleDeleteReglamento =
     async (
       id:
-        | number
-        | string
+        number |
+        string
     ) => {
+
       if (
         currentUserRole !==
         'admin'
@@ -2514,14 +3296,19 @@ export default function App() {
         return;
       }
 
+
       const confirmed =
         window.confirm(
           '¿Seguro que deseas eliminar esta política, reglamento o manual? También se eliminarán sus capítulos.'
         );
 
-      if (!confirmed) {
+
+      if (
+        !confirmed
+      ) {
         return;
       }
+
 
       const {
         error,
@@ -2533,10 +3320,15 @@ export default function App() {
           .delete()
           .eq(
             'id',
-            Number(id)
+            Number(
+              id
+            )
           );
 
-      if (error) {
+
+      if (
+        error
+      ) {
         console.error(
           'Error eliminando reglamento:',
           error
@@ -2548,6 +3340,7 @@ export default function App() {
 
         return;
       }
+
 
       await loadReglamentos();
     };
@@ -2562,6 +3355,7 @@ export default function App() {
       newEvt:
         EventoAgenda
     ) => {
+
       setEventos(
         (
           prev
@@ -2578,6 +3372,7 @@ export default function App() {
       id:
         string
     ) => {
+
       setEventos(
         (
           prev
@@ -2606,6 +3401,7 @@ export default function App() {
           authFlowMode
         }
         onSuccess={() => {
+
           setAuthFlowMode(
             null
           );
@@ -2614,9 +3410,13 @@ export default function App() {
             false
           );
 
-          setCurrentUserEmail('');
+          setCurrentUserEmail(
+            ''
+          );
 
-          setCurrentUserRole('');
+          setCurrentUserRole(
+            ''
+          );
 
           setAdminModeEnabled(
             false
@@ -2626,11 +3426,12 @@ export default function App() {
             'inicio'
           );
 
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname
-          );
+          window.history
+            .replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
         }}
       />
     );
@@ -2684,6 +3485,7 @@ export default function App() {
   return (
     <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
 
+
       <Header
         activeTab={
           activeTab
@@ -2712,11 +3514,13 @@ export default function App() {
           </strong>
         </span>
 
+
         {canUseAdminPanel && (
           <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">
             Administrador
           </span>
         )}
+
 
         {canUseAdminPanel && (
           <span
@@ -2732,6 +3536,7 @@ export default function App() {
           </span>
         )}
 
+
         <button
           type="button"
           onClick={
@@ -2746,6 +3551,7 @@ export default function App() {
 
 
       <main className="flex-grow p-4 md:p-8 overflow-y-auto">
+
 
         {activeTab ===
           'inicio' && (
@@ -2790,84 +3596,88 @@ export default function App() {
         {activeTab ===
           'admin' &&
           isAdmin && (
-            <AdminPanelView
-              formatos={
-                formatos
-              }
+          <AdminPanelView
+            formatos={
+              formatos
+            }
 
-              comunicados={
-                comunicados
-              }
+            comunicados={
+              comunicados
+            }
 
-              comunicadosLoading={
-                comunicadosLoading
-              }
+            comunicadosLoading={
+              comunicadosLoading
+            }
 
-              authorizedUsers={
-                authorizedUsers
-              }
+            authorizedUsers={
+              authorizedUsers
+            }
 
-              authorizedUsersLoading={
-                authorizedUsersLoading
-              }
+            authorizedUsersLoading={
+              authorizedUsersLoading
+            }
 
-              currentUserEmail={
-                currentUserEmail
-              }
+            currentUserEmail={
+              currentUserEmail
+            }
 
-              onAddDocument={() =>
-                setIsAddDocOpen(
-                  true
-                )
-              }
+            onAddDocument={() =>
+              setIsAddDocOpen(
+                true
+              )
+            }
 
-              onEditDocument={
-                setDocumentoEditando
-              }
+            onEditDocument={
+              setDocumentoEditando
+            }
 
-              onDeleteDocument={
-                handleDeleteDocument
-              }
+            onDeleteDocument={
+              handleDeleteDocument
+            }
 
-              onAddComunicado={() =>
-                setIsAddComunicadoOpen(
-                  true
-                )
-              }
+            onAddComunicado={() =>
+              setIsAddComunicadoOpen(
+                true
+              )
+            }
 
-              onDeleteComunicado={
-                handleDeleteComunicado
-              }
+            onEditComunicado={
+              handleEditComunicado
+            }
 
-              onReloadComunicados={
-                loadComunicados
-              }
+            onDeleteComunicado={
+              handleDeleteComunicado
+            }
 
-              onAddAuthorizedUser={
-                handleAddAuthorizedUser
-              }
+            onReloadComunicados={
+              loadComunicados
+            }
 
-              onUpdateAuthorizedUser={
-                handleUpdateAuthorizedUser
-              }
+            onAddAuthorizedUser={
+              handleAddAuthorizedUser
+            }
 
-              onToggleAuthorizedUser={
-                handleToggleAuthorizedUser
-              }
+            onUpdateAuthorizedUser={
+              handleUpdateAuthorizedUser
+            }
 
-              onDeleteAuthorizedUser={
-                handleDeleteAuthorizedUser
-              }
+            onToggleAuthorizedUser={
+              handleToggleAuthorizedUser
+            }
 
-              onResetUserPassword={
-                handleResetUserPassword
-              }
+            onDeleteAuthorizedUser={
+              handleDeleteAuthorizedUser
+            }
 
-              onReloadAuthorizedUsers={
-                loadAuthorizedUsers
-              }
-            />
-          )}
+            onResetUserPassword={
+              handleResetUserPassword
+            }
+
+            onReloadAuthorizedUsers={
+              loadAuthorizedUsers
+            }
+          />
+        )}
 
 
         {activeTab ===
@@ -3050,6 +3860,7 @@ export default function App() {
         }}
 
         onDisableAdminMode={() => {
+
           setAdminModeEnabled(
             false
           );
@@ -3113,6 +3924,7 @@ export default function App() {
           reglamentoEditando
         }
         onClose={() => {
+
           setIsEditReglamentoOpen(
             false
           );
@@ -3138,6 +3950,24 @@ export default function App() {
         }
         onAdd={
           handleAddComunicado
+        }
+      />
+
+
+      <EditComunicadoModal
+        isOpen={
+          !!comunicadoEditando
+        }
+        comunicado={
+          comunicadoEditando
+        }
+        onClose={() =>
+          setComunicadoEditando(
+            null
+          )
+        }
+        onSave={
+          handleSaveComunicado
         }
       />
 

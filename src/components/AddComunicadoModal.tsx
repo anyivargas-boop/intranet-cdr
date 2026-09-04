@@ -502,6 +502,71 @@ export const AddComunicadoModal:
           return;
         }
 
+
+        // ===================================================
+        // RECURSOS MULTIMEDIA FINALES
+        // ===================================================
+
+        let mediaFinal:
+          ComunicadoMedia[] = [
+            ...media,
+          ];
+
+
+        const pendingName =
+          mediaName.trim();
+
+        const pendingUrl =
+          mediaUrl.trim();
+
+
+        if (
+          pendingName ||
+          pendingUrl
+        ) {
+          if (
+            !pendingName ||
+            !pendingUrl
+          ) {
+            alert(
+              'Completa el nombre y el enlace del recurso multimedia.'
+            );
+
+            return;
+          }
+
+          try {
+            new URL(
+              pendingUrl
+            );
+          } catch {
+            alert(
+              'El enlace del recurso multimedia no es válido.'
+            );
+
+            return;
+          }
+
+
+          mediaFinal = [
+            ...mediaFinal,
+
+            {
+              mediaType,
+
+              name:
+                pendingName,
+
+              url:
+                pendingUrl,
+
+              sortOrder:
+                mediaFinal.length,
+            },
+          ];
+        }
+
+
         const newComunicado:
           Comunicado = {
             id:
@@ -530,7 +595,8 @@ export const AddComunicadoModal:
 
             pinned,
 
-            media,
+            media:
+              mediaFinal,
           };
 
 
