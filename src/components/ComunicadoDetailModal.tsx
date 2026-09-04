@@ -1,4 +1,6 @@
-import React from 'react';
+import React, {
+  useEffect,
+} from 'react';
 
 import {
   Comunicado,
@@ -19,7 +21,9 @@ import {
 
 
 interface ComunicadoDetailModalProps {
-  comunicado: Comunicado | null;
+  comunicado:
+    | Comunicado
+    | null;
 
   onClose: () => void;
 }
@@ -32,6 +36,7 @@ interface ComunicadoDetailModalProps {
 const getGoogleDriveFileId = (
   url: string
 ): string | null => {
+
   if (!url) {
     return null;
   }
@@ -42,9 +47,14 @@ const getGoogleDriveFileId = (
     /\/d\/([^/]+)/,
   ];
 
-  for (const pattern of patterns) {
+  for (
+    const pattern
+    of patterns
+  ) {
     const match =
-      url.match(pattern);
+      url.match(
+        pattern
+      );
 
     if (
       match &&
@@ -61,6 +71,7 @@ const getGoogleDriveFileId = (
 const getDriveImageUrl = (
   url: string
 ) => {
+
   const fileId =
     getGoogleDriveFileId(
       url
@@ -70,13 +81,14 @@ const getDriveImageUrl = (
     return url;
   }
 
-  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`;
 };
 
 
 const getDrivePreviewUrl = (
   url: string
 ) => {
+
   const fileId =
     getGoogleDriveFileId(
       url
@@ -97,68 +109,105 @@ const getDrivePreviewUrl = (
 const getYouTubeVideoId = (
   url: string
 ): string | null => {
+
   if (!url) {
     return null;
   }
 
   try {
+
     const parsed =
-      new URL(url);
+      new URL(
+        url
+      );
+
 
     if (
       parsed.hostname.includes(
         'youtu.be'
       )
     ) {
-      return parsed.pathname
-        .replace('/', '')
-        .split('?')[0];
+      return (
+        parsed.pathname
+          .replace(
+            '/',
+            ''
+          )
+          .split(
+            '?'
+          )[0] ||
+        null
+      );
     }
+
 
     if (
       parsed.hostname.includes(
         'youtube.com'
       )
     ) {
+
       if (
         parsed.pathname.startsWith(
           '/embed/'
         )
       ) {
-        return parsed.pathname
-          .split('/embed/')[1]
-          ?.split('/')[0] || null;
+        return (
+          parsed.pathname
+            .split(
+              '/embed/'
+            )[1]
+            ?.split(
+              '/'
+            )[0] ||
+          null
+        );
       }
+
 
       if (
         parsed.pathname.startsWith(
           '/shorts/'
         )
       ) {
-        return parsed.pathname
-          .split('/shorts/')[1]
-          ?.split('/')[0] || null;
+        return (
+          parsed.pathname
+            .split(
+              '/shorts/'
+            )[1]
+            ?.split(
+              '/'
+            )[0] ||
+          null
+        );
       }
 
-      return parsed.searchParams.get(
-        'v'
+
+      return (
+        parsed.searchParams.get(
+          'v'
+        )
       );
     }
 
+
     return null;
+
   } catch {
+
     return null;
   }
 };
 
 
 // =========================================================
-// FORMATO DE CONTENIDO
+// TEXTO ANTIGUO
 // =========================================================
 
 const escapeHtml = (
   text: string
 ) => {
+
   return text
     .replace(
       /&/g,
@@ -183,14 +232,15 @@ const escapeHtml = (
 };
 
 
-// Convierte los comunicados antiguos que usaban
-// texto plano / Markdown básico.
-
 const legacyTextToHtml = (
   text: string
 ) => {
+
   const escaped =
-    escapeHtml(text);
+    escapeHtml(
+      text
+    );
+
 
   const withBold =
     escaped.replace(
@@ -198,10 +248,15 @@ const legacyTextToHtml = (
       '<strong>$1</strong>'
     );
 
-  const lines =
-    withBold.split('\n');
 
-  let html = '';
+  const lines =
+    withBold.split(
+      '\n'
+    );
+
+
+  let html =
+    '';
 
   let inUnorderedList =
     false;
@@ -212,19 +267,23 @@ const legacyTextToHtml = (
 
   const closeLists =
     () => {
+
       if (
         inUnorderedList
       ) {
-        html += '</ul>';
+        html +=
+          '</ul>';
 
         inUnorderedList =
           false;
       }
 
+
       if (
         inOrderedList
       ) {
-        html += '</ol>';
+        html +=
+          '</ol>';
 
         inOrderedList =
           false;
@@ -236,11 +295,14 @@ const legacyTextToHtml = (
     (
       line
     ) => {
+
       const trimmed =
         line.trim();
 
 
-      if (!trimmed) {
+      if (
+        !trimmed
+      ) {
         closeLists();
 
         return;
@@ -249,29 +311,35 @@ const legacyTextToHtml = (
 
       const bulletMatch =
         trimmed.match(
-          /^[-*]\s*(.+)$/
+          /^[-*]\s+(.+)$/
         );
+
 
       if (
         bulletMatch
       ) {
+
         if (
           inOrderedList
         ) {
-          html += '</ol>';
+          html +=
+            '</ol>';
 
           inOrderedList =
             false;
         }
 
+
         if (
           !inUnorderedList
         ) {
-          html += '<ul>';
+          html +=
+            '<ul>';
 
           inUnorderedList =
             true;
         }
+
 
         html +=
           `<li>${bulletMatch[1]}</li>`;
@@ -282,29 +350,35 @@ const legacyTextToHtml = (
 
       const numberedMatch =
         trimmed.match(
-          /^\d+\.\s*(.+)$/
+          /^\d+\.\s+(.+)$/
         );
+
 
       if (
         numberedMatch
       ) {
+
         if (
           inUnorderedList
         ) {
-          html += '</ul>';
+          html +=
+            '</ul>';
 
           inUnorderedList =
             false;
         }
 
+
         if (
           !inOrderedList
         ) {
-          html += '<ol>';
+          html +=
+            '<ol>';
 
           inOrderedList =
             true;
         }
+
 
         html +=
           `<li>${numberedMatch[1]}</li>`;
@@ -315,6 +389,7 @@ const legacyTextToHtml = (
 
       closeLists();
 
+
       html +=
         `<p>${trimmed}</p>`;
     }
@@ -322,6 +397,7 @@ const legacyTextToHtml = (
 
 
   closeLists();
+
 
   return html;
 };
@@ -334,6 +410,7 @@ const legacyTextToHtml = (
 const sanitizeHtml = (
   html: string
 ) => {
+
   if (
     typeof window ===
     'undefined'
@@ -341,8 +418,10 @@ const sanitizeHtml = (
     return html;
   }
 
+
   const parser =
     new DOMParser();
+
 
   const doc =
     parser.parseFromString(
@@ -350,8 +429,6 @@ const sanitizeHtml = (
       'text/html'
     );
 
-
-  // Eliminamos elementos que no queremos permitir.
 
   doc.querySelectorAll(
     'script, style, iframe, object, embed, form, input, button'
@@ -364,28 +441,30 @@ const sanitizeHtml = (
 
 
   doc.body
-    .querySelectorAll('*')
+    .querySelectorAll(
+      '*'
+    )
     .forEach(
       (
         element
       ) => {
+
         Array.from(
           element.attributes
         ).forEach(
           (
             attribute
           ) => {
+
             const name =
-              attribute.name.toLowerCase();
+              attribute.name
+                .toLowerCase();
 
             const value =
               attribute.value
                 .trim()
                 .toLowerCase();
 
-
-            // Quitar eventos JS:
-            // onclick, onerror, etc.
 
             if (
               name.startsWith(
@@ -400,8 +479,6 @@ const sanitizeHtml = (
             }
 
 
-            // Quitar estilos pegados desde otros sitios.
-
             if (
               name ===
               'style'
@@ -413,8 +490,6 @@ const sanitizeHtml = (
               return;
             }
 
-
-            // Evitar javascript:
 
             if (
               (
@@ -436,7 +511,8 @@ const sanitizeHtml = (
 
 
         if (
-          element.tagName.toLowerCase() ===
+          element.tagName
+            .toLowerCase() ===
           'a'
         ) {
           element.setAttribute(
@@ -453,7 +529,9 @@ const sanitizeHtml = (
     );
 
 
-  return doc.body.innerHTML;
+  return (
+    doc.body.innerHTML
+  );
 };
 
 
@@ -464,13 +542,13 @@ const sanitizeHtml = (
 const prepareContent = (
   content: string
 ) => {
-  if (!content) {
+
+  if (
+    !content
+  ) {
     return '';
   }
 
-
-  // Si ya contiene etiquetas HTML,
-  // viene del nuevo editor.
 
   const looksLikeHtml =
     /<\/?[a-z][\s\S]*>/i.test(
@@ -493,21 +571,24 @@ const prepareContent = (
 
 
 // =========================================================
-// MEDIA: IMAGEN
+// IMAGEN
 // =========================================================
 
 const ImageMedia = ({
   item,
 }: {
-  item: ComunicadoMedia;
+  item:
+    ComunicadoMedia;
 }) => {
+
   const imageUrl =
     getDriveImageUrl(
       item.url
     );
 
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
       <a
         href={
@@ -515,8 +596,9 @@ const ImageMedia = ({
         }
         target="_blank"
         rel="noopener noreferrer"
-        className="block"
+        className="block w-full"
       >
+
         <img
           src={
             imageUrl
@@ -525,18 +607,25 @@ const ImageMedia = ({
             item.name
           }
           loading="lazy"
-          className="w-full max-h-[520px] object-contain bg-slate-100"
+          className="
+            block
+            w-full
+            h-auto
+            object-contain
+            bg-slate-100
+          "
         />
+
       </a>
 
 
-      <div className="px-4 py-3 flex items-center justify-between gap-3">
+      <div className="px-3 sm:px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-start sm:items-center gap-2 min-w-0">
 
-          <ImageIcon className="w-4 h-4 text-[#234156] shrink-0" />
+          <ImageIcon className="w-4 h-4 text-[#234156] shrink-0 mt-0.5 sm:mt-0" />
 
-          <span className="text-xs font-bold text-slate-700 truncate">
+          <span className="text-xs font-bold text-slate-700 break-words [overflow-wrap:anywhere] min-w-0">
             {
               item.name
             }
@@ -551,7 +640,7 @@ const ImageMedia = ({
           }
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-extrabold text-[#234156] hover:underline shrink-0"
+          className="text-[11px] font-extrabold text-[#234156] hover:underline shrink-0"
         >
           Abrir original
         </a>
@@ -564,18 +653,21 @@ const ImageMedia = ({
 
 
 // =========================================================
-// MEDIA: VIDEO
+// VIDEO
 // =========================================================
 
 const VideoMedia = ({
   item,
 }: {
-  item: ComunicadoMedia;
+  item:
+    ComunicadoMedia;
 }) => {
+
   const youtubeId =
     getYouTubeVideoId(
       item.url
     );
+
 
   const drivePreview =
     getDrivePreviewUrl(
@@ -583,15 +675,13 @@ const VideoMedia = ({
     );
 
 
-  // YouTube
-
   if (
     youtubeId
   ) {
     return (
-      <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950">
+      <div className="w-full min-w-0 rounded-2xl overflow-hidden border border-slate-200 bg-slate-950">
 
-        <div className="aspect-video">
+        <div className="aspect-video w-full">
 
           <iframe
             src={`https://www.youtube.com/embed/${youtubeId}`}
@@ -606,13 +696,13 @@ const VideoMedia = ({
         </div>
 
 
-        <div className="bg-white px-4 py-3">
+        <div className="bg-white px-3 sm:px-4 py-3">
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
 
-            <Video className="w-4 h-4 text-[#234156]" />
+            <Video className="w-4 h-4 text-[#234156] shrink-0 mt-0.5" />
 
-            <span className="text-xs font-bold text-slate-700">
+            <span className="text-xs font-bold text-slate-700 break-words [overflow-wrap:anywhere]">
               {
                 item.name
               }
@@ -627,15 +717,13 @@ const VideoMedia = ({
   }
 
 
-  // Google Drive
-
   if (
     drivePreview
   ) {
     return (
-      <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950">
+      <div className="w-full min-w-0 rounded-2xl overflow-hidden border border-slate-200 bg-slate-950">
 
-        <div className="aspect-video">
+        <div className="aspect-video w-full">
 
           <iframe
             src={
@@ -652,13 +740,13 @@ const VideoMedia = ({
         </div>
 
 
-        <div className="bg-white px-4 py-3">
+        <div className="bg-white px-3 sm:px-4 py-3">
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
 
-            <Video className="w-4 h-4 text-[#234156]" />
+            <Video className="w-4 h-4 text-[#234156] shrink-0 mt-0.5" />
 
-            <span className="text-xs font-bold text-slate-700">
+            <span className="text-xs font-bold text-slate-700 break-words [overflow-wrap:anywhere]">
               {
                 item.name
               }
@@ -673,9 +761,6 @@ const VideoMedia = ({
   }
 
 
-  // Cualquier otro video:
-  // dejamos tarjeta para abrir.
-
   return (
     <MediaLinkCard
       item={
@@ -687,17 +772,20 @@ const VideoMedia = ({
 
 
 // =========================================================
-// MEDIA: DOCUMENTO / ENLACE
+// DOCUMENTO / ENLACE
 // =========================================================
 
 const MediaLinkCard = ({
   item,
 }: {
-  item: ComunicadoMedia;
+  item:
+    ComunicadoMedia;
 }) => {
+
   const isDocument =
     item.mediaType ===
     'document';
+
 
   return (
     <a
@@ -706,10 +794,26 @@ const MediaLinkCard = ({
       }
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors"
+      className="
+        w-full
+        min-w-0
+        flex
+        items-center
+        justify-between
+        gap-3
+        p-3
+        sm:p-4
+        rounded-xl
+        border
+        border-slate-200
+        bg-slate-50
+        hover:bg-slate-100
+        transition-colors
+        overflow-hidden
+      "
     >
 
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
 
         <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#234156] flex items-center justify-center shrink-0">
 
@@ -722,15 +826,15 @@ const MediaLinkCard = ({
         </div>
 
 
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
 
-          <p className="text-xs font-extrabold text-[#234156]">
+          <p className="text-xs font-extrabold text-[#234156] break-words [overflow-wrap:anywhere]">
             {
               item.name
             }
           </p>
 
-          <p className="text-[10px] text-slate-400 truncate mt-0.5">
+          <p className="text-[10px] text-slate-400 mt-1 break-all line-clamp-2">
             {
               item.url
             }
@@ -760,165 +864,301 @@ export const ComunicadoDetailModal:
     onClose,
   }) => {
 
-    if (
-      !comunicado
-    ) {
-      return null;
-    }
+  // =======================================================
+  // BLOQUEAR SCROLL DEL FONDO
+  // =======================================================
+
+  useEffect(
+    () => {
+
+      if (
+        !comunicado
+      ) {
+        return;
+      }
 
 
-    const preparedContent =
-      prepareContent(
-        comunicado.content
-      );
+      const previousOverflow =
+        document.body.style
+          .overflow;
+
+      const previousPosition =
+        document.body.style
+          .position;
+
+      const previousWidth =
+        document.body.style
+          .width;
 
 
-    const images =
+      document.body.style
+        .overflow =
+        'hidden';
+
+      document.body.style
+        .position =
+        'relative';
+
+      document.body.style
+        .width =
+        '100%';
+
+
+      return () => {
+
+        document.body.style
+          .overflow =
+          previousOverflow;
+
+        document.body.style
+          .position =
+          previousPosition;
+
+        document.body.style
+          .width =
+          previousWidth;
+      };
+
+    },
+    [
+      comunicado,
+    ]
+  );
+
+
+  if (
+    !comunicado
+  ) {
+    return null;
+  }
+
+
+  const preparedContent =
+    prepareContent(
+      comunicado.content
+    );
+
+
+  const images =
+    (
+      comunicado.media ||
+      []
+    ).filter(
       (
-        comunicado.media ||
-        []
-      ).filter(
-        (
-          item
-        ) =>
-          item.mediaType ===
-          'image'
-      );
+        item
+      ) =>
+        item.mediaType ===
+        'image'
+    );
 
 
-    const videos =
+  const videos =
+    (
+      comunicado.media ||
+      []
+    ).filter(
       (
-        comunicado.media ||
-        []
-      ).filter(
-        (
-          item
-        ) =>
-          item.mediaType ===
-          'video'
-      );
+        item
+      ) =>
+        item.mediaType ===
+        'video'
+    );
 
 
-    const documentsAndLinks =
+  const documentsAndLinks =
+    (
+      comunicado.media ||
+      []
+    ).filter(
       (
-        comunicado.media ||
-        []
-      ).filter(
-        (
-          item
-        ) =>
-          item.mediaType ===
-            'document' ||
-          item.mediaType ===
-            'link'
-      );
+        item
+      ) =>
+        item.mediaType ===
+          'document' ||
+        item.mediaType ===
+          'link'
+    );
 
 
-    return (
-      <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  return (
+    <div
+      className="
+        fixed
+        inset-0
+        z-[200]
+        bg-slate-950/75
+        sm:backdrop-blur-sm
+        flex
+        items-stretch
+        sm:items-center
+        justify-center
+        p-0
+        sm:p-4
+        overflow-hidden
+      "
+    >
 
-        <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto text-slate-900">
+      {/* ===================================================== */}
+      {/* CONTENEDOR DEL MODAL */}
+      {/* ===================================================== */}
 
+      <div
+        className="
+          bg-white
+          w-full
+          h-[100dvh]
+          sm:h-auto
+          sm:max-h-[92dvh]
+          sm:max-w-4xl
+          rounded-none
+          sm:rounded-2xl
+          border-0
+          sm:border
+          sm:border-slate-300
+          shadow-2xl
+          text-slate-900
+          flex
+          flex-col
+          overflow-hidden
+          min-w-0
+        "
+      >
 
-          {/* =============================================== */}
-          {/* ENCABEZADO */}
-          {/* =============================================== */}
+        {/* =================================================== */}
+        {/* CABECERA FIJA */}
+        {/* =================================================== */}
 
-          <div className="sticky top-0 z-20 bg-white px-6 md:px-8 pt-6 pb-4 border-b border-slate-100">
+        <div className="shrink-0 bg-white px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 border-b border-slate-100">
 
-            <div className="flex justify-between items-start gap-4">
+          <div className="flex justify-between items-start gap-3">
 
-              <div className="min-w-0">
+            <div className="min-w-0 flex-1">
 
-                <div className="flex items-center gap-2 flex-wrap mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
 
-                  <span className="text-[10px] font-extrabold text-slate-900 bg-[#f3a828] px-2.5 py-1 rounded border border-amber-300 uppercase tracking-wider">
-                    {
-                      comunicado.category
-                    }
-                  </span>
-
-
-                  {comunicado.pinned && (
-                    <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded border border-red-200">
-                      📌 Comunicado Fijado
-                    </span>
-                  )}
-
-                </div>
-
-
-                <h2 className="text-xl md:text-2xl font-extrabold text-[#234156] leading-snug">
+                <span className="max-w-full text-[10px] font-extrabold text-slate-900 bg-[#f3a828] px-2.5 py-1 rounded border border-amber-300 uppercase tracking-wider break-words">
                   {
-                    comunicado.title
+                    comunicado.category
                   }
-                </h2>
+                </span>
 
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 mt-3 font-medium">
-
-                  <span className="flex items-center gap-1 font-semibold">
-
-                    <Calendar className="w-3.5 h-3.5 text-[#234156]" />
-
-                    {
-                      comunicado.date
-                    }
-
+                {comunicado.pinned && (
+                  <span className="max-w-full text-[10px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded border border-red-200 break-words">
+                    📌 Comunicado Fijado
                   </span>
-
-
-                  <span className="flex items-center gap-1 font-semibold">
-
-                    <User className="w-3.5 h-3.5 text-[#234156]" />
-
-                    {
-                      comunicado.author
-                    }
-
-                    {comunicado.authorRole && (
-                      <>
-                        {' '}
-                        (
-                        {
-                          comunicado.authorRole
-                        }
-                        )
-                      </>
-                    )}
-
-                  </span>
-
-                </div>
+                )}
 
               </div>
 
 
-              <button
-                type="button"
-                onClick={
-                  onClose
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#234156] leading-tight break-words [overflow-wrap:anywhere]">
+                {
+                  comunicado.title
                 }
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 font-bold shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              </h2>
+
+
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-5 mt-4 text-xs text-slate-500 font-medium min-w-0">
+
+                <span className="flex items-center gap-2 font-semibold min-w-0">
+
+                  <Calendar className="w-4 h-4 text-[#234156] shrink-0" />
+
+                  <span className="break-words">
+                    {
+                      comunicado.date
+                    }
+                  </span>
+
+                </span>
+
+
+                {(comunicado.author ||
+                  comunicado.authorRole) && (
+                  <span className="flex items-start gap-2 font-semibold min-w-0">
+
+                    <User className="w-4 h-4 text-[#234156] shrink-0 mt-0.5" />
+
+                    <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+
+                      {
+                        comunicado.author
+                      }
+
+                      {comunicado.authorRole && (
+                        <>
+                          {' '}
+                          (
+                          {
+                            comunicado.authorRole
+                          }
+                          )
+                        </>
+                      )}
+
+                    </span>
+
+                  </span>
+                )}
+
+              </div>
 
             </div>
 
+
+            <button
+              type="button"
+              onClick={
+                onClose
+              }
+              aria-label="Cerrar comunicado"
+              className="
+                w-10
+                h-10
+                rounded-xl
+                flex
+                items-center
+                justify-center
+                text-slate-400
+                hover:text-slate-700
+                hover:bg-slate-100
+                shrink-0
+              "
+            >
+              <X className="w-5 h-5" />
+            </button>
+
           </div>
 
+        </div>
 
-          <div className="p-6 md:p-8">
 
+        {/* =================================================== */}
+        {/* ZONA QUE SÍ HACE SCROLL */}
+        {/* =================================================== */}
 
-            {/* =============================================== */}
+        <div
+          className="
+            flex-1
+            min-h-0
+            overflow-y-auto
+            overflow-x-hidden
+            overscroll-contain
+            touch-pan-y
+            [-webkit-overflow-scrolling:touch]
+          "
+        >
+
+          <div className="w-full min-w-0 p-4 sm:p-6 md:p-8">
+
+            {/* ================================================= */}
             {/* IMÁGENES */}
-            {/* =============================================== */}
+            {/* ================================================= */}
 
             {images.length >
               0 && (
-              <div className="space-y-4 mb-7">
+              <div className="w-full min-w-0 space-y-4 mb-7">
 
                 {images.map(
                   (
@@ -941,18 +1181,25 @@ export const ComunicadoDetailModal:
             )}
 
 
-            {/* =============================================== */}
+            {/* ================================================= */}
             {/* CONTENIDO */}
-            {/* =============================================== */}
+            {/* ================================================= */}
 
             <div
               className="
                 comunicado-content
+                w-full
+                min-w-0
                 text-sm
+                sm:text-[15px]
                 text-slate-700
                 leading-7
+                break-words
+                [overflow-wrap:anywhere]
 
                 [&_p]:mb-4
+                [&_p]:max-w-full
+                [&_p]:break-words
 
                 [&_strong]:font-extrabold
                 [&_strong]:text-slate-900
@@ -962,22 +1209,31 @@ export const ComunicadoDetailModal:
                 [&_u]:underline
 
                 [&_ul]:list-disc
-                [&_ul]:pl-6
+                [&_ul]:pl-5
+                [&_ul]:sm:pl-6
                 [&_ul]:mb-4
                 [&_ul]:space-y-1
+                [&_ul]:max-w-full
 
                 [&_ol]:list-decimal
-                [&_ol]:pl-6
+                [&_ol]:pl-5
+                [&_ol]:sm:pl-6
                 [&_ol]:mb-4
                 [&_ol]:space-y-1
+                [&_ol]:max-w-full
 
                 [&_li]:pl-1
+                [&_li]:break-words
 
                 [&_a]:text-blue-700
                 [&_a]:font-bold
                 [&_a]:underline
                 [&_a]:underline-offset-2
                 [&_a]:hover:text-blue-900
+                [&_a]:break-all
+
+                [&_img]:max-w-full
+                [&_img]:h-auto
               "
               dangerouslySetInnerHTML={{
                 __html:
@@ -986,17 +1242,17 @@ export const ComunicadoDetailModal:
             />
 
 
-            {/* =============================================== */}
+            {/* ================================================= */}
             {/* VIDEOS */}
-            {/* =============================================== */}
+            {/* ================================================= */}
 
             {videos.length >
               0 && (
-              <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="w-full min-w-0 mt-8 pt-6 border-t border-slate-100">
 
                 <div className="flex items-center gap-2 mb-4">
 
-                  <Video className="w-4 h-4 text-[#234156]" />
+                  <Video className="w-4 h-4 text-[#234156] shrink-0" />
 
                   <h4 className="text-xs font-extrabold text-[#234156] uppercase tracking-wider">
                     Videos
@@ -1005,7 +1261,7 @@ export const ComunicadoDetailModal:
                 </div>
 
 
-                <div className="space-y-5">
+                <div className="space-y-5 w-full min-w-0">
 
                   {videos.map(
                     (
@@ -1030,17 +1286,17 @@ export const ComunicadoDetailModal:
             )}
 
 
-            {/* =============================================== */}
-            {/* DOCUMENTOS Y ENLACES NUEVOS */}
-            {/* =============================================== */}
+            {/* ================================================= */}
+            {/* DOCUMENTOS Y ENLACES */}
+            {/* ================================================= */}
 
             {documentsAndLinks.length >
               0 && (
-              <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="w-full min-w-0 mt-8 pt-6 border-t border-slate-100">
 
                 <div className="flex items-center gap-2 mb-4">
 
-                  <Paperclip className="w-4 h-4 text-[#234156]" />
+                  <Paperclip className="w-4 h-4 text-[#234156] shrink-0" />
 
                   <h4 className="text-xs font-extrabold text-[#234156] uppercase tracking-wider">
                     Recursos y documentos
@@ -1049,7 +1305,7 @@ export const ComunicadoDetailModal:
                 </div>
 
 
-                <div className="space-y-2">
+                <div className="space-y-2 w-full min-w-0">
 
                   {documentsAndLinks.map(
                     (
@@ -1074,14 +1330,14 @@ export const ComunicadoDetailModal:
             )}
 
 
-            {/* =============================================== */}
+            {/* ================================================= */}
             {/* ADJUNTOS ANTIGUOS */}
-            {/* =============================================== */}
+            {/* ================================================= */}
 
             {comunicado.attachments &&
               comunicado.attachments.length >
                 0 && (
-                <div className="mt-8 pt-6 border-t border-slate-100">
+                <div className="w-full min-w-0 mt-8 pt-6 border-t border-slate-100">
 
                   <h4 className="text-xs font-extrabold text-[#234156] uppercase tracking-wider mb-3">
                     Documentos Adjuntos
@@ -1099,14 +1355,14 @@ export const ComunicadoDetailModal:
                           key={
                             idx
                           }
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50"
+                          className="w-full min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden"
                         >
 
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
 
-                            <FileText className="w-5 h-5 text-[#234156] shrink-0" />
+                            <FileText className="w-5 h-5 text-[#234156] shrink-0 mt-0.5 sm:mt-0" />
 
-                            <span className="text-xs font-bold text-slate-800 truncate">
+                            <span className="text-xs font-bold text-slate-800 break-words [overflow-wrap:anywhere] min-w-0">
                               {
                                 att.name
                               }
@@ -1124,7 +1380,7 @@ export const ComunicadoDetailModal:
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-[#234156] hover:bg-[#1a3142] text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 shadow-xs border border-slate-700 shrink-0"
+                                className="w-full sm:w-auto bg-[#234156] hover:bg-[#1a3142] text-white font-extrabold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-xs border border-slate-700 shrink-0"
                               >
 
                                 <span>
@@ -1146,18 +1402,18 @@ export const ComunicadoDetailModal:
               )}
 
 
-            {/* =============================================== */}
-            {/* CERRAR */}
-            {/* =============================================== */}
+            {/* ================================================= */}
+            {/* BOTÓN CERRAR */}
+            {/* ================================================= */}
 
-            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end">
+            <div className="mt-8 pt-5 pb-[max(8px,env(safe-area-inset-bottom))] border-t border-slate-100 flex justify-stretch sm:justify-end">
 
               <button
                 type="button"
                 onClick={
                   onClose
                 }
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl border border-slate-200"
+                className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl border border-slate-200"
               >
                 Cerrar Comunicado
               </button>
@@ -1169,5 +1425,7 @@ export const ComunicadoDetailModal:
         </div>
 
       </div>
-    );
-  };
+
+    </div>
+  );
+};
