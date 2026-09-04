@@ -6,7 +6,6 @@ import {
   FileText,
   Bell,
   BookOpen,
-  Calendar,
   Users,
   ArrowRight,
   ArrowLeft,
@@ -142,20 +141,12 @@ export const AdminPanelView: React.FC<
   onResetUserPassword,
   onReloadAuthorizedUsers,
 }) => {
-  // =========================================================
-  // SECCIÓN ACTIVA
-  // =========================================================
-
   const [
     activeSection,
     setActiveSection,
   ] = useState<string | null>(
     null
   );
-
-  // =========================================================
-  // MODAL USUARIO
-  // =========================================================
 
   const [
     isUserModalOpen,
@@ -206,6 +197,7 @@ export const AdminPanelView: React.FC<
       null
     );
 
+
   // =========================================================
   // MÓDULOS
   // =========================================================
@@ -244,14 +236,6 @@ export const AdminPanelView: React.FC<
       icon: BookOpen,
     },
     {
-      id: 'agenda',
-      title:
-        'Agenda y Eventos',
-      description:
-        'Administra talleres, capacitaciones, reuniones, fechas límite y eventos internos.',
-      icon: Calendar,
-    },
-    {
       id: 'usuarios',
       title:
         'Usuarios y Accesos',
@@ -260,6 +244,7 @@ export const AdminPanelView: React.FC<
       icon: Users,
     },
   ];
+
 
   // =========================================================
   // DOCUMENTOS
@@ -279,72 +264,45 @@ export const AdminPanelView: React.FC<
         'Documentación Institucional'
     );
 
-  // =========================================================
-  // ABRIR MÓDULO
-  // =========================================================
-
-  const handleOpenModule = (
-    id: string
-  ) => {
-    setActiveSection(id);
-  };
 
   // =========================================================
-  // NUEVO USUARIO
+  // USUARIOS
   // =========================================================
 
   const handleOpenNewUser =
     () => {
       setEditingUser(null);
-
       setUserName('');
-
       setUserEmail('');
-
       setUserRole(
         'employee'
       );
-
       setUserActive(true);
-
       setIsUserModalOpen(
         true
       );
     };
 
-  // =========================================================
-  // EDITAR USUARIO
-  // =========================================================
-
   const handleOpenEditUser = (
     user: AuthorizedUser
   ) => {
     setEditingUser(user);
-
     setUserName(
       user.name
     );
-
     setUserEmail(
       user.email
     );
-
     setUserRole(
       user.role
     );
-
     setUserActive(
       user.active
     );
-
     setIsUserModalOpen(
       true
     );
   };
-
-  // =========================================================
-  // CERRAR MODAL USUARIO
-  // =========================================================
 
   const handleCloseUserModal =
     () => {
@@ -355,23 +313,14 @@ export const AdminPanelView: React.FC<
       setIsUserModalOpen(
         false
       );
-
       setEditingUser(null);
-
       setUserName('');
-
       setUserEmail('');
-
       setUserRole(
         'employee'
       );
-
       setUserActive(true);
     };
-
-  // =========================================================
-  // GUARDAR USUARIO
-  // =========================================================
 
   const handleSaveUser =
     async (
@@ -453,22 +402,15 @@ export const AdminPanelView: React.FC<
         );
 
         setUserName('');
-
         setUserEmail('');
-
         setUserRole(
           'employee'
         );
-
         setUserActive(
           true
         );
       }
     };
-
-  // =========================================================
-  // RESTABLECER CONTRASEÑA
-  // =========================================================
 
   const handleResetPassword =
     async (
@@ -496,6 +438,7 @@ export const AdminPanelView: React.FC<
       }
     };
 
+
   // =========================================================
   // DOCUMENTACIÓN INSTITUCIONAL
   // =========================================================
@@ -519,7 +462,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
@@ -531,7 +473,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-
             Agregar Documento
           </button>
 
@@ -635,7 +576,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-
                         Editar
                       </button>
 
@@ -649,7 +589,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-
                         Eliminar
                       </button>
 
@@ -668,6 +607,7 @@ export const AdminPanelView: React.FC<
       </div>
     );
   }
+
 
   // =========================================================
   // FORMATOS Y PLANTILLAS
@@ -692,7 +632,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
@@ -704,7 +643,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-
             Agregar Formato
           </button>
 
@@ -901,7 +839,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-
                         Editar
                       </button>
 
@@ -915,7 +852,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-
                         Eliminar
                       </button>
 
@@ -935,6 +871,7 @@ export const AdminPanelView: React.FC<
       </div>
     );
   }
+
 
   // =========================================================
   // COMUNICADOS
@@ -977,7 +914,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
@@ -1000,7 +936,6 @@ export const AdminPanelView: React.FC<
                     : ''
                 }`}
               />
-
               Actualizar
             </button>
 
@@ -1012,7 +947,6 @@ export const AdminPanelView: React.FC<
               className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-
               Publicar comunicado
             </button>
 
@@ -1229,7 +1163,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-
                         Editar
                       </button>
 
@@ -1243,7 +1176,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-
                         Eliminar
                       </button>
 
@@ -1264,6 +1196,7 @@ export const AdminPanelView: React.FC<
     );
   }
 
+
   // =========================================================
   // REGLAMENTOS Y POLÍTICAS
   // =========================================================
@@ -1272,8 +1205,15 @@ export const AdminPanelView: React.FC<
     activeSection ===
     'reglamentos'
   ) {
+    const safeReglamentos =
+      Array.isArray(
+        reglamentos
+      )
+        ? reglamentos
+        : [];
+
     const sectionsCount =
-      reglamentos.reduce(
+      safeReglamentos.reduce(
         (
           total,
           reglamento
@@ -1289,7 +1229,7 @@ export const AdminPanelView: React.FC<
 
     const categoriesCount =
       new Set(
-        reglamentos
+        safeReglamentos
           .map(
             (
               reglamento
@@ -1316,7 +1256,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
@@ -1339,7 +1278,6 @@ export const AdminPanelView: React.FC<
                     : ''
                 }`}
               />
-
               Actualizar
             </button>
 
@@ -1351,7 +1289,6 @@ export const AdminPanelView: React.FC<
               className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-
               Agregar Reglamento
             </button>
 
@@ -1393,7 +1330,7 @@ export const AdminPanelView: React.FC<
 
             <p className="text-2xl font-black text-[#234156] mt-1">
               {
-                reglamentos.length
+                safeReglamentos.length
               }
             </p>
 
@@ -1455,7 +1392,7 @@ export const AdminPanelView: React.FC<
 
             </div>
 
-          ) : reglamentos.length ===
+          ) : safeReglamentos.length ===
             0 ? (
 
             <div className="p-10 text-center">
@@ -1476,7 +1413,7 @@ export const AdminPanelView: React.FC<
 
             <div className="divide-y divide-slate-100">
 
-              {reglamentos.map(
+              {safeReglamentos.map(
                 (
                   reglamento
                 ) => (
@@ -1562,7 +1499,6 @@ export const AdminPanelView: React.FC<
                               className="text-[10px] font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
-
                               Abrir documento
                             </a>
                           )}
@@ -1585,7 +1521,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-
                         Editar
                       </button>
 
@@ -1599,7 +1534,6 @@ export const AdminPanelView: React.FC<
                         className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-
                         Eliminar
                       </button>
 
@@ -1619,6 +1553,7 @@ export const AdminPanelView: React.FC<
       </div>
     );
   }
+
 
   // =========================================================
   // USUARIOS Y ACCESOS
@@ -1643,7 +1578,6 @@ export const AdminPanelView: React.FC<
             className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
-
             Volver a módulos
           </button>
 
@@ -1666,7 +1600,6 @@ export const AdminPanelView: React.FC<
                     : ''
                 }`}
               />
-
               Actualizar
             </button>
 
@@ -1678,7 +1611,6 @@ export const AdminPanelView: React.FC<
               className="flex items-center justify-center gap-2 bg-[#f3a828] hover:bg-[#e0951a] text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold border border-amber-300 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-
               Agregar Usuario
             </button>
 
@@ -1932,7 +1864,6 @@ export const AdminPanelView: React.FC<
                           className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-bold"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-
                           Editar
                         </button>
 
@@ -2000,7 +1931,6 @@ export const AdminPanelView: React.FC<
                           className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-40"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-
                           Eliminar
                         </button>
 
@@ -2238,72 +2168,6 @@ export const AdminPanelView: React.FC<
     );
   }
 
-  // =========================================================
-  // AGENDA PENDIENTE
-  // =========================================================
-
-  if (
-    activeSection ===
-    'agenda'
-  ) {
-    return (
-      <div className="w-full max-w-7xl mx-auto pb-12 space-y-6">
-
-        <button
-          type="button"
-          onClick={() =>
-            setActiveSection(
-              null
-            )
-          }
-          className="flex items-center gap-2 text-xs font-bold text-[#234156] hover:text-slate-900"
-        >
-          <ArrowLeft className="w-4 h-4" />
-
-          Volver a módulos
-        </button>
-
-        <div className="bg-[#234156] text-white rounded-3xl p-7 border-b-4 border-[#f3a828] shadow-md">
-
-          <div className="flex items-start gap-4">
-
-            <div className="w-12 h-12 rounded-2xl bg-[#f3a828] text-slate-950 flex items-center justify-center shrink-0">
-              <Calendar className="w-6 h-6" />
-            </div>
-
-            <div>
-
-              <h1 className="text-xl md:text-2xl font-extrabold">
-                Agenda y Eventos
-              </h1>
-
-              <p className="text-xs md:text-sm text-slate-200 mt-1">
-                Administra talleres, capacitaciones, reuniones, fechas límite y eventos internos.
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
-
-          <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-
-          <h2 className="text-sm font-extrabold text-[#234156]">
-            Módulo preparado
-          </h2>
-
-          <p className="text-xs text-slate-500 mt-2 max-w-xl mx-auto">
-            La Agenda todavía funciona desde su sección principal. Después podemos conectar aquí su administración completa.
-          </p>
-
-        </div>
-
-      </div>
-    );
-  }
 
   // =========================================================
   // PANEL PRINCIPAL
@@ -2327,7 +2191,7 @@ export const AdminPanelView: React.FC<
             </h1>
 
             <p className="text-xs md:text-sm text-slate-200 mt-1 max-w-3xl leading-relaxed">
-              Centro de gestión de contenidos de la intranet. Desde aquí puedes administrar documentos, formatos, comunicados, reglamentos, agenda y accesos de usuarios.
+              Centro de gestión de contenidos de la intranet. Desde aquí puedes administrar documentación institucional, formatos, comunicados, reglamentos, políticas y accesos de usuarios.
             </p>
 
           </div>
@@ -2388,7 +2252,7 @@ export const AdminPanelView: React.FC<
                     module.id
                   }
                   onClick={() =>
-                    handleOpenModule(
+                    setActiveSection(
                       module.id
                     )
                   }

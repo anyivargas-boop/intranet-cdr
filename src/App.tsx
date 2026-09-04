@@ -2641,18 +2641,11 @@ export default function App() {
         comunicadoActualizado.id;
 
 
-      // Guardamos copia de multimedia anterior
-      // para poder restaurarla si algo falla.
-
       const previousMedia =
         comunicadoEditando
           ?.media ||
         [];
 
-
-      // =====================================================
-      // 1. ACTUALIZAR COMUNICADO
-      // =====================================================
 
       const {
         error:
@@ -2684,9 +2677,6 @@ export default function App() {
             pinned:
               comunicadoActualizado.pinned,
 
-            // El sistema nuevo usa comunicado_media.
-            // Quitamos el adjunto antiguo para no duplicar.
-
             attachment_name:
               null,
 
@@ -2717,10 +2707,6 @@ export default function App() {
       }
 
 
-      // =====================================================
-      // 2. BORRAR MULTIMEDIA ANTERIOR
-      // =====================================================
-
       const {
         error:
           deleteMediaError,
@@ -2747,10 +2733,6 @@ export default function App() {
         throw deleteMediaError;
       }
 
-
-      // =====================================================
-      // 3. INSERTAR MULTIMEDIA ACTUAL
-      // =====================================================
 
       const validMedia =
         (
@@ -2819,8 +2801,6 @@ export default function App() {
             insertMediaError
           );
 
-
-          // Intentar restaurar multimedia anterior
 
           if (
             previousMedia.length >
@@ -3483,7 +3463,7 @@ export default function App() {
   // =========================================================
 
   return (
-    <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col bg-slate-50 text-slate-900 font-sans">
 
 
       <Header
@@ -3502,55 +3482,67 @@ export default function App() {
       />
 
 
-      <div className="bg-slate-100 border-b border-slate-200 px-6 lg:px-10 py-1 flex items-center justify-end gap-3 text-[10px] text-slate-500">
+      {/* ===================================================== */}
+      {/* BARRA DE SESIÓN RESPONSIVE */}
+      {/* ===================================================== */}
 
-        <span>
-          Sesión:{' '}
+      <div className="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 lg:px-10 py-2 shrink-0">
 
-          <strong>
-            {
-              currentUserEmail
-            }
-          </strong>
-        </span>
+        <div className="w-full max-w-7xl mx-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-end lg:gap-3 text-[10px] text-slate-500">
 
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:gap-3 min-w-0">
 
-        {canUseAdminPanel && (
-          <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">
-            Administrador
-          </span>
-        )}
+            <span className="min-w-0 truncate">
+              Sesión:{' '}
 
-
-        {canUseAdminPanel && (
-          <span
-            className={`font-bold px-2 py-0.5 rounded-md border ${
-              adminModeEnabled
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                : 'bg-slate-100 text-slate-600 border-slate-200'
-            }`}
-          >
-            {adminModeEnabled
-              ? 'Modo admin activo'
-              : 'Modo admin inactivo'}
-          </span>
-        )}
+              <strong className="break-all sm:break-normal">
+                {currentUserEmail}
+              </strong>
+            </span>
 
 
-        <button
-          type="button"
-          onClick={
-            handleEmployeeLogout
-          }
-          className="font-bold text-red-600 hover:text-red-800"
-        >
-          Cerrar sesión
-        </button>
+            <button
+              type="button"
+              onClick={
+                handleEmployeeLogout
+              }
+              className="font-bold text-red-600 hover:text-red-800 whitespace-nowrap shrink-0"
+            >
+              Cerrar sesión
+            </button>
+
+          </div>
+
+
+          {canUseAdminPanel && (
+            <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
+
+              <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-1 rounded-md whitespace-nowrap">
+                Administrador
+              </span>
+
+
+              <span
+                className={`font-bold px-2 py-1 rounded-md border whitespace-nowrap ${
+                  adminModeEnabled
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                }`}
+              >
+                {adminModeEnabled
+                  ? 'Modo admin activo'
+                  : 'Modo admin inactivo'}
+              </span>
+
+            </div>
+          )}
+
+        </div>
 
       </div>
 
 
-      <main className="flex-grow p-4 md:p-8 overflow-y-auto">
+      <main className="flex-grow p-4 md:p-8">
 
 
         {activeTab ===
